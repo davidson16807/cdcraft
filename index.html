@@ -1,0 +1,465 @@
+<!doctype html>
+<html>
+<head>
+    <title>Diagram editor</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="./styles/bootstrap.min.css">
+    <script src="./libraries/vue.js"></script>
+    <script src="./libraries/glm-js.min.js"></script>
+    <style type="text/css">
+        svg {
+            position: fixed;
+            top:0;
+            left:0;
+            height:100%;
+            width:100%;
+            user-select: none;
+        }
+        .cell-border {
+            stroke:grey;
+            stroke-width:0.5;
+            stroke-dasharray: 10,10;
+        }
+        .arrow {
+            fill: none;
+            stroke: dimgrey;
+            stroke-width:4;
+        }
+        .arrow-highlight {
+            fill: none;
+            stroke: darkgrey;
+            stroke-width:20;
+        }
+        .arrow-tip-highlight {
+            fill: darkgrey;
+            stroke: none;
+        }
+        .arrow-handle {
+            fill: red;
+            /*fill: lightgrey;*/
+            stroke: none;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <svg id="svg">
+        <g v-bind:transform="transformation()">
+            <g v-for="i in cell_count()">
+                <line class="cell-border"
+                      v-bind:x1="cell_border_position(i,0).x" v-bind:y1="cell_border_position(0,-cell_count()).y" 
+                      v-bind:x2="cell_border_position(i,0).x" v-bind:y2="cell_border_position(0,cell_count()).y"/>
+                <line class="cell-border"
+                      v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
+                      v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
+            </g>
+            <path class="arrow-highlight" v-bind:d="path(state.edited_arrow)" />
+            <circle class="arrow-tip-highlight" v-bind:cx="state.edited_arrow.start.x" v-bind:cy="state.edited_arrow.start.y" r="10"/>
+            <circle class="arrow-tip-highlight" v-bind:cx="state.edited_arrow.end.x" v-bind:cy="state.edited_arrow.end.y" r="10" />
+            <circle class="arrow-handle" v-bind:cx="state.edited_arrow.start.x" v-bind:cy="state.edited_arrow.start.y" r="10"/>
+            <circle class="arrow-handle" v-bind:cx="state.edited_arrow.end.x" v-bind:cy="state.edited_arrow.end.y" r="10" />
+            <circle class="arrow-handle" v-bind:cx="midpath(state.edited_arrow).x" v-bind:cy="midpath(state.edited_arrow).y" r="10" />
+            <path class="arrow" v-bind:d="path(state.edited_arrow)"/>
+        </g>
+    </svg>
+</div>
+
+<!-- logo -->
+<script type="text/javascript">
+    'use strict';
+
+
+    class Arrow {
+        constructor(start, end){
+            this.start = start;
+            this.end = end;
+            this.label = undefined;
+            this.min_length = 1;
+            this.is_clockwise = false;
+            this.label_position_id = undefined;
+            this.start_style_id = undefined;
+            this.end_style_id = undefined;
+            this.line_style_id = undefined;
+        }
+    }
+
+    const DragState = {
+        released: 'released',
+        draw: 'draw',
+        zoom: 'zoom',
+        pan: 'pan',
+    };
+
+    class DiagramState {
+        constructor(topleft, log2_cell_width, drag_state){
+            this.topleft = topleft;
+            this.log2_cell_width = log2_cell_width;
+            this.drag_state = drag_state;
+            this.edited_arrow = new Arrow(glm.vec2(), glm.vec2());
+        }
+    }
+    /*
+    "DiagramState" is a namespace of conceptually pure functions that operate with no concept of what hardware is being used.
+    All functions represent the transformation of state in reponse to controller events. 
+    */
+    function DiagramStateOperations(diagram_coordinates) {
+        const coordinates = diagram_coordinates;
+        return {
+            zoom: function(state_in, log2_cell_width_change, state_out) {
+                state_out.topleft = state_in.topleft;
+                state_out.log2_cell_width = state_in.log2_cell_width + log2_cell_width_change;
+                state_out.drag_state = DragState.zoom;
+                state_out.edited_arrow = state_in.edited_arrow;
+            },
+            pan: function(state_in, motion, state_out){
+                state_out.topleft = state_in.topleft.sub(motion);
+                state_out.log2_cell_width = state_in.log2_cell_width;
+                state_out.drag_state = DragState.pan;
+                state_out.edited_arrow = state_in.edited_arrow;
+            },
+            draw: function(state_in, screen_position, state_out){
+                state_out.topleft = state_in.topleft;
+                state_out.log2_cell_width = state_in.log2_cell_width;
+                const model_position = coordinates.screen_to_model(screen_position, state_in);
+                const cell_midpoint = 
+                    coordinates.cell_id_to_midpoint(
+                        coordinates.model_to_cell_id(model_position)
+                    );
+                const difference = glm.abs(model_position.sub(cell_midpoint));
+                const is_snappable = difference.x < 50 && difference.y < 50;
+                const snapped = model_position;
+                // const snapped = is_snappable? cell_midpoint : model_position;
+                state_out.edited_arrow = state_in.drag_state == DragState.draw
+                    ? new Arrow(state_in.edited_arrow.start, snapped)
+                    : new Arrow(cell_midpoint, snapped);
+                state_out.drag_state = DragState.draw;
+            },
+            copy: function(state_in, state_out){
+                state_out.topleft = state_in.topleft;
+                state_out.log2_cell_width = state_in.log2_cell_width;
+                state_out.drag_state = state_in.drag_state;
+                state_out.edited_arrow = state_in.edited_arrow;
+            }
+        };
+    }
+    /*
+    "DiagramControls" is a namespace of conceptually pure functions that reflect how events map to actions.
+    All functions represent the transformation of state in reponse to controller events. 
+    It resembles an "Updater" within the "Model-View-Updater" patter (A.K.A. "Elm" architecture)
+    */
+    function DiagramControls(diagram_controls, dom_element){
+        const mouse_actions = {
+            'pan':  (state_in, event, state_out) => diagram_controls.pan(state_in, glm.vec2(event.movementX, event.movementY), state_out),
+            'draw': (state_in, event, state_out) => diagram_controls.draw(state_in, glm.vec2(event.clientX, event.clientY), state_out),
+        };
+        return {
+            mousedown: function(state_in, event, state_out){
+                const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
+                if (state in mouse_actions){
+                    mouse_actions[state](state_in,  event, state_out); 
+                }
+            },
+            mousemove: function(state_in, event, state_out){
+                const state = state_in.drag_state;
+                if (state in mouse_actions){
+                    mouse_actions[state](state_in,  event, state_out); 
+                }
+            },
+            mouseup: function(state_in, event, state_out){
+                state_out.drag_state = 'released';
+            },
+            mousewheel: function(state_in, event, state_out){
+                diagram_controls.zoom(state_in, event.wheelDelta, state_out);
+            },
+            DOMMouseScroll: function(state_in, event, state_out){
+                diagram_controls.zoom(state_in, -event.detail, state_out);
+            },
+            touchstart: function(state_in, event, state_out){
+
+            },
+            touchend: function(state_in, event, state_out){
+
+            },
+            touchmove: function(state_in, event, state_out){
+
+            }
+        }
+    }
+
+    /*
+    "EventQueueSideEffectWrapper" is a object oriented class that encapsulates all use of the javascript event system.
+    This is done so that the rest of the application can be managed statelessly, using pure functions and categories.
+    It practices RAII in that it binds events to a `domElement` upon construction and does not let go until dispose() is called.
+    Events can be retrieved using `poll()`, which returns a list of all events that occurred on the diagram since the last invocation.
+    */
+    class EventQueueSideEffectWrapper{
+        constructor(domElement){
+            let queue = [];
+            function enqueue( event ) { 
+                queue.push(event);
+            };
+            function enqueuePrevent( event ) { 
+                event.preventDefault(); 
+                queue.push(event);
+            };
+            function enqueuePreventStop( event ) { 
+                event.preventDefault(); 
+                event.stopPropagation();
+                queue.push(event);
+            };
+            domElement.addEventListener('contextmenu',    enqueuePrevent,     false);
+            domElement.addEventListener('mousedown',      enqueuePrevent,     false);
+            domElement.addEventListener('mousemove',      enqueuePrevent,     false);
+            domElement.addEventListener('mouseup',        enqueue,            false);
+            domElement.addEventListener('mousewheel',     enqueue,            false);
+            domElement.addEventListener('DOMMouseScroll', enqueue,            false);
+            domElement.addEventListener('touchstart',     enqueue,            false);
+            domElement.addEventListener('touchmove',      enqueuePreventStop, false);
+            domElement.addEventListener('touchend',       enqueue,            false);
+            this.dispose = function(){
+                domElement.removeEventListener('contextmenu',    enqueuePrevent,     false);
+                domElement.removeEventListener('mousedown',      enqueuePrevent,     false);
+                domElement.removeEventListener('mousemove',      enqueuePrevent,     false);
+                domElement.removeEventListener('mouseup',        enqueue,            false);
+                domElement.removeEventListener('mousewheel',     enqueue,            false);
+                domElement.removeEventListener('DOMMouseScroll', enqueue,            false);
+                domElement.removeEventListener('touchstart',     enqueue,            false);
+                domElement.removeEventListener('touchmove',      enqueuePreventStop, false);
+                domElement.removeEventListener('touchend',       enqueue,            false);
+            }
+            this.pollWithSideEffect = function(){
+                let events = queue;
+                queue = [];
+                return events;
+            }
+        }
+    }
+
+    function DiagramCoordinates(cell_width){
+        const floor = Math.floor;
+        const round = Math.round;
+        return {
+            'screen_to_model': (screen_position, state) => screen_position.add(state.topleft),
+            'model_to_screen': (model_position, state) => model_position.sub(state.topleft),
+            'model_to_border_id': model_position => glm.vec2(floor(model_position.x/cell_width), floor(model_position.y/cell_width)),
+            'border_id_to_model': id => id.add(0.5).mul(cell_width),
+            'model_to_cell_id': position => glm.vec2(round(position.x/cell_width), round(position.y/cell_width)),
+            'cell_id_to_midpoint': id => id.mul(cell_width),
+        }
+    }
+
+    function LineGeometry(){
+        const abs = Math.abs;
+        return {
+            /*
+            A0 line reference
+            A  line direction, normalized
+            B0 line reference
+            B  line direction, normalized
+            */
+            distance_along_line_to_line: function(A0,A, B0,B){
+                return glm.cross((B0.sub(A0)), B).z / glm.cross(A, B).z;
+            }
+        };
+    }
+
+
+
+    function ArcGeometry(){
+        const pow = Math.pow;
+        const acos = Math.acos;
+        const cos = Math.cos;
+        const sin = Math.sin;
+        const min = Math.min;
+        const max = Math.max;
+        const sqrt = Math.sqrt;
+        const epsilon = 1e-6;
+        return {
+            origin: function(start, end, radius, is_clockwise){
+                const chord_direction = glm.normalize(end.sub(start));
+                const chord_tangent = is_clockwise? glm.vec2(chord_direction.y, -chord_direction.x) : glm.vec2(-chord_direction.y, chord_direction.x);
+                const r = radius;
+                const x = glm.length(end.sub(start)) / 2.0;
+                const y = sqrt(r*r - x*x);
+                const chord_midpoint = start.add(end).div(2);
+                const origin = chord_tangent.mul(y).add(chord_midpoint);
+                return origin;
+            },
+            position_at_distance_along_arc: function (start, origin, is_clockwise, distance){
+                const r = glm.length(origin.sub(start));
+                const i = glm.normalize(start.sub(origin));
+                const j = is_clockwise? glm.vec2(i.y, -i.x) : glm.vec2(-i.y, i.x);
+                const theta = distance / r;
+                const x = origin.add(i.mul(r*cos(theta))).add(j.mul(r*sin(theta)));
+                return x;
+            },
+            radius_for_chord_and_arc_length: function(start, end, min_arc_length){
+                /*
+                NOTE: 
+                Given the start position, end position, and length of an arc, we want to find the radius of the circle that is traced by the arc.
+                We find the problem reduces to finding the radius ("r") of a semicircle given half the chord length ("x") and half the arc length ("A").
+                We draw a right triangle on the semicircle with a hypoteneuse of r, a leg of x opposite to the origin, and angle of θ such that:
+                  x/r = sin(θ)
+                The angle subtended by the arc ("ϕ") takes up the rest of the semicircle, so if we use radians then:
+                  ϕ = π-θ = A/r
+                We have a lot of unknowns to work with (r, θ, and ϕ), so we first try to remove some from consideration.
+                Using the equations above we find that:
+                  x/(A/ϕ) = sin(π-ϕ)
+                which simplifies to:
+                  x/A = sin(ϕ)/ϕ
+                So we can solve the problem by approximating the inverse of sin(ϕ)/ϕ
+                We start our approximation by noticing that it resembles 2acos(ϕ) for our range of interest, [0,π]:
+                  https://www.desmos.com/calculator/unllvphdq0
+                It's slightly off towards the middle of the range, but all we have to do is find an expression for a factor that we can "nudge" it by.
+                We model this "nudge" factor as 1-axᵇ, and by fitting the function manually, we get adequate results using a = 0.147 and b = 0.65.
+                In summary, our approximation is:
+                  ϕ = A/r ≈ 2 (1-a(x/A)ᵇ) acos(x/A)
+                And our solution is:
+                  r ≈ A / (2 (1-a(x/A)ᵇ) acos(x/A))
+                */
+                const a = 0.147;
+                const b = 0.650;
+                const x = glm.length(end.sub(start)) / 2.0;
+                const A = max(x, min_arc_length/2 );
+                const xA = min(x/A, 1-epsilon);
+                const r = A / (2.0 * (1.0 - a*pow(xA, b)) * acos(xA));
+                return r;
+            },
+        }
+    }
+
+    function DiagramSvg(arc_geometry, line_geometry){
+        const pi = Math.PI;
+        const sqrt = Math.sqrt;
+        const max = Math.max;
+        // A "DiagramArc" is an arc defined in terms that are useful to depict arrows in a diagram.
+        // It starts from the premise that an arrow must have a minimum nonzero length for it to be visible to the user.
+        class DiagramArc{
+            constructor(start, end, length, is_clockwise){
+                this.start = start;
+                this.end = end;
+                this.length = length;
+                this.is_clockwise = is_clockwise;
+            }
+        };
+        // An "SvgArc" is an arc as defined by svg paths
+        class SvgArc{
+            constructor(start, end, radius, is_large_arc, is_clockwise){
+                this.start = start;
+                this.end = end;
+                this.radius = radius;
+                this.is_large_arc = is_large_arc;
+                this.is_clockwise = is_clockwise;
+            }
+        };
+        // A "SvgQuadraticBezier" is a representation for a quadratic Bezier that can be used by svg
+        class SvgQuadraticBezier{
+            constructor(points){
+                this.points = points;
+            }
+        };
+
+        return {
+            'DiagramArc' : DiagramArc,
+            diagram_arc_to_svg_arc: function(arc){
+                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.length);
+                return new SvgArc(arc.start, arc.end, 
+                    radius, arc.length/radius > pi, arc.is_clockwise);
+            },
+            diagram_arc_to_svg_bezier: function(arc, sample_point_count){
+                const length = max(arc.length, glm.length(arc.end.sub(arc.start)));
+                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, length);
+                const origin = arc_geometry.origin(arc.start, arc.end, radius, arc.is_clockwise);
+                const sample_points = [];
+                for (let i = 0; i <= sample_point_count; i++) {
+                    sample_points.push(arc_geometry.position_at_distance_along_arc(arc.start, origin, arc.is_clockwise, length * i/sample_point_count));
+                }
+                const points = [sample_points[0]];
+                for (let i = 1; i <= sample_point_count; i++) {
+                    const a = sample_points[i-1].sub(origin);
+                    const b = sample_points[i].sub(origin);
+                    const k = glm.vec3(0,0,1);
+                    const a_tangent = glm.normalize(glm.cross(glm.vec3(a,0), k)).xy;
+                    const b_tangent = glm.normalize(glm.cross(glm.vec3(b,0), k)).xy;
+                    // console.log(a.x, a.y, a_tangent.x, a_tangent.y, b.x, b.y, b_tangent.x, b_tangent.y);
+                    const intersection = a_tangent.mul(line_geometry.distance_along_line_to_line(a,a_tangent,b,b_tangent)).add(a).add(origin);
+                    points.push(intersection);
+                    points.push(sample_points[i]);
+                }
+                return new SvgQuadraticBezier(points);
+            },
+            svg_bezier_to_path: function(bezier){
+                const points = bezier.points;
+                const start = points[0];
+                let output = `M ${start.x} ${start.y}`;
+                for (let i = 1; i+1 < points.length; i+=2) {
+                    const control = points[i];
+                    const sample = points[i+1];
+                    output += ` Q ${control.x} ${control.y} ${sample.x} ${sample.y}`;
+                }
+                return output;
+            },
+            svg_arc_to_path: function(arc){
+                return `M ${arc.start.x} ${arc.start.y} A ${arc.radius} ${arc.radius} 0 ${arc.is_large_arc?1:0} ${arc.is_clockwise?1:0} ${arc.end.x} ${arc.end.y}` ;
+            },
+        }
+    }
+
+    const vue = new Vue({
+        el: '#app',
+        data:{
+            state: new DiagramState(glm.vec2(), Math.log2(200), DragState.released),
+            queue: undefined,
+            controls: DiagramControls(DiagramStateOperations(DiagramCoordinates(200)), document.documentElement),
+            coordinates: DiagramCoordinates(200),
+            svg: DiagramSvg(ArcGeometry(), LineGeometry()),
+        },
+        created: function() {
+            // Register event manager in setTimeout to prevent vue from inapproprately touching event listeners
+            setTimeout(() => {this.queue = new EventQueueSideEffectWrapper(document.getElementById('svg'));}, 1000/60);
+            setInterval(() => {
+                if (this.queue) {
+                    let events = this.queue.pollWithSideEffect();
+                    for(event of events){
+                        if (event.type in this.controls){
+                            this.controls[event.type](this.state, event, this.state);
+                        }
+                    }
+                }
+            }, 1000/60);
+        },
+        methods: {
+            transformation: function() {
+                return `translate(${-this.state.topleft.x} ${-this.state.topleft.y})`;
+            },
+            cell_count: function() {
+                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / (1 << this.state.log2_cell_width));
+            },
+            cell_border_position: function(x, y) {
+                return this.coordinates.border_id_to_model( 
+                    this.coordinates.model_to_border_id(this.state.topleft).add(glm.ivec2(x-1,y-1))
+                );
+            },
+            path: function(arrow) {
+                const svg = DiagramSvg(ArcGeometry(), LineGeometry());
+                const arc = new svg.DiagramArc(arrow.start, arrow.end, 160, true);
+                const arc2 = svg.diagram_arc_to_svg_arc(arc);
+                const bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
+                const path = svg.svg_arc_to_path(arc2);
+                // const path = svg.svg_bezier_to_path(bezier);
+                return path;
+            },
+            midpath: function(arrow) {
+                const arcs = ArcGeometry();
+                const length = Math.max(arrow.length, glm.length(arrow.end.sub(arrow.start)));
+                const radius = arcs.radius_for_chord_and_arc_length(arrow.start, arrow.end, length);
+                const origin = arcs.origin(arrow.start, arrow.end, radius, arrow.is_clockwise);
+                const midpath = arcs.position_at_distance_along_arc(arrow.start, origin, arrow.is_clockwise, 0.5*arrow.length);
+                return midpath;
+            },
+        }
+    });
+</script>
+</body>
+</html>

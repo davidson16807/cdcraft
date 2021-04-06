@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>QUnit Example</title>
+
+  <!-- for unit testing -->
+  <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
+  <script src="https://code.jquery.com/qunit/qunit-1.23.1.js"></script>
+  <script src="./testutils/QUnitx.approx.js"></script>
+  <script src="./testutils/AlgebraHelpers.js"></script>
+  <script src="./UnboundedCellHashing.js"></script>
+  <script src="./DiagramComposition.js"></script>
+</head>
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+  <script type="text/javascript">
+    'use strict';
+    const empty_category = DiagramComposition.identity();
+    const set_category = new DiagramComposition({0:new Node('a'), 1:new Node('b')}, {}, {}, {}, []);
+    
+    const identity = DiagramComposition.identity();
+    const node_modified = new DiagramComposition(
+      {0:new Node('c'), 1:new Node('d')}, {}, 
+      {0:new Node('a'), 1:new Node('b')}, {}, 
+      []);
+    const apply = (a,b)=>{ let a_copy=a.copy(); a_copy.apply(b); return a_copy;};
+    const revert = (a,b)=>{ let a_copy=a.copy(); a_copy.revert(b); return a_copy;};
+    test_binary_inverse(apply, 'apply', revert, 'revert', {empty_category}, {identity});
+    test_binary_inverse(apply, 'apply', revert, 'revert', {set_category}, {node_modified});
+  </script>
+</body>
