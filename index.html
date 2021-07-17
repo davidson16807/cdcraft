@@ -29,10 +29,17 @@
         .arrow-highlight {
             fill: none;
             stroke: darkgrey;
+            stroke-opacity: 0.5;
+            stroke-width:20;
+        }
+        .arrow-highlight2 {
+            fill: none;
+            stroke: blue;
+            stroke-opacity: 0.5;
             stroke-width:20;
         }
         .arrow-tip-highlight {
-            fill: darkgrey;
+            fill: none;
             stroke: none;
         }
         .arrow-handle {
@@ -55,10 +62,11 @@
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
             <path class="arrow-highlight" v-bind:d="path(state.edited_arrow)" />
-            <circle class="arrow-tip-highlight" v-bind:cx="state.edited_arrow.start.x" v-bind:cy="state.edited_arrow.start.y" r="10"/>
-            <circle class="arrow-tip-highlight" v-bind:cx="state.edited_arrow.end.x" v-bind:cy="state.edited_arrow.end.y" r="10" />
-            <circle class="arrow-handle" v-bind:cx="state.edited_arrow.start.x" v-bind:cy="state.edited_arrow.start.y" r="10"/>
-            <circle class="arrow-handle" v-bind:cx="state.edited_arrow.end.x" v-bind:cy="state.edited_arrow.end.y" r="10" />
+            <path class="arrow-highlight2" v-bind:d="path2(state.edited_arrow)" />
+            <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="10"/>
+            <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="10" />
+            <!-- <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="10"/> -->
+            <!-- <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="10" /> -->
             <circle class="arrow-handle" v-bind:cx="midpath(state.edited_arrow).x" v-bind:cy="midpath(state.edited_arrow).y" r="10" />
             <path class="arrow" v-bind:d="path(state.edited_arrow)"/>
         </g>
@@ -71,16 +79,94 @@
 
 
     class Arrow {
-        constructor(start, end){
+        constructor(
+            start, end, min_length, is_clockwise, 
+            label, label_position_id, 
+            start_style_id, end_style_id, line_style_id
+        ){
             this.start = start;
             this.end = end;
-            this.label = undefined;
-            this.min_length = 1;
-            this.is_clockwise = false;
-            this.label_position_id = undefined;
-            this.start_style_id = undefined;
-            this.end_style_id = undefined;
-            this.line_style_id = undefined;
+            this.min_length = min_length || 0.7;
+            this.is_clockwise = is_clockwise || false;
+            this.label = label || "";
+            this.label_position_id = label_position_id;
+            this.start_style_id = start_style_id;
+            this.end_style_id = end_style_id;
+            this.line_style_id = line_style_id;
+        }
+    }
+
+    /*
+    "DiagramReferenceFrame" can be considered a degenerate case of an affine transform.
+    It permits scaling and translation but forbids rotation or shearing.
+    */
+    class DiagramReferenceFrame {
+        constructor(origin, scale){
+            this.origin = origin;
+            this.scale = scale;
+        }
+    }
+
+    function DiagramIds(){
+        const floor = Math.floor;
+        const round = Math.round;
+        const abs = Math.abs;
+        return {
+            'cell_position_to_border_id': cell_position => glm.vec2(floor(cell_position.x), floor(cell_position.y)),
+            'border_id_to_cell_position': border_id => border_id.add(0.5),
+            'cell_position_to_cell_id': cell_position => glm.vec2(round(cell_position.x), round(cell_position.y)),
+            'cell_position_and_cell_id_to_offset': (cell_position, cell_id) => cell_position.sub(cell_id),
+            'offset_to_basis': offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
+            'offset_to_basis_id': offset => ((offset.x > offset.y) << 1) + (-offset.x > offset.y),
+        };
+    }
+
+    function DiagramSnapping(diagram_ids, cell_to_target_distance) {
+        const ids = diagram_ids;
+        return {
+            'snap_to_cell': model => ids.cell_position_to_cell_id(model),
+            'snap_to_target_handle': function(model){
+                return model;
+                const cell_id = ids.cell_position_to_cell_id(model);
+                return ids.offset_to_basis(ids.cell_position_and_cell_id_to_offset(model, cell_id)).mul(cell_to_target_distance).add(cell_id);
+            },
+        };
+    }
+
+    function PositionFrameShifting(){
+        const pow = Math.pow;
+        return {
+            'view_to_model': (view_position, state) => view_position.div( pow(2.0, state.log2_cell_width) ).add(state.topleft_cell_position),
+            'model_to_view': (model_position, state) => model_position.sub(state.topleft_cell_position).mul( pow(2.0, state.log2_cell_width) ),
+        };
+    }
+
+    function ArrowFrameShifting(vector_frame_shifting){
+        const pow = Math.pow;
+        const shifting = vector_frame_shifting;
+        return {
+            'model_to_view': (model_arrow, state) => new Arrow(
+                    shifting.model_to_view(model_arrow.start, state),
+                    shifting.model_to_view(model_arrow.end, state),
+                    model_arrow.min_length * pow(2.0, state.log2_cell_width),
+                    model_arrow.is_clockwise,
+                    model_arrow.label,
+                    model_arrow.label_position_id,
+                    model_arrow.start_style_id,
+                    model_arrow.end_style_id,
+                    model_arrow.line_style_id
+                ),
+            'view_to_model': (view_arrow, state) => new Arrow(
+                    shifting.model_to_view(view_arrow.start, state),
+                    shifting.model_to_view(view_arrow.end, state),
+                    model_arrow.min_length / pow(2.0, state.log2_cell_width),
+                    model_arrow.is_clockwise,
+                    model_arrow.label,
+                    model_arrow.label_position_id,
+                    model_arrow.start_style_id,
+                    model_arrow.end_style_id,
+                    model_arrow.line_style_id
+                ),
         }
     }
 
@@ -91,89 +177,107 @@
         pan: 'pan',
     };
 
-    class DiagramState {
-        constructor(topleft, log2_cell_width, drag_state){
-            this.topleft = topleft;
+    /*
+    "ApplicationState" contains all state within the application. 
+    It guarantees that for any combination of real numbered attribute values there is a valid application state.
+    */
+    class ApplicationState {
+        constructor(topleft_cell_position, log2_cell_width, drag_state, edited_arrow){
+            this.topleft_cell_position = topleft_cell_position;
             this.log2_cell_width = log2_cell_width;
             this.drag_state = drag_state;
-            this.edited_arrow = new Arrow(glm.vec2(), glm.vec2());
+            this.edited_arrow = edited_arrow;
         }
     }
+
     /*
-    "DiagramState" is a namespace of conceptually pure functions that operate with no concept of what hardware is being used.
+    "ApplicationState" is a namespace of conceptually pure functions that operate with no concept of what hardware is being used.
     All functions represent the transformation of state in reponse to controller events. 
     */
-    function DiagramStateOperations(diagram_coordinates) {
-        const coordinates = diagram_coordinates;
+    function DiagramStateOperations(diagram_view_coordinates, diagram_snapping) {
+        const pow = Math.pow;
+        const spaces = diagram_view_coordinates;
+        const snapping = diagram_snapping;
         return {
             zoom: function(state_in, log2_cell_width_change, state_out) {
-                state_out.topleft = state_in.topleft;
+                state_out.topleft_cell_position = state_in.topleft_cell_position;
                 state_out.log2_cell_width = state_in.log2_cell_width + log2_cell_width_change;
                 state_out.drag_state = DragState.zoom;
                 state_out.edited_arrow = state_in.edited_arrow;
             },
             pan: function(state_in, motion, state_out){
-                state_out.topleft = state_in.topleft.sub(motion);
+                state_out.topleft_cell_position = state_in.topleft_cell_position.sub(motion.div(pow(2.0, state_in.log2_cell_width)));
                 state_out.log2_cell_width = state_in.log2_cell_width;
                 state_out.drag_state = DragState.pan;
                 state_out.edited_arrow = state_in.edited_arrow;
             },
-            draw: function(state_in, screen_position, state_out){
-                state_out.topleft = state_in.topleft;
+            draw: function(state_in, view_position, state_out){
+                state_out.topleft_cell_position = state_in.topleft_cell_position;
                 state_out.log2_cell_width = state_in.log2_cell_width;
-                const model_position = coordinates.screen_to_model(screen_position, state_in);
-                const cell_midpoint = 
-                    coordinates.cell_id_to_midpoint(
-                        coordinates.model_to_cell_id(model_position)
-                    );
-                const difference = glm.abs(model_position.sub(cell_midpoint));
-                const is_snappable = difference.x < 50 && difference.y < 50;
-                const snapped = model_position;
-                // const snapped = is_snappable? cell_midpoint : model_position;
+                const model_position = spaces.view_to_model(view_position, state_in);
+                const source = snapping.snap_to_cell(model_position);
+                const target = snapping.snap_to_target_handle(model_position);
                 state_out.edited_arrow = state_in.drag_state == DragState.draw
-                    ? new Arrow(state_in.edited_arrow.start, snapped)
-                    : new Arrow(cell_midpoint, snapped);
+                    ? new Arrow(state_in.edited_arrow.start, target, 
+                        state_in.edited_arrow.is_clockwise,
+                        state_in.edited_arrow.label,
+                        state_in.edited_arrow.label_position_id,
+                        state_in.edited_arrow.start_style_id,
+                        state_in.edited_arrow.end_style_id,
+                        state_in.edited_arrow.line_style_id)
+                    : new Arrow(source, target,
+                        state_in.edited_arrow.is_clockwise,
+                        state_in.edited_arrow.label,
+                        state_in.edited_arrow.label_position_id,
+                        state_in.edited_arrow.start_style_id,
+                        state_in.edited_arrow.end_style_id,
+                        state_in.edited_arrow.line_style_id);
                 state_out.drag_state = DragState.draw;
             },
             copy: function(state_in, state_out){
-                state_out.topleft = state_in.topleft;
+                state_out.topleft_cell_position = state_in.topleft_cell_position;
                 state_out.log2_cell_width = state_in.log2_cell_width;
                 state_out.drag_state = state_in.drag_state;
                 state_out.edited_arrow = state_in.edited_arrow;
             }
         };
     }
+
     /*
     "DiagramControls" is a namespace of conceptually pure functions that reflect how events map to actions.
     All functions represent the transformation of state in reponse to controller events. 
-    It resembles an "Updater" within the "Model-View-Updater" patter (A.K.A. "Elm" architecture)
+    It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
     */
-    function DiagramControls(diagram_controls, dom_element){
+    function DiagramControls(
+        diagram_state_operations, 
+        log2_cell_width_change_per_scroll
+    ){
+        const operations = diagram_state_operations;
         const mouse_actions = {
-            'pan':  (state_in, event, state_out) => diagram_controls.pan(state_in, glm.vec2(event.movementX, event.movementY), state_out),
-            'draw': (state_in, event, state_out) => diagram_controls.draw(state_in, glm.vec2(event.clientX, event.clientY), state_out),
+            'pan':  (state_in, event, state_out) => operations.pan(state_in, glm.vec2(event.movementX, event.movementY), state_out),
+            'draw': (state_in, event, state_out) => operations.draw(state_in, glm.vec2(event.clientX, event.clientY), state_out),
         };
         return {
             mousedown: function(state_in, event, state_out){
                 const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
                 if (state in mouse_actions){
-                    mouse_actions[state](state_in,  event, state_out); 
+                    mouse_actions[state](state_in, event, state_out); 
                 }
             },
             mousemove: function(state_in, event, state_out){
                 const state = state_in.drag_state;
                 if (state in mouse_actions){
-                    mouse_actions[state](state_in,  event, state_out); 
+                    mouse_actions[state](state_in, event, state_out); 
                 }
             },
             mouseup: function(state_in, event, state_out){
                 state_out.drag_state = 'released';
             },
             mousewheel: function(state_in, event, state_out){
-                diagram_controls.zoom(state_in, event.wheelDelta, state_out);
+                operations.zoom(state_in, log2_cell_width_change_per_scroll * event.wheelDelta, state_out);
             },
             DOMMouseScroll: function(state_in, event, state_out){
-                diagram_controls.zoom(state_in, -event.detail, state_out);
+                operations.zoom(state_in, -log2_cell_width_change_per_scroll * event.detail, state_out);
             },
             touchstart: function(state_in, event, state_out){
 
@@ -236,18 +340,6 @@
         }
     }
 
-    function DiagramCoordinates(cell_width){
-        const floor = Math.floor;
-        const round = Math.round;
-        return {
-            'screen_to_model': (screen_position, state) => screen_position.add(state.topleft),
-            'model_to_screen': (model_position, state) => model_position.sub(state.topleft),
-            'model_to_border_id': model_position => glm.vec2(floor(model_position.x/cell_width), floor(model_position.y/cell_width)),
-            'border_id_to_model': id => id.add(0.5).mul(cell_width),
-            'model_to_cell_id': position => glm.vec2(round(position.x/cell_width), round(position.y/cell_width)),
-            'cell_id_to_midpoint': id => id.mul(cell_width),
-        }
-    }
 
     function LineGeometry(){
         const abs = Math.abs;
@@ -264,9 +356,8 @@
         };
     }
 
-
-
     function ArcGeometry(){
+        const pi = Math.PI;
         const pow = Math.pow;
         const acos = Math.acos;
         const cos = Math.cos;
@@ -276,9 +367,13 @@
         const sqrt = Math.sqrt;
         const epsilon = 1e-6;
         return {
-            origin: function(start, end, radius, is_clockwise){
-                const chord_direction = glm.normalize(end.sub(start));
-                const chord_tangent = is_clockwise? glm.vec2(chord_direction.y, -chord_direction.x) : glm.vec2(-chord_direction.y, chord_direction.x);
+            origin: function(start, end, radius, is_clockwise, min_radius){
+                const chord = end.sub(start);
+                const chord_length = glm.length(chord);
+                const chord_direction = glm.normalize(chord);
+                const chord_tangent = glm.vec2(chord_direction.y, -chord_direction.x)
+                    .mul(chord_length < 2*min_radius? -1:1)
+                    .mul(is_clockwise? 1:1);
                 const r = radius;
                 const x = glm.length(end.sub(start)) / 2.0;
                 const y = sqrt(r*r - x*x);
@@ -286,15 +381,15 @@
                 const origin = chord_tangent.mul(y).add(chord_midpoint);
                 return origin;
             },
-            position_at_distance_along_arc: function (start, origin, is_clockwise, distance){
-                const r = glm.length(origin.sub(start));
-                const i = glm.normalize(start.sub(origin));
-                const j = is_clockwise? glm.vec2(i.y, -i.x) : glm.vec2(-i.y, i.x);
-                const theta = distance / r;
-                const x = origin.add(i.mul(r*cos(theta))).add(j.mul(r*sin(theta)));
-                return x;
+            position_at_distance_along_arc: function (start, origin, radius, is_clockwise, distance){
+                const v = start.sub(origin);
+                const theta = -distance / radius;
+                return glm.vec2(
+                    v.x * cos(theta) - v.y * sin(theta),
+                    v.x * sin(theta) + v.y * cos(theta),
+                ).add(origin);
             },
-            radius_for_chord_and_arc_length: function(start, end, min_arc_length){
+            radius_for_chord_and_arc_length: function(start, end, arc_length){
                 /*
                 NOTE: 
                 Given the start position, end position, and length of an arc, we want to find the radius of the circle that is traced by the arc.
@@ -321,7 +416,7 @@
                 const a = 0.147;
                 const b = 0.650;
                 const x = glm.length(end.sub(start)) / 2.0;
-                const A = max(x, min_arc_length/2 );
+                const A = max(x, arc_length/2 );
                 const xA = min(x/A, 1-epsilon);
                 const r = A / (2.0 * (1.0 - a*pow(xA, b)) * acos(xA));
                 return r;
@@ -329,7 +424,7 @@
         }
     }
 
-    function DiagramSvg(arc_geometry, line_geometry){
+    function ArcSvg(arc_geometry, line_geometry){
         const pi = Math.PI;
         const sqrt = Math.sqrt;
         const max = Math.max;
@@ -369,11 +464,12 @@
             },
             diagram_arc_to_svg_bezier: function(arc, sample_point_count){
                 const length = max(arc.length, glm.length(arc.end.sub(arc.start)));
+                const min_radius = arc.length/pi;
                 const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, length);
-                const origin = arc_geometry.origin(arc.start, arc.end, radius, arc.is_clockwise);
+                const origin = arc_geometry.origin(arc.start, arc.end, radius, arc.is_clockwise, min_radius);
                 const sample_points = [];
                 for (let i = 0; i <= sample_point_count; i++) {
-                    sample_points.push(arc_geometry.position_at_distance_along_arc(arc.start, origin, arc.is_clockwise, length * i/sample_point_count));
+                    sample_points.push(arc_geometry.position_at_distance_along_arc(arc.start, origin, radius, arc.is_clockwise, length * i/sample_point_count));
                 }
                 const points = [sample_points[0]];
                 for (let i = 1; i <= sample_point_count; i++) {
@@ -401,19 +497,45 @@
                 return output;
             },
             svg_arc_to_path: function(arc){
-                return `M ${arc.start.x} ${arc.start.y} A ${arc.radius} ${arc.radius} 0 ${arc.is_large_arc?1:0} ${arc.is_clockwise?1:0} ${arc.end.x} ${arc.end.y}` ;
+                return `M ${arc.start.x} ${arc.start.y} A ${arc.radius} ${arc.radius} 0 ${arc.is_large_arc?1:0} ${arc.is_clockwise?0:1} ${arc.end.x} ${arc.end.y}` ;
             },
         }
+    }
+
+    function ArrowSvg(diagram_svg){
+        const svg = diagram_svg;
+        return {
+            'view_to_path': function(view_arrow) {
+                const arc = new svg.DiagramArc(
+                    view_arrow.start,
+                    view_arrow.end,
+                    view_arrow.min_length, 
+                    true
+                );
+                const svg_arc = svg.diagram_arc_to_svg_arc(arc);
+                const svg_bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
+                // const path = svg.svg_arc_to_path(svg_arc);
+                const path = svg.svg_bezier_to_path(svg_bezier);
+                return path;
+            },
+        };
     }
 
     const vue = new Vue({
         el: '#app',
         data:{
-            state: new DiagramState(glm.vec2(), Math.log2(200), DragState.released),
+            state: new ApplicationState(glm.vec2(), Math.log2(200), DragState.released, new Arrow(glm.vec2(), glm.vec2())),
             queue: undefined,
-            controls: DiagramControls(DiagramStateOperations(DiagramCoordinates(200)), document.documentElement),
-            coordinates: DiagramCoordinates(200),
-            svg: DiagramSvg(ArcGeometry(), LineGeometry()),
+            controls: DiagramControls(
+                DiagramStateOperations(
+                    PositionFrameShifting(), 
+                    DiagramSnapping(DiagramIds(), 0.1)
+                ),
+                0.1
+            ),
+            vector_shifting: PositionFrameShifting(),
+            arrow_shifting: ArrowFrameShifting(PositionFrameShifting()),
+            ids: DiagramIds(),
         },
         created: function() {
             // Register event manager in setTimeout to prevent vue from inapproprately touching event listeners
@@ -431,32 +553,60 @@
         },
         methods: {
             transformation: function() {
-                return `translate(${-this.state.topleft.x} ${-this.state.topleft.y})`;
+                const top_left_view_position = this.vector_shifting.model_to_view(this.state.topleft_cell_position, this.state);
+                return `translate(${-top_left_view_position.x} ${-top_left_view_position.y})`;
             },
             cell_count: function() {
-                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / (1 << this.state.log2_cell_width));
+                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.log2_cell_width));
             },
             cell_border_position: function(x, y) {
-                return this.coordinates.border_id_to_model( 
-                    this.coordinates.model_to_border_id(this.state.topleft).add(glm.ivec2(x-1,y-1))
+                return this.vector_shifting.model_to_view(
+                    this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(this.state.topleft_cell_position).add(glm.ivec2(x-1,y-1)) ), 
+                    this.state
                 );
             },
             path: function(arrow) {
-                const svg = DiagramSvg(ArcGeometry(), LineGeometry());
-                const arc = new svg.DiagramArc(arrow.start, arrow.end, 160, true);
-                const arc2 = svg.diagram_arc_to_svg_arc(arc);
-                const bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
-                const path = svg.svg_arc_to_path(arc2);
-                // const path = svg.svg_bezier_to_path(bezier);
+                const svg = ArcSvg(ArcGeometry(), LineGeometry());
+                const view_arrow = this.arrow_shifting.model_to_view(arrow, this.state);
+                const arc = new svg.DiagramArc(
+                    view_arrow.start,
+                    view_arrow.end,
+                    view_arrow.min_length, 
+                    true
+                );
+                const svg_arc = svg.diagram_arc_to_svg_arc(arc);
+                const svg_bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
+                const path = svg.svg_arc_to_path(svg_arc);
+                // const path = svg.svg_bezier_to_path(svg_bezier);
                 return path;
             },
+            path2: function(arrow) {
+                const svg = ArcSvg(ArcGeometry(), LineGeometry());
+                const view_arrow = this.arrow_shifting.model_to_view(arrow, this.state);
+                const arc = new svg.DiagramArc(
+                    view_arrow.start,
+                    view_arrow.end,
+                    view_arrow.min_length, 
+                    true
+                );
+                const svg_arc = svg.diagram_arc_to_svg_arc(arc);
+                const svg_bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
+                // const path = svg.svg_arc_to_path(svg_arc);
+                const path = svg.svg_bezier_to_path(svg_bezier);
+                return path;
+            },
+            point: function(coordinate) {
+                return this.vector_shifting.model_to_view(coordinate, this.state);
+            },
             midpath: function(arrow) {
+                const view_arrow = this.arrow_shifting.model_to_view(arrow, this.state);
                 const arcs = ArcGeometry();
-                const length = Math.max(arrow.length, glm.length(arrow.end.sub(arrow.start)));
-                const radius = arcs.radius_for_chord_and_arc_length(arrow.start, arrow.end, length);
-                const origin = arcs.origin(arrow.start, arrow.end, radius, arrow.is_clockwise);
-                const midpath = arcs.position_at_distance_along_arc(arrow.start, origin, arrow.is_clockwise, 0.5*arrow.length);
-                return midpath;
+                const length = Math.max(view_arrow.min_length, glm.length(view_arrow.end.sub(view_arrow.start)));
+                const min_radius = view_arrow.min_length/Math.PI;
+                const radius = arcs.radius_for_chord_and_arc_length(view_arrow.start, view_arrow.end, length);
+                const origin = arcs.origin(view_arrow.start, view_arrow.end, radius, view_arrow.is_clockwise, min_radius);
+                const midpath = arcs.position_at_distance_along_arc(view_arrow.start, origin, radius, view_arrow.is_clockwise, 1*length);
+                return origin
             },
         }
     });
