@@ -115,9 +115,15 @@
     function DiagramSnapping(diagram_ids, cell_to_target_distance) {
         const ids = diagram_ids;
         return {
+            /* 
+            A "cell" here is shorthand for the center position of a cell.
+            */
             'snap_to_cell': model => ids.cell_position_to_cell_id(model),
-            'snap_to_target_handle': function(model){
-                // return model;
+            /* 
+            A "handle" is any position within a cell that can be used as a target. 
+            This includes positions that are off of center to allow the user to specify how loops are oriented.
+            */
+            'snap_to_handle': function(model){
                 const cell_id = ids.cell_position_to_cell_id(model);
                 return ids.offset_to_basis(ids.cell_position_and_cell_id_to_offset(model, cell_id)).mul(cell_to_target_distance).add(cell_id);
             },
@@ -203,21 +209,29 @@
                 state_out.edited_arrow = state_in.edited_arrow;
             },
             draw: function(state_in, view_position, state_out){
+
+                const model_position = spaces.view_to_model(view_position, state_in);
+
+                const source_cell = state_out.drag_state == DragState.draw? 
+                    state_in.edited_arrow.start : snapping.snap_to_cell(model_position);
+                const target_cell = snapping.snap_to_cell(model_position);
+                const target_handle = snapping.snap_to_handle(model_position);
+
+                const is_loop = glm.distance(source_cell, target_cell) < 1;
+                const is_snapped = glm.distance(model_position, target_cell) < 0.25;
+                const is_canceled = glm.distance(model_position, source_cell) < 0.07;
+
+                const source = source_cell;
+                const target = 
+                      is_canceled?  source_cell
+                    : is_snapped?  (is_loop? target_handle : target_cell)
+                    :               model_position;
+
                 state_out.topleft_cell_position = state_in.topleft_cell_position;
                 state_out.log2_cell_width = state_in.log2_cell_width;
-                const model_position = spaces.view_to_model(view_position, state_in);
-                const source = snapping.snap_to_cell(model_position);
-                const target = snapping.snap_to_target_handle(model_position);
-                state_out.edited_arrow = state_in.drag_state == DragState.draw
-                    ? new Arrow(state_in.edited_arrow.start, target, 
-                        state_in.edited_arrow.min_length,
-                        state_in.edited_arrow.is_clockwise,
-                        state_in.edited_arrow.label,
-                        state_in.edited_arrow.label_position_id,
-                        state_in.edited_arrow.start_style_id,
-                        state_in.edited_arrow.end_style_id,
-                        state_in.edited_arrow.line_style_id)
-                    : new Arrow(source, target,
+                state_out.drag_state = DragState.draw;
+                state_out.edited_arrow = 
+                    new Arrow(source, target,
                         state_in.edited_arrow.min_length,
                         state_in.edited_arrow.is_clockwise,
                         state_in.edited_arrow.label,
@@ -225,7 +239,6 @@
                         state_in.edited_arrow.start_style_id,
                         state_in.edited_arrow.end_style_id,
                         state_in.edited_arrow.line_style_id);
-                state_out.drag_state = DragState.draw;
             },
             copy: function(state_in, state_out){
                 state_out.topleft_cell_position = state_in.topleft_cell_position;
@@ -488,7 +501,7 @@
             controls: DiagramControls(
                 DiagramStateOperations(
                     PositionFrameShifting(), 
-                    DiagramSnapping(DiagramIds(), 0.1)
+                    DiagramSnapping(DiagramIds(), 0.03)
                 ),
                 0.1
             ),
@@ -544,7 +557,7 @@
                 const radius = arcs.radius_for_chord_and_arc_length(view_arrow.start, view_arrow.end, length);
                 const origin = arcs.origin(view_arrow.start, view_arrow.end, radius, view_arrow.is_clockwise, min_radius);
                 const midpath = arcs.position_at_distance_along_arc(view_arrow.start, origin, radius, view_arrow.is_clockwise, 1*length);
-                return midpath
+                return midpath;
             },
         }
     });
