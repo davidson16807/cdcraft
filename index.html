@@ -87,7 +87,7 @@
             this.start = start;
             this.end = end;
             this.min_length = min_length || 0.7;
-            this.is_clockwise = is_clockwise || true;
+            this.is_clockwise = is_clockwise || false;
             this.label = label || "";
             this.label_position_id = label_position_id;
             this.start_style_id = start_style_id;
@@ -427,16 +427,6 @@
         const pi = Math.PI;
         const sqrt = Math.sqrt;
         const max = Math.max;
-        // A "DiagramArc" is an arc defined in terms that are useful to depict arrows in a diagram.
-        // It starts from the premise that an arrow must have a minimum nonzero length for it to be visible to the user.
-        class DiagramArc{
-            constructor(start, end, length, is_clockwise){
-                this.start = start;
-                this.end = end;
-                this.length = length;
-                this.is_clockwise = is_clockwise;
-            }
-        };
         // An "SvgArc" is an arc as defined by svg paths
         class SvgArc{
             constructor(start, end, radius, is_large_arc, is_clockwise){
@@ -455,15 +445,14 @@
         };
 
         return {
-            'DiagramArc' : DiagramArc,
             diagram_arc_to_svg_arc: function(arc){
-                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.length);
+                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.min_length);
                 return new SvgArc(arc.start, arc.end, 
-                    radius, arc.length/radius > pi, !arc.is_clockwise);
+                    radius, arc.min_length/radius > pi, !arc.is_clockwise);
             },
             diagram_arc_to_svg_bezier: function(arc, sample_point_count){
-                const length = max(arc.length, glm.length(arc.end.sub(arc.start)));
-                const min_radius = arc.length/pi;
+                const length = max(arc.min_length, glm.length(arc.end.sub(arc.start)));
+                const min_radius = arc.min_length/pi;
                 const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, length);
                 const origin = arc_geometry.origin(arc.start, arc.end, radius, arc.is_clockwise, min_radius);
                 const sample_points = [];
@@ -498,25 +487,6 @@
                 return `M ${arc.start.x} ${arc.start.y} A ${arc.radius} ${arc.radius} 0 ${arc.is_large_arc?1:0} ${arc.is_clockwise?0:1} ${arc.end.x} ${arc.end.y}` ;
             },
         }
-    }
-
-    function ArrowSvg(diagram_svg){
-        const svg = diagram_svg;
-        return {
-            'view_to_path': function(view_arrow) {
-                const arc = new svg.DiagramArc(
-                    view_arrow.start,
-                    view_arrow.end,
-                    view_arrow.min_length, 
-                    view_arrow.is_clockwise
-                );
-                const svg_arc = svg.diagram_arc_to_svg_arc(arc);
-                const svg_bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
-                // const path = svg.svg_arc_to_path(svg_arc);
-                const path = svg.svg_bezier_to_path(svg_bezier);
-                return path;
-            },
-        };
     }
 
     const vue = new Vue({
@@ -566,14 +536,8 @@
             path: function(arrow) {
                 const svg = ArcSvg(ArcGeometry(), LineGeometry());
                 const view_arrow = this.arrow_shifting.model_to_view(arrow, this.state);
-                const arc = new svg.DiagramArc(
-                    view_arrow.start,
-                    view_arrow.end,
-                    view_arrow.min_length, 
-                    view_arrow.is_clockwise
-                );
-                const svg_arc = svg.diagram_arc_to_svg_arc(arc);
-                const svg_bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
+                const svg_arc = svg.diagram_arc_to_svg_arc(view_arrow);
+                const svg_bezier = svg.diagram_arc_to_svg_bezier(view_arrow, 10);
                 const path = svg.svg_arc_to_path(svg_arc);
                 // const path = svg.svg_bezier_to_path(svg_bezier);
                 return path;
@@ -581,14 +545,8 @@
             path2: function(arrow) {
                 const svg = ArcSvg(ArcGeometry(), LineGeometry());
                 const view_arrow = this.arrow_shifting.model_to_view(arrow, this.state);
-                const arc = new svg.DiagramArc(
-                    view_arrow.start,
-                    view_arrow.end,
-                    view_arrow.min_length, 
-                    view_arrow.is_clockwise
-                );
-                const svg_arc = svg.diagram_arc_to_svg_arc(arc);
-                const svg_bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
+                const svg_arc = svg.diagram_arc_to_svg_arc(view_arrow);
+                const svg_bezier = svg.diagram_arc_to_svg_bezier(view_arrow, 10);
                 // const path = svg.svg_arc_to_path(svg_arc);
                 const path = svg.svg_bezier_to_path(svg_bezier);
                 return path;
