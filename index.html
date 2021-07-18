@@ -82,8 +82,7 @@
 
     /*
     "DiagramArc" is a data structure that represents a directed arc in a way that can be easily manipulated in the application
-    "min_length_clockwise" is the minimum length of an arc, where positive values indicate the arc is going clockwise
-    and negative values indicate a counterclockwise arc.
+    "min_length_clockwise" is the minimum length of an arc, where sign inidicates arc chirality (positive values are clockwise).
     */
     class DiagramArc {
         constructor(start, end, min_length_clockwise){
@@ -115,7 +114,7 @@
 
     /*
     "DiagramReferenceFrame" is a data structure that can be considered a degenerate case of an affine transform.
-    It permits scaling and translation but forbids rotation or shearing.
+    It permits scaling and translation but forbids rotation and shearing.
     Its origin and unit length are each stored in terms of another reference frame that the user must define.
     */
     class DiagramReferenceFrame {
@@ -146,8 +145,8 @@
         const pow = Math.pow;
         const log2 = Math.log2;
         return {
-            'unpack': (view) => new DiagramReferenceFrame(view.topleft_cell_position, 1/pow(2, view.log2_cell_width)),
             'pack': (frame) => new ViewReferenceFrameStore(frame.topleft_cell_position, log2(1/frame.unit_length)),
+            'unpack': (view) => new DiagramReferenceFrame(view.topleft_cell_position, 1/pow(2, view.log2_cell_width)),
         };
     }
 
@@ -254,7 +253,6 @@
         };
     }
 
-
     const DragState = {
         released: 'released',
         draw: 'draw',
@@ -351,6 +349,7 @@
                 if (state_in.drag_state == DragState.draw) {
                     operations.copy(state_in, state_out);
                     state_out.edited_arrow.min_length_clockwise += min_length_change_per_scroll * event.deltaY;
+                    console.log(state_out.edited_arrow.min_length_clockwise);
                 } else {
                     operations.zoom(state_in, log2_cell_width_change_per_scroll * event.deltaY, state_out);
                 }
@@ -462,12 +461,14 @@
         const max = Math.max;
         const sqrt = Math.sqrt;
         const sign = Math.sign;
+        const abs = Math.abs;
         const epsilon = 1e-6;
         return {
-            origin: function(start, end, radius, min_length_clockwise, min_radius){
+            origin: function(start, end, min_length_clockwise, radius){
                 const chord = end.sub(start);
                 const chord_length = glm.length(chord);
                 const chord_direction = glm.normalize(chord);
+                const min_radius = abs(min_length_clockwise) / pi;
                 const v = chord_direction.mul(radius);
                 const theta = acos(chord_length/(2*radius)) * (chord_length < 2*min_radius? 1:-1) * -sign(min_length_clockwise);
                 return glm.vec2(
@@ -475,7 +476,7 @@
                     v.x * sin(theta) + v.y * cos(theta),
                 ).add(start);
             },
-            position_at_distance_along_arc: function (start, origin, radius, min_length_clockwise, distance){
+            position_at_distance_along_arc: function (start, origin, min_length_clockwise, radius, distance){
                 const v = start.sub(origin);
                 const theta = -distance / radius * -sign(min_length_clockwise);
                 return glm.vec2(
@@ -483,7 +484,7 @@
                     v.x * sin(theta) + v.y * cos(theta),
                 ).add(origin);
             },
-            radius_for_chord_and_arc_length: function(start, end, arc_length){
+            radius_for_chord_and_arc_length: function(start, end, min_length_clockwise){
                 /*
                 NOTE: 
                 Given the start position, end position, and length of an arc, we want to find the radius of the circle that is traced by the arc.
@@ -507,6 +508,7 @@
                 And our solution is:
                   r ≈ A / (2 (1-a(x/A)ᵇ) acos(x/A))
                 */
+                const arc_length = abs(min_length_clockwise);
                 const a = 0.147;
                 const b = 0.650;
                 const x = glm.length(end.sub(start)) / 2.0;
@@ -545,19 +547,20 @@
 
         return {
             diagram_arc_to_svg_arc: function(arc){
+                const min_length = abs(arc.min_length_clockwise);
+                const length = max(min_length, glm.length(arc.end.sub(arc.start)));
                 const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.min_length_clockwise);
                 return new SvgArc(arc.start, arc.end, 
-                    radius, arc.min_length_clockwise/radius > pi, !arc.is_clockwise);
+                    radius, abs(arc.min_length_clockwise)/radius > pi, !arc.is_clockwise);
             },
             diagram_arc_to_svg_bezier: function(arc, sample_point_count){
                 const min_length = abs(arc.min_length_clockwise);
                 const length = max(min_length, glm.length(arc.end.sub(arc.start)));
-                const min_radius = min_length/pi;
-                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, length);
-                const origin = arc_geometry.origin(arc.start, arc.end, radius, arc.min_length_clockwise, min_radius);
+                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.min_length_clockwise);
+                const origin = arc_geometry.origin(arc.start, arc.end, arc.min_length_clockwise, radius);
                 const sample_points = [];
                 for (let i = 0; i <= sample_point_count; i++) {
-                    sample_points.push(arc_geometry.position_at_distance_along_arc(arc.start, origin, radius, arc.min_length_clockwise > 0, length * i/sample_point_count));
+                    sample_points.push(arc_geometry.position_at_distance_along_arc(arc.start, origin, arc.min_length_clockwise, radius, length * i/sample_point_count));
                 }
                 const points = [sample_points[0]];
                 for (let i = 1; i <= sample_point_count; i++) {
@@ -665,11 +668,11 @@
                 const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
                 const view_arc = this.arrow_shifting.enter(arrow, view_frame);
                 const arcs = ArcGeometry();
-                const length = Math.max(view_arc.min_length_clockwise, glm.length(view_arc.end.sub(view_arc.start)));
-                const min_radius = view_arc.min_length_clockwise/Math.PI;
-                const radius = arcs.radius_for_chord_and_arc_length(view_arc.start, view_arc.end, length);
-                const origin = arcs.origin(view_arc.start, view_arc.end, radius, view_arc.min_length_clockwise, min_radius);
-                const midpath = arcs.position_at_distance_along_arc(view_arc.start, origin, radius, view_arc.min_length_clockwise, 1*length);
+                const min_length = abs(arc.min_length_clockwise);
+                const length = Math.max(min_length, glm.length(view_arc.end.sub(view_arc.start)));
+                const radius = arcs.radius_for_chord_and_arc_length(view_arc.start, view_arc.end, arc.min_length_clockwise);
+                const origin = arcs.origin(view_arc.start, view_arc.end, view_arc.min_length_clockwise, radius);
+                const midpath = arcs.position_at_distance_along_arc(view_arc.start, origin, view_arc.min_length_clockwise, radius, 1*length);
                 return midpath;
             },
         }
