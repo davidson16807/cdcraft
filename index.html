@@ -284,15 +284,16 @@
         const snapping = arrow_snapping;
         return {
             zoom: function(state_in, focus, log2_cell_width_change, state_out) {
-                let topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(focus);
+                console.log(state_out);
+                // let topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(focus);
                 state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position;
-                state_out.log2_cell_width = state_in.log2_cell_width + log2_cell_width_change;
+                state_out.view_frame_store.log2_cell_width = state_in.view_frame_store.log2_cell_width + log2_cell_width_change;
                 state_out.drag_state = DragState.zoom;
                 state_out.edited_arrow = state_in.edited_arrow;
             },
             pan: function(state_in, motion, state_out){
-                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(motion.div(pow(2.0, state_in.log2_cell_width)));
-                state_out.log2_cell_width = state_in.log2_cell_width;
+                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(motion.div(pow(2.0, state_in.view_frame_store.log2_cell_width)));
+                state_out.view_frame_store.log2_cell_width = state_in.view_frame_store.log2_cell_width;
                 state_out.drag_state = DragState.pan;
                 state_out.edited_arrow = state_in.edited_arrow;
             },
@@ -314,14 +315,12 @@
                     state_in.edited_arrow.line_style_id,
                 );
 
-                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position;
-                state_out.log2_cell_width = state_in.log2_cell_width;
+                state_out.view_frame_store = state_in.view_frame_store;
                 state_out.drag_state = DragState.draw;
                 state_out.edited_arrow = diagram_arrow;
             },
             copy: function(state_in, state_out){
-                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position;
-                state_out.log2_cell_width = state_in.log2_cell_width;
+                state_out.view_frame_store = state_in.view_frame_store;
                 state_out.drag_state = state_in.drag_state;
                 state_out.edited_arrow = state_in.edited_arrow;
             }
@@ -360,9 +359,8 @@
                     const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
                     operations.copy(state_in, state_out);
                     state_out.edited_arrow.min_length_clockwise = min_length_clockwise_out;
-                    console.log(excess_in);
                 } else {
-                    operations.zoom(state_in, log2_cell_width_change_per_scroll * event.deltaY, state_out);
+                    operations.zoom(state_in, glm.vec2(), log2_cell_width_change_per_scroll * event.deltaY, state_out);
                 }
             },
             mousedown: function(state_in, event, state_out){
