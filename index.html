@@ -174,7 +174,7 @@
     }
 
     /*
-    "PositionFrameShifting" is a namespace of pure functions that describe an isomorphism 
+    "PositionFrameShifting" is a namespace of pure functions that describe the isomorphism 
     between points in the "view space" used to specify svg and the "model space" where each cell is of unit length
     */
     function PositionFrameShifting(){
@@ -186,7 +186,7 @@
     }
 
     /*
-    "ArrowFrameShifting" is a namespace of pure functions that describe an isomorphism 
+    "ArrowFrameShifting" is a namespace of pure functions that describe the isomorphism 
     between arrows in the "view space" used to specify svg and the "model space" where each cell is of unit length
     */
     function ArrowFrameShifting(vector_frame_shifting){
@@ -319,18 +319,11 @@
             mouseup: function(state_in, event, state_out){
                 state_out.drag_state = DragState.released;
             },
-            mousewheel: function(state_in, event, state_out){
+            wheel: function(state_in, event, state_out){
                 if (state_in.drag_state == DragState.draw) {
 
                 } else {
-                    operations.zoom(state_in, log2_cell_width_change_per_scroll * event.wheelDelta, state_out);
-                }
-            },
-            DOMMouseScroll: function(state_in, event, state_out){
-                if (state_in.drag_state == DragState.draw) {
-
-                } else {
-                    operations.zoom(state_in, -log2_cell_width_change_per_scroll * event.detail, state_out);
+                    operations.zoom(state_in, log2_cell_width_change_per_scroll * event.deltaY, state_out);
                 }
             },
             touchstart: function(state_in, event, state_out){
@@ -370,8 +363,7 @@
             domElement.addEventListener('mousedown',      enqueuePrevent,     false);
             domElement.addEventListener('mousemove',      enqueuePrevent,     false);
             domElement.addEventListener('mouseup',        enqueue,            false);
-            domElement.addEventListener('mousewheel',     enqueue,            false);
-            domElement.addEventListener('DOMMouseScroll', enqueue,            false);
+            domElement.addEventListener('wheel',          enqueue,            false);
             domElement.addEventListener('touchstart',     enqueue,            false);
             domElement.addEventListener('touchmove',      enqueuePreventStop, false);
             domElement.addEventListener('touchend',       enqueue,            false);
@@ -380,8 +372,7 @@
                 domElement.removeEventListener('mousedown',      enqueuePrevent,     false);
                 domElement.removeEventListener('mousemove',      enqueuePrevent,     false);
                 domElement.removeEventListener('mouseup',        enqueue,            false);
-                domElement.removeEventListener('mousewheel',     enqueue,            false);
-                domElement.removeEventListener('DOMMouseScroll', enqueue,            false);
+                domElement.removeEventListener('wheel',          enqueue,            false);
                 domElement.removeEventListener('touchstart',     enqueue,            false);
                 domElement.removeEventListener('touchmove',      enqueuePreventStop, false);
                 domElement.removeEventListener('touchend',       enqueue,            false);
@@ -563,7 +554,7 @@
                         0.07, 0.5, 0.25, 0.3 // min loop, max loop, loop snap, nonloop snap
                     ) 
                 ),
-                0.03
+                -0.001 // log2_cell_width_change_per_scroll
             ),
             vector_shifting: PositionFrameShifting(),
             arrow_shifting: ArrowFrameShifting(PositionFrameShifting()),
