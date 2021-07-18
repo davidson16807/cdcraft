@@ -29,22 +29,14 @@
         .arrow-highlight {
             fill: none;
             stroke: darkgrey;
-            stroke-opacity: 0.5;
-            stroke-width:20;
-        }
-        .arrow-highlight2 {
-            fill: none;
-            stroke: blue;
-            stroke-opacity: 0.5;
-            stroke-width:20;
+            stroke-width:24;
         }
         .arrow-tip-highlight {
-            fill: none;
+            fill: darkgrey;
             stroke: none;
         }
         .arrow-handle {
-            fill: red;
-            /*fill: lightgrey;*/
+            fill: lightgrey;
             stroke: none;
         }
     </style>
@@ -62,12 +54,11 @@
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
             <path class="arrow-highlight" v-bind:d="path(state.edited_arrow)" />
-            <path class="arrow-highlight2" v-bind:d="path2(state.edited_arrow)" />
-            <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="10"/>
-            <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="10" />
-            <!-- <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="10"/> -->
-            <!-- <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="10" /> -->
-            <circle class="arrow-handle" v-bind:cx="midpath(state.edited_arrow).x" v-bind:cy="midpath(state.edited_arrow).y" r="10" />
+            <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="12"/>
+            <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="12" />
+            <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="10"/>
+            <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="10" />
+            <!-- <circle class="arrow-handle" v-bind:cx="midpath(state.edited_arrow).x" v-bind:cy="midpath(state.edited_arrow).y" r="10" /> -->
             <path class="arrow" v-bind:d="path(state.edited_arrow)"/>
         </g>
     </svg>
@@ -126,7 +117,7 @@
         return {
             'snap_to_cell': model => ids.cell_position_to_cell_id(model),
             'snap_to_target_handle': function(model){
-                return model;
+                // return model;
                 const cell_id = ids.cell_position_to_cell_id(model);
                 return ids.offset_to_basis(ids.cell_position_and_cell_id_to_offset(model, cell_id)).mul(cell_to_target_distance).add(cell_id);
             },
@@ -538,15 +529,6 @@
                 const view_arrow = this.arrow_shifting.model_to_view(arrow, this.state);
                 const svg_arc = svg.diagram_arc_to_svg_arc(view_arrow);
                 const svg_bezier = svg.diagram_arc_to_svg_bezier(view_arrow, 10);
-                const path = svg.svg_arc_to_path(svg_arc);
-                // const path = svg.svg_bezier_to_path(svg_bezier);
-                return path;
-            },
-            path2: function(arrow) {
-                const svg = ArcSvg(ArcGeometry(), LineGeometry());
-                const view_arrow = this.arrow_shifting.model_to_view(arrow, this.state);
-                const svg_arc = svg.diagram_arc_to_svg_arc(view_arrow);
-                const svg_bezier = svg.diagram_arc_to_svg_bezier(view_arrow, 10);
                 // const path = svg.svg_arc_to_path(svg_arc);
                 const path = svg.svg_bezier_to_path(svg_bezier);
                 return path;
@@ -562,7 +544,7 @@
                 const radius = arcs.radius_for_chord_and_arc_length(view_arrow.start, view_arrow.end, length);
                 const origin = arcs.origin(view_arrow.start, view_arrow.end, radius, view_arrow.is_clockwise, min_radius);
                 const midpath = arcs.position_at_distance_along_arc(view_arrow.start, origin, radius, view_arrow.is_clockwise, 1*length);
-                return origin
+                return midpath
             },
         }
     });
