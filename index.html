@@ -78,10 +78,6 @@
             this.start = start;
             this.end = end;
         }
-        copy(other){
-            this.start = other.start;
-            this.end = other.end;
-        }
     }
 
     /*
@@ -94,11 +90,6 @@
             this.start = start;
             this.end = end;
             this.min_length_clockwise = min_length_clockwise;
-        }
-        copy(other){
-            this.start = other.start;
-            this.end = other.end;
-            this.min_length_clockwise = other.min_length_clockwise;
         }
     }
 
@@ -120,35 +111,81 @@
             this.end_style_id = end_style_id;
             this.line_style_id = line_style_id;
         }
-        copy(other){
-            this.start = other.start;
-            this.end = other.end;
-            this.min_length_clockwise = other.min_length_clockwise;
-            this.label = other.label;
-            this.label_position_id = other.label_position_id;
-            this.start_style_id = other.start_style_id;
-            this.end_style_id = other.end_style_id;
-            this.line_style_id = other.line_style_id;
-        }
     }
 
     /*
     "DiagramReferenceFrame" is a data structure that can be considered a degenerate case of an affine transform.
     It permits scaling and translation but forbids rotation or shearing.
+    Its origin and unit length are each stored in terms of another reference frame that the user must define.
     */
     class DiagramReferenceFrame {
-        constructor(origin, scale){
+        constructor(origin, unit_length){
             this.origin = origin;
-            this.scale = scale;
-        }
-        copy(other){
-            this.origin = other.origin;
-            this.scale = other.scale;
+            this.unit_length = unit_length;
         }
     }
 
     /*
-    "DiagramIds" is a small category of pure functions mapping between position indicators in model space
+    "ViewReferenceFrame" is a data structure that expresses a DiagramReferenceFrame 
+    in a way that can be easily manipulated by the application while guaranteeing correctness 
+    for all real valued attributes.
+    */
+    class ViewReferenceFrameStore {
+        constructor(topleft_cell_position, log2_cell_width){
+            this.topleft_cell_position = topleft_cell_position;
+            this.log2_cell_width = log2_cell_width;
+        }
+    }
+
+    /*
+    "ViewReferenceFrameStorage" is a namespace of pure functions that describe the isomorphism 
+    between a ViewReferenceFrame and a DiagramReferenceFrame expressed in terms of "model space"
+    where each cell is of unit length.
+    */
+    function ViewReferenceFrameStorage(){
+        const pow = Math.pow;
+        const log2 = Math.log2;
+        return {
+            'unpack': (view) => new DiagramReferenceFrame(view.topleft_cell_position, 1/pow(2, view.log2_cell_width)),
+            'pack': (frame) => new ViewReferenceFrameStore(frame.topleft_cell_position, log2(1/frame.unit_length)),
+        };
+    }
+
+    /*
+    "PositionFrameShifting" is a namespace of pure functions that describe the isomorphism 
+    between points in the "view space" used to specify svg and the "model space" where each cell is of unit length
+    */
+    function PositionFrameShifting(){
+        return {
+            'enter': (position, frame) => position.sub(frame.origin).div(frame.unit_length),
+            'leave': (position, frame) => position.mul(frame.unit_length).add(frame.origin),
+        };
+    }
+
+    /*
+    "ArcFrameShifting" is a namespace of pure functions that describe the isomorphism 
+    between arrows in the "view space" used to specify svg and the "model space" where each cell is of unit length
+    */
+    function ArcFrameShifting(position_frame_shifting){
+        const shifting = position_frame_shifting;
+        return {
+            'enter': (model_arrow, frame) => 
+                new DiagramArc(
+                    shifting.enter(model_arrow.start, frame),
+                    shifting.enter(model_arrow.end, frame),
+                    model_arrow.min_length_clockwise / frame.unit_length,
+                ),
+            'leave': (view_arrow, frame) =>
+                new DiagramArc(
+                    shifting.leave(view_arrow.start, frame),
+                    shifting.leave(view_arrow.end, frame),
+                    model_arrow.min_length_clockwise * frame.unit_length,
+                ),
+        };
+    }
+
+    /*
+    "DiagramIds" is a namespace describing a small category of pure functions mapping between position indicators in model space
     */
     function DiagramIds(){
         const floor = Math.floor;
@@ -217,40 +254,6 @@
         };
     }
 
-    /*
-    "PositionFrameShifting" is a namespace of pure functions that describe the isomorphism 
-    between points in the "view space" used to specify svg and the "model space" where each cell is of unit length
-    */
-    function PositionFrameShifting(){
-        const pow = Math.pow;
-        return {
-            'view_to_model': (view_position, state) => view_position.div( pow(2.0, state.log2_cell_width) ).add(state.topleft_cell_position),
-            'model_to_view': (model_position, state) => model_position.sub(state.topleft_cell_position).mul( pow(2.0, state.log2_cell_width) ),
-        };
-    }
-
-    /*
-    "ArcFrameShifting" is a namespace of pure functions that describe the isomorphism 
-    between arrows in the "view space" used to specify svg and the "model space" where each cell is of unit length
-    */
-    function ArcFrameShifting(vector_frame_shifting){
-        const pow = Math.pow;
-        const shifting = vector_frame_shifting;
-        return {
-            'model_to_view': (model_arrow, state) => 
-                new DiagramArc(
-                    shifting.model_to_view(model_arrow.start, state),
-                    shifting.model_to_view(model_arrow.end, state),
-                    model_arrow.min_length_clockwise * pow(2.0, state.log2_cell_width),
-                ),
-            'view_to_model': (view_arrow, state) =>
-                new DiagramArc(
-                    shifting.view_to_model(view_arrow.start, state),
-                    shifting.view_to_model(view_arrow.end, state),
-                    model_arrow.min_length_clockwise / pow(2.0, state.log2_cell_width),
-                ),
-        };
-    }
 
     const DragState = {
         released: 'released',
@@ -264,44 +267,41 @@
     It guarantees that for any combination of real numbered attribute values there is a valid application state.
     */
     class ApplicationState {
-        constructor(topleft_cell_position, log2_cell_width, drag_state, edited_arrow){
-            this.topleft_cell_position = topleft_cell_position;
-            this.log2_cell_width = log2_cell_width;
+        constructor(view_frame_store, drag_state, edited_arrow){
+            this.view_frame_store = view_frame_store;
             this.drag_state = drag_state;
             this.edited_arrow = edited_arrow;
-        }
-        copy(other){
-            this.topleft_cell_position = other.topleft_cell_position;
-            this.log2_cell_width = other.log2_cell_width;
-            this.drag_state = other.drag_state;
-            this.edited_arrow = other.edited_arrow;
         }
     }
 
     /*
-    "ApplicationState" is a namespace of *conceptually* pure functions 
+    "DiagramStateOperations" is a namespace of *conceptually* pure functions 
     that operate with no concept of what hardware is being used (e.g. mouse, touchscreen, etc.).
     All functions represent the transformation of state in reponse to controller events. 
     */
-    function DiagramStateOperations(diagram_view_coordinates, arrow_snapping) {
+    function DiagramStateOperations(view_frame_storage, diagram_view_coordinates, arrow_snapping) {
         const pow = Math.pow;
+        const storage = view_frame_storage;
         const spaces = diagram_view_coordinates;
         const snapping = arrow_snapping;
         return {
-            zoom: function(state_in, log2_cell_width_change, state_out) {
-                state_out.topleft_cell_position = state_in.topleft_cell_position;
+            zoom: function(state_in, focus, log2_cell_width_change, state_out) {
+                let topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(focus);
+
+                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position;
                 state_out.log2_cell_width = state_in.log2_cell_width + log2_cell_width_change;
                 state_out.drag_state = DragState.zoom;
                 state_out.edited_arrow = state_in.edited_arrow;
             },
             pan: function(state_in, motion, state_out){
-                state_out.topleft_cell_position = state_in.topleft_cell_position.sub(motion.div(pow(2.0, state_in.log2_cell_width)));
+                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(motion.div(pow(2.0, state_in.log2_cell_width)));
                 state_out.log2_cell_width = state_in.log2_cell_width;
                 state_out.drag_state = DragState.pan;
                 state_out.edited_arrow = state_in.edited_arrow;
             },
             draw: function(state_in, view_position, state_out){
-                const model_position = spaces.view_to_model(view_position, state_in);
+                const view_frame = storage.unpack(state_in.view_frame_store);
+                const model_position = spaces.leave(view_position, view_frame);
 
                 let arrow = snapping.snap(
                     state_out.drag_state == DragState.draw? state_in.edited_arrow.start : model_position,
@@ -317,13 +317,13 @@
                     state_in.edited_arrow.line_style_id,
                 );
 
-                state_out.topleft_cell_position = state_in.topleft_cell_position;
+                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position;
                 state_out.log2_cell_width = state_in.log2_cell_width;
                 state_out.drag_state = DragState.draw;
                 state_out.edited_arrow = diagram_arrow;
             },
             copy: function(state_in, state_out){
-                state_out.topleft_cell_position = state_in.topleft_cell_position;
+                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position;
                 state_out.log2_cell_width = state_in.log2_cell_width;
                 state_out.drag_state = state_in.drag_state;
                 state_out.edited_arrow = state_in.edited_arrow;
@@ -349,7 +349,7 @@
         return {
             wheel: function(state_in, event, state_out){
                 if (state_in.drag_state == DragState.draw) {
-                    state_out.copy(state_in);
+                    operations.copy(state_in, state_out);
                     state_out.edited_arrow.min_length_clockwise += min_length_change_per_scroll * event.deltaY;
                 } else {
                     operations.zoom(state_in, log2_cell_width_change_per_scroll * event.deltaY, state_out);
@@ -592,19 +592,27 @@
     const vue = new Vue({
         el: '#app',
         data:{
-            state: new ApplicationState(glm.vec2(), Math.log2(200), DragState.released, new DiagramArrow(glm.vec2(), glm.vec2())),
-            queue: undefined,
-            controls: DiagramControls(
-                DiagramStateOperations(
-                    PositionFrameShifting(), 
-                    ArrowSnapping(
-                        PointSnapping(DiagramIds(), 0.03), // handle separation
-                        0.07, 0.5, 0.25, 0.3 // min loop, max loop, loop snap, nonloop snap
-                    ) 
+            state: 
+                new ApplicationState(
+                    new ViewReferenceFrameStore(glm.vec2(), Math.log2(200)), 
+                    DragState.released, 
+                    new DiagramArrow(glm.vec2(), glm.vec2()),
                 ),
-                -0.001, // log2_cell_width_change_per_scroll
-                0.001 // min_length_change_per_scroll
-            ),
+            queue: undefined,
+            controls: 
+                DiagramControls(
+                    DiagramStateOperations(
+                        ViewReferenceFrameStorage(),
+                        PositionFrameShifting(), 
+                        ArrowSnapping(
+                            PointSnapping(DiagramIds(), 0.03), // handle separation
+                            0.07, 0.5, 0.25, 0.3 // min loop, max loop, loop snap, nonloop snap
+                        ) 
+                    ),
+                    -0.001, // log2_cell_width_change_per_scroll
+                    0.001 // min_length_change_per_scroll
+                ),
+            view_frame_storage: ViewReferenceFrameStorage(), 
             vector_shifting: PositionFrameShifting(),
             arrow_shifting: ArcFrameShifting(PositionFrameShifting()),
             ids: DiagramIds(),
@@ -628,21 +636,21 @@
                 return this.state.drag_state == DragState.draw;
             },
             transformation: function() {
-                const top_left_view_position = this.vector_shifting.model_to_view(this.state.topleft_cell_position, this.state);
-                return `translate(${-top_left_view_position.x} ${-top_left_view_position.y})`;
+                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
+                return `translate(${-view_frame.origin.x} ${-view_frame.origin.y})`;
             },
             cell_count: function() {
-                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.log2_cell_width));
+                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.view_frame_store.log2_cell_width));
             },
             cell_border_position: function(x, y) {
-                return this.vector_shifting.model_to_view(
-                    this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(this.state.topleft_cell_position).add(glm.ivec2(x-1,y-1)) ), 
-                    this.state
-                );
+                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
+                const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(view_frame.origin).add(glm.ivec2(x-1,y-1)) );
+                return this.vector_shifting.enter(model_border_position, view_frame);
             },
             path: function(arrow) {
                 const svg = ArcSvg(ArcGeometry(), LineGeometry());
-                const view_arc = this.arrow_shifting.model_to_view(arrow, this.state);
+                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
+                const view_arc = this.arrow_shifting.enter(arrow, view_frame);
                 const svg_arc = svg.diagram_arc_to_svg_arc(view_arc);
                 const svg_bezier = svg.diagram_arc_to_svg_bezier(view_arc, 10);
                 // const path = svg.svg_arc_to_path(svg_arc);
@@ -650,10 +658,12 @@
                 return path;
             },
             point: function(coordinate) {
-                return this.vector_shifting.model_to_view(coordinate, this.state);
+                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
+                return this.vector_shifting.enter(coordinate, view_frame);
             },
             midpath: function(arrow) {
-                const view_arc = this.arrow_shifting.model_to_view(arrow, this.state);
+                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
+                const view_arc = this.arrow_shifting.enter(arrow, view_frame);
                 const arcs = ArcGeometry();
                 const length = Math.max(view_arc.min_length_clockwise, glm.length(view_arc.end.sub(view_arc.start)));
                 const min_radius = view_arc.min_length_clockwise/Math.PI;
