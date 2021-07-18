@@ -285,7 +285,6 @@
         return {
             zoom: function(state_in, focus, log2_cell_width_change, state_out) {
                 let topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(focus);
-
                 state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position;
                 state_out.log2_cell_width = state_in.log2_cell_width + log2_cell_width_change;
                 state_out.drag_state = DragState.zoom;
@@ -339,6 +338,9 @@
         log2_cell_width_change_per_scroll,
         min_length_change_per_scroll
     ){
+        const sign = Math.sign;
+        const abs = Math.abs;
+        const max = Math.max;
         const operations = diagram_state_operations;
         const mouse_actions = {
             'pan':  (state_in, event, state_out) => operations.pan(state_in, glm.vec2(event.movementX, event.movementY), state_out),
@@ -347,18 +349,31 @@
         return {
             wheel: function(state_in, event, state_out){
                 if (state_in.drag_state == DragState.draw) {
+                    const chord_length = glm.distance(state_in.edited_arrow.start, state_in.edited_arrow.end);
+                    const arc_length1 = 0.7;
+                    const arc_length2 = max(arc_length1, chord_length);
+                    const min_arc_length = abs(state_in.edited_arrow.min_length_clockwise);
+                    const clockwise_sign = sign(state_in.edited_arrow.min_length_clockwise);
+                    const excess_in = clockwise_sign * max(min_arc_length - arc_length2, 0);
+                    const excess_out = excess_in + min_length_change_per_scroll * event.deltaY;
+                    const is_different_sign = sign(excess_in) * sign(excess_out) < 0;
+                    const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
                     operations.copy(state_in, state_out);
-                    state_out.edited_arrow.min_length_clockwise += min_length_change_per_scroll * event.deltaY;
-                    console.log(state_out.edited_arrow.min_length_clockwise);
+                    state_out.edited_arrow.min_length_clockwise = min_length_clockwise_out;
+                    console.log(excess_in);
                 } else {
                     operations.zoom(state_in, log2_cell_width_change_per_scroll * event.deltaY, state_out);
                 }
             },
             mousedown: function(state_in, event, state_out){
                 const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
-                if (state in mouse_actions){
+                if (state_in.drag_state == DragState.draw) { 
+                    // cancel draw action
+                    state_out.drag_state = DragState.released;
+                } else if (state in mouse_actions){
                     mouse_actions[state](state_in, event, state_out); 
                 }
+                
             },
             mousemove: function(state_in, event, state_out){
                 const state = state_in.drag_state;
@@ -511,7 +526,7 @@
                 const arc_length = abs(min_length_clockwise);
                 const a = 0.147;
                 const b = 0.650;
-                const x = glm.length(end.sub(start)) / 2.0;
+                const x = glm.distance(start, end) / 2.0;
                 const A = max(x, arc_length/2 );
                 const xA = min(x/A, 1-epsilon);
                 const r = A / (2.0 * (1.0 - a*pow(xA, b)) * acos(xA));
@@ -548,14 +563,14 @@
         return {
             diagram_arc_to_svg_arc: function(arc){
                 const min_length = abs(arc.min_length_clockwise);
-                const length = max(min_length, glm.length(arc.end.sub(arc.start)));
+                const length = max(min_length, glm.distance(arc.start, arc.end));
                 const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.min_length_clockwise);
                 return new SvgArc(arc.start, arc.end, 
                     radius, abs(arc.min_length_clockwise)/radius > pi, !arc.is_clockwise);
             },
             diagram_arc_to_svg_bezier: function(arc, sample_point_count){
                 const min_length = abs(arc.min_length_clockwise);
-                const length = max(min_length, glm.length(arc.end.sub(arc.start)));
+                const length = max(min_length, glm.distance(arc.start, arc.end));
                 const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.min_length_clockwise);
                 const origin = arc_geometry.origin(arc.start, arc.end, arc.min_length_clockwise, radius);
                 const sample_points = [];
@@ -669,7 +684,7 @@
                 const view_arc = this.arrow_shifting.enter(arrow, view_frame);
                 const arcs = ArcGeometry();
                 const min_length = abs(arc.min_length_clockwise);
-                const length = Math.max(min_length, glm.length(view_arc.end.sub(view_arc.start)));
+                const length = Math.max(min_length, glm.distance(view_arc.start, view_arc.end));
                 const radius = arcs.radius_for_chord_and_arc_length(view_arc.start, view_arc.end, arc.min_length_clockwise);
                 const origin = arcs.origin(view_arc.start, view_arc.end, view_arc.min_length_clockwise, radius);
                 const midpath = arcs.position_at_distance_along_arc(view_arc.start, origin, view_arc.min_length_clockwise, radius, 1*length);
