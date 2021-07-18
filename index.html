@@ -29,7 +29,7 @@
         .arrow-highlight {
             fill: none;
             stroke: darkgrey;
-            stroke-width:24;
+            stroke-width:30;
         }
         .arrow-tip-highlight {
             fill: darkgrey;
@@ -53,13 +53,15 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
-            <path class="arrow-highlight" v-bind:d="path(state.edited_arrow)" />
-            <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="12"/>
-            <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="12" />
-            <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="10"/>
-            <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="10" />
-            <!-- <circle class="arrow-handle" v-bind:cx="midpath(state.edited_arrow).x" v-bind:cy="midpath(state.edited_arrow).y" r="10" /> -->
-            <path class="arrow" v-bind:d="path(state.edited_arrow)"/>
+            <g v-if="is_drawing()">
+                <path class="arrow-highlight" v-bind:d="path(state.edited_arrow)" />
+                <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="15"/>
+                <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="15" />
+                <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="10"/>
+                <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="10" />
+                <!-- <circle class="arrow-handle" v-bind:cx="midpath(state.edited_arrow).x" v-bind:cy="midpath(state.edited_arrow).y" r="10" /> -->
+                <path class="arrow" v-bind:d="path(state.edited_arrow)"/>
+            </g>
         </g>
     </svg>
 </div>
@@ -69,6 +71,9 @@
     'use strict';
 
 
+    /*
+    "Arrow" is a data structure that represents every property of an arrow that can be depicted by the application
+    */
     class Arrow {
         constructor(
             start, end, min_length, is_clockwise, 
@@ -88,7 +93,7 @@
     }
 
     /*
-    "DiagramReferenceFrame" can be considered a degenerate case of an affine transform.
+    "DiagramReferenceFrame" is a data structure that can be considered a degenerate case of an affine transform.
     It permits scaling and translation but forbids rotation or shearing.
     */
     class DiagramReferenceFrame {
@@ -98,6 +103,9 @@
         }
     }
 
+    /*
+    "DiagramIds" is a small category of pure functions mapping between positions, integer vectors, integer ids in model space
+    */
     function DiagramIds(){
         const floor = Math.floor;
         const round = Math.round;
@@ -112,7 +120,10 @@
         };
     }
 
-    function DiagramSnapping(diagram_ids, cell_to_target_distance) {
+    /*
+    "PointSnapping" is a namespace of pure functions that describe equivalence classes of user specified positions
+    */
+    function PointSnapping(diagram_ids, cell_to_target_distance) {
         const ids = diagram_ids;
         return {
             /* 
@@ -130,6 +141,42 @@
         };
     }
 
+    /*
+    "ArrowSnapping" is a namespace of pure functions that describe equivalence classes of arrows for user specified start and stop positions
+    */
+    function ArrowSnapping(
+        point_snapping, 
+        min_loop_chord_length, 
+        max_loop_chord_length, 
+        max_loop_snap_distance, 
+        max_nonloop_snap_distance
+    ) {
+        const snapping = point_snapping;
+        return {
+            'snap': function(source_proposal, target_proposal) {
+                const source_cell = snapping.snap_to_cell(source_proposal);
+                const target_cell = snapping.snap_to_cell(target_proposal);
+                const target_handle = snapping.snap_to_handle(target_proposal);
+
+                const is_loop = glm.distance(source_cell, target_cell) < max_loop_chord_length;
+                const is_snapped = glm.distance(target_proposal, target_cell) < (is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
+                const is_canceled = glm.distance(target_proposal, source_cell) < min_loop_chord_length;
+
+                const source = source_cell;
+                const target = 
+                      is_canceled?  source_cell
+                    : is_snapped?  (is_loop? target_handle : target_cell)
+                    :               target_proposal;
+
+                return new Arrow(source, target);
+            }
+        };
+    }
+
+    /*
+    "PositionFrameShifting" is a namespace of pure functions that describe an isomorphism 
+    between points in the "view space" used to specify svg and the "model space" where each cell is of unit length
+    */
     function PositionFrameShifting(){
         const pow = Math.pow;
         return {
@@ -138,6 +185,10 @@
         };
     }
 
+    /*
+    "ArrowFrameShifting" is a namespace of pure functions that describe an isomorphism 
+    between arrows in the "view space" used to specify svg and the "model space" where each cell is of unit length
+    */
     function ArrowFrameShifting(vector_frame_shifting){
         const pow = Math.pow;
         const shifting = vector_frame_shifting;
@@ -154,8 +205,8 @@
                     model_arrow.line_style_id
                 ),
             'view_to_model': (view_arrow, state) => new Arrow(
-                    shifting.model_to_view(view_arrow.start, state),
-                    shifting.model_to_view(view_arrow.end, state),
+                    shifting.view_to_model(view_arrow.start, state),
+                    shifting.view_to_model(view_arrow.end, state),
                     model_arrow.min_length / pow(2.0, state.log2_cell_width),
                     model_arrow.is_clockwise,
                     model_arrow.label,
@@ -175,7 +226,7 @@
     };
 
     /*
-    "ApplicationState" contains all state within the application. 
+    "ApplicationState" is a data structure that contains all state within the application. 
     It guarantees that for any combination of real numbered attribute values there is a valid application state.
     */
     class ApplicationState {
@@ -188,13 +239,14 @@
     }
 
     /*
-    "ApplicationState" is a namespace of conceptually pure functions that operate with no concept of what hardware is being used.
+    "ApplicationState" is a namespace of *conceptually* pure functions 
+    that operate with no concept of what hardware is being used (e.g. mouse, touchscreen, etc.).
     All functions represent the transformation of state in reponse to controller events. 
     */
-    function DiagramStateOperations(diagram_view_coordinates, diagram_snapping) {
+    function DiagramStateOperations(diagram_view_coordinates, arrow_snapping) {
         const pow = Math.pow;
         const spaces = diagram_view_coordinates;
-        const snapping = diagram_snapping;
+        const snapping = arrow_snapping;
         return {
             zoom: function(state_in, log2_cell_width_change, state_out) {
                 state_out.topleft_cell_position = state_in.topleft_cell_position;
@@ -209,36 +261,24 @@
                 state_out.edited_arrow = state_in.edited_arrow;
             },
             draw: function(state_in, view_position, state_out){
-
                 const model_position = spaces.view_to_model(view_position, state_in);
 
-                const source_cell = state_out.drag_state == DragState.draw? 
-                    state_in.edited_arrow.start : snapping.snap_to_cell(model_position);
-                const target_cell = snapping.snap_to_cell(model_position);
-                const target_handle = snapping.snap_to_handle(model_position);
-
-                const is_loop = glm.distance(source_cell, target_cell) < 1;
-                const is_snapped = glm.distance(model_position, target_cell) < 0.25;
-                const is_canceled = glm.distance(model_position, source_cell) < 0.07;
-
-                const source = source_cell;
-                const target = 
-                      is_canceled?  source_cell
-                    : is_snapped?  (is_loop? target_handle : target_cell)
-                    :               model_position;
+                let arrow = snapping.snap(
+                    state_out.drag_state == DragState.draw? state_in.edited_arrow.start : model_position,
+                    model_position
+                );
+                arrow.min_length = state_in.edited_arrow.min_length;
+                arrow.is_clockwise = state_in.edited_arrow.is_clockwise;
+                arrow.label = state_in.edited_arrow.label;
+                arrow.label_position_id = state_in.edited_arrow.label_position_id;
+                arrow.start_style_id = state_in.edited_arrow.start_style_id;
+                arrow.end_style_id = state_in.edited_arrow.end_style_id;
+                arrow.line_style_id = state_in.edited_arrow.line_style_id;
 
                 state_out.topleft_cell_position = state_in.topleft_cell_position;
                 state_out.log2_cell_width = state_in.log2_cell_width;
                 state_out.drag_state = DragState.draw;
-                state_out.edited_arrow = 
-                    new Arrow(source, target,
-                        state_in.edited_arrow.min_length,
-                        state_in.edited_arrow.is_clockwise,
-                        state_in.edited_arrow.label,
-                        state_in.edited_arrow.label_position_id,
-                        state_in.edited_arrow.start_style_id,
-                        state_in.edited_arrow.end_style_id,
-                        state_in.edited_arrow.line_style_id);
+                state_out.edited_arrow = arrow;
             },
             copy: function(state_in, state_out){
                 state_out.topleft_cell_position = state_in.topleft_cell_position;
@@ -250,7 +290,7 @@
     }
 
     /*
-    "DiagramControls" is a namespace of conceptually pure functions that reflect how events map to actions.
+    "DiagramControls" is a namespace of *conceptually* pure functions that reflect how events map to actions.
     All functions represent the transformation of state in reponse to controller events. 
     It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
     */
@@ -277,13 +317,21 @@
                 }
             },
             mouseup: function(state_in, event, state_out){
-                state_out.drag_state = 'released';
+                state_out.drag_state = DragState.released;
             },
             mousewheel: function(state_in, event, state_out){
-                operations.zoom(state_in, log2_cell_width_change_per_scroll * event.wheelDelta, state_out);
+                if (state_in.drag_state == DragState.draw) {
+
+                } else {
+                    operations.zoom(state_in, log2_cell_width_change_per_scroll * event.wheelDelta, state_out);
+                }
             },
             DOMMouseScroll: function(state_in, event, state_out){
-                operations.zoom(state_in, -log2_cell_width_change_per_scroll * event.detail, state_out);
+                if (state_in.drag_state == DragState.draw) {
+
+                } else {
+                    operations.zoom(state_in, -log2_cell_width_change_per_scroll * event.detail, state_out);
+                }
             },
             touchstart: function(state_in, event, state_out){
 
@@ -347,6 +395,9 @@
     }
 
 
+    /*
+    "DiagramControls" is intended as a namespace of pure functions describing useful analytic geometry of 2d lines
+    */
     function LineGeometry(){
         const abs = Math.abs;
         return {
@@ -362,6 +413,9 @@
         };
     }
 
+    /*
+    "DiagramControls" is intended as a namespace of pure functions describing useful analytic geometry of arcs
+    */
     function ArcGeometry(){
         const pi = Math.PI;
         const pow = Math.pow;
@@ -427,6 +481,9 @@
         }
     }
 
+    /*
+    "DiagramControls" is a namespace of pure functions describing a small category mapping arcs to svg depictions
+    */
     function ArcSvg(arc_geometry, line_geometry){
         const pi = Math.PI;
         const sqrt = Math.sqrt;
@@ -501,9 +558,12 @@
             controls: DiagramControls(
                 DiagramStateOperations(
                     PositionFrameShifting(), 
-                    DiagramSnapping(DiagramIds(), 0.03)
+                    ArrowSnapping(
+                        PointSnapping(DiagramIds(), 0.03), // handle separation
+                        0.07, 0.5, 0.25, 0.3 // min loop, max loop, loop snap, nonloop snap
+                    ) 
                 ),
-                0.1
+                0.03
             ),
             vector_shifting: PositionFrameShifting(),
             arrow_shifting: ArrowFrameShifting(PositionFrameShifting()),
@@ -524,6 +584,9 @@
             }, 1000/60);
         },
         methods: {
+            is_drawing: function(){
+                return this.state.drag_state == DragState.draw;
+            },
             transformation: function() {
                 const top_left_view_position = this.vector_shifting.model_to_view(this.state.topleft_cell_position, this.state);
                 return `translate(${-top_left_view_position.x} ${-top_left_view_position.y})`;
