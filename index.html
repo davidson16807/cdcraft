@@ -87,7 +87,7 @@
             this.start = start;
             this.end = end;
             this.min_length = min_length || 0.7;
-            this.is_clockwise = is_clockwise || false;
+            this.is_clockwise = is_clockwise || true;
             this.label = label || "";
             this.label_position_id = label_position_id;
             this.start_style_id = start_style_id;
@@ -219,6 +219,7 @@
                 const target = snapping.snap_to_target_handle(model_position);
                 state_out.edited_arrow = state_in.drag_state == DragState.draw
                     ? new Arrow(state_in.edited_arrow.start, target, 
+                        state_in.edited_arrow.min_length,
                         state_in.edited_arrow.is_clockwise,
                         state_in.edited_arrow.label,
                         state_in.edited_arrow.label_position_id,
@@ -226,6 +227,7 @@
                         state_in.edited_arrow.end_style_id,
                         state_in.edited_arrow.line_style_id)
                     : new Arrow(source, target,
+                        state_in.edited_arrow.min_length,
                         state_in.edited_arrow.is_clockwise,
                         state_in.edited_arrow.label,
                         state_in.edited_arrow.label_position_id,
@@ -371,19 +373,16 @@
                 const chord = end.sub(start);
                 const chord_length = glm.length(chord);
                 const chord_direction = glm.normalize(chord);
-                const chord_tangent = glm.vec2(chord_direction.y, -chord_direction.x)
-                    .mul(chord_length < 2*min_radius? -1:1)
-                    .mul(is_clockwise? 1:1);
-                const r = radius;
-                const x = glm.length(end.sub(start)) / 2.0;
-                const y = sqrt(r*r - x*x);
-                const chord_midpoint = start.add(end).div(2);
-                const origin = chord_tangent.mul(y).add(chord_midpoint);
-                return origin;
+                const v = chord_direction.mul(radius);
+                const theta = acos(chord_length/(2*radius)) * (chord_length < 2*min_radius? 1:-1) * (is_clockwise? -1:1);
+                return glm.vec2(
+                    v.x * cos(theta) - v.y * sin(theta),
+                    v.x * sin(theta) + v.y * cos(theta),
+                ).add(start);
             },
             position_at_distance_along_arc: function (start, origin, radius, is_clockwise, distance){
                 const v = start.sub(origin);
-                const theta = -distance / radius;
+                const theta = -distance / radius * (is_clockwise? -1:1);
                 return glm.vec2(
                     v.x * cos(theta) - v.y * sin(theta),
                     v.x * sin(theta) + v.y * cos(theta),
@@ -460,7 +459,7 @@
             diagram_arc_to_svg_arc: function(arc){
                 const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.length);
                 return new SvgArc(arc.start, arc.end, 
-                    radius, arc.length/radius > pi, arc.is_clockwise);
+                    radius, arc.length/radius > pi, !arc.is_clockwise);
             },
             diagram_arc_to_svg_bezier: function(arc, sample_point_count){
                 const length = max(arc.length, glm.length(arc.end.sub(arc.start)));
@@ -478,7 +477,6 @@
                     const k = glm.vec3(0,0,1);
                     const a_tangent = glm.normalize(glm.cross(glm.vec3(a,0), k)).xy;
                     const b_tangent = glm.normalize(glm.cross(glm.vec3(b,0), k)).xy;
-                    // console.log(a.x, a.y, a_tangent.x, a_tangent.y, b.x, b.y, b_tangent.x, b_tangent.y);
                     const intersection = a_tangent.mul(line_geometry.distance_along_line_to_line(a,a_tangent,b,b_tangent)).add(a).add(origin);
                     points.push(intersection);
                     points.push(sample_points[i]);
@@ -510,7 +508,7 @@
                     view_arrow.start,
                     view_arrow.end,
                     view_arrow.min_length, 
-                    true
+                    view_arrow.is_clockwise
                 );
                 const svg_arc = svg.diagram_arc_to_svg_arc(arc);
                 const svg_bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
@@ -572,7 +570,7 @@
                     view_arrow.start,
                     view_arrow.end,
                     view_arrow.min_length, 
-                    true
+                    view_arrow.is_clockwise
                 );
                 const svg_arc = svg.diagram_arc_to_svg_arc(arc);
                 const svg_bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
@@ -587,7 +585,7 @@
                     view_arrow.start,
                     view_arrow.end,
                     view_arrow.min_length, 
-                    true
+                    view_arrow.is_clockwise
                 );
                 const svg_arc = svg.diagram_arc_to_svg_arc(arc);
                 const svg_bezier = svg.diagram_arc_to_svg_bezier(arc, 10);
