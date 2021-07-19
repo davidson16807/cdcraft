@@ -53,6 +53,7 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
+                <path class="arrow" v-bind:d="path(state.edited_arrow)"/>
             <g v-if="is_drawing()">
                 <path class="arrow-highlight" v-bind:d="path(state.edited_arrow)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="15"/>
@@ -145,14 +146,27 @@
         const pow = Math.pow;
         const log2 = Math.log2;
         return {
-            'pack': (frame) => new ViewReferenceFrameStore(frame.topleft_cell_position, log2(1/frame.unit_length)),
+            'pack': (frame) => new ViewReferenceFrameStore(frame.origin, log2(1/frame.unit_length)),
             'unpack': (view) => new DiagramReferenceFrame(view.topleft_cell_position, 1/pow(2, view.log2_cell_width)),
         };
     }
 
     /*
-    "PositionFrameShifting" is a namespace of pure functions that describe the isomorphism 
-    between points in the "view space" used to specify svg and the "model space" where each cell is of unit length
+    "OffsetFrameShifting" is a namespace of pure functions that describe an isomorphism.
+    "enter" accepts a offset and reference frame, both expressed in terms of an implicit user defined reference frame,
+    and returns a offset that is defined in terms of the reference frame. "leave" is inverse to "enter".
+    */
+    function OffsetFrameShifting(){
+        return {
+            'enter': (position, frame) => position.div(frame.unit_length),
+            'leave': (position, frame) => position.mul(frame.unit_length),
+        };
+    }
+
+    /*
+    "PositionFrameShifting" is a namespace of pure functions that describe an isomorphism.
+    "enter" accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
+    and returns a position that is defined in terms of the reference frame. "leave" is inverse to "enter".
     */
     function PositionFrameShifting(){
         return {
@@ -162,8 +176,9 @@
     }
 
     /*
-    "ArcFrameShifting" is a namespace of pure functions that describe the isomorphism 
-    between arrows in the "view space" used to specify svg and the "model space" where each cell is of unit length
+    "ArcFrameShifting" is a namespace of pure functions that describe the isomorphism.
+    "enter" accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
+    and returns a position that is defined in terms of the reference frame. "leave" is inverse to "enter".
     */
     function ArcFrameShifting(position_frame_shifting){
         const shifting = position_frame_shifting;
@@ -179,6 +194,27 @@
                     shifting.leave(view_arrow.start, frame),
                     shifting.leave(view_arrow.end, frame),
                     model_arrow.min_length_clockwise * frame.unit_length,
+                ),
+        };
+    }
+
+    /*
+    "ArcFrameShifting" is a namespace of pure functions that describe the isomorphism
+    "enter" accepts two reference frames, both expressed in terms of an implicit user defined reference frame,
+    and returns a new reference frame that is the first defined in terms of the second. "leave" is inverse to "enter".
+    */
+    function DiagramReferenceFrameShifting(position_frame_shifting){
+        const shifting = position_frame_shifting;
+        return {
+            'enter': (frame1, frame2) => 
+                new DiagramReferenceFrame(
+                    shifting.enter(frame1.origin, frame2),
+                    frame1.unit_length / frame2.unit_length,
+                ),
+            'leave': (frame1, frame2) =>
+                new DiagramReferenceFrame(
+                    shifting.leave(frame1.origin, frame2),
+                    frame1.unit_length * frame2.unit_length,
                 ),
         };
     }
@@ -201,9 +237,9 @@
     }
 
     /*
-    "PointSnapping" is a namespace of pure functions that describe equivalence classes of user specified positions
+    "PositionSnapping" is a namespace of pure functions that describe equivalence classes of user specified positions
     */
-    function PointSnapping(diagram_ids, cell_to_target_distance) {
+    function PositionSnapping(diagram_ids, cell_to_target_distance) {
         const ids = diagram_ids;
         return {
             /* 
@@ -277,29 +313,48 @@
     that operate with no concept of what hardware is being used (e.g. mouse, touchscreen, etc.).
     All functions represent the transformation of state in reponse to controller events. 
     */
-    function DiagramStateOperations(view_frame_storage, diagram_view_coordinates, arrow_snapping) {
+    function DiagramStateOperations(
+            view_frame_storage,  
+            offset_frame_shifting, 
+            position_frame_shifting, 
+            reference_frame_shifting, 
+            arrow_snapping
+        ) {
         const pow = Math.pow;
         const storage = view_frame_storage;
-        const spaces = diagram_view_coordinates;
+        const offset_shifting = offset_frame_shifting;
+        const position_shifting = position_frame_shifting;
+        const reference_shifting = reference_frame_shifting;
         const snapping = arrow_snapping;
         return {
-            zoom: function(state_in, focus, log2_cell_width_change, state_out) {
-                console.log(state_out);
-                // let topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(focus);
-                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position;
+            zoom: function(state_in, view_focus, log2_cell_width_change, state_out) {
+                const view_frame_store = state_in.view_frame_store;
+                const view_frame = storage.unpack(view_frame_store);
+                const model_focus = position_shifting.leave(view_focus, view_frame);
+                const topleft_zoom_frame_store = 
+                    new ViewReferenceFrameStore(
+                        view_frame_store.topleft_cell_position, 
+                        view_frame_store.log2_cell_width + log2_cell_width_change
+                    )
+                const topleft_zoom_frame = storage.unpack(topleft_zoom_frame_store);
+                const view_zoom_offset = position_shifting.enter(model_focus, topleft_zoom_frame).sub(view_focus);
+                const model_zoom_offset = offset_shifting.leave(view_zoom_offset, view_frame);
+                state_out.view_frame_store.topleft_cell_position = view_frame_store.topleft_cell_position.add(model_zoom_offset);
                 state_out.view_frame_store.log2_cell_width = state_in.view_frame_store.log2_cell_width + log2_cell_width_change;
                 state_out.drag_state = DragState.zoom;
                 state_out.edited_arrow = state_in.edited_arrow;
             },
-            pan: function(state_in, motion, state_out){
-                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(motion.div(pow(2.0, state_in.view_frame_store.log2_cell_width)));
+            pan: function(state_in, view_offset, state_out){
+                const view_frame = storage.unpack(state_in.view_frame_store);
+                const model_offset = offset_shifting.leave(view_offset, view_frame);
+                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(model_offset);
                 state_out.view_frame_store.log2_cell_width = state_in.view_frame_store.log2_cell_width;
                 state_out.drag_state = DragState.pan;
                 state_out.edited_arrow = state_in.edited_arrow;
             },
             draw: function(state_in, view_position, state_out){
                 const view_frame = storage.unpack(state_in.view_frame_store);
-                const model_position = spaces.leave(view_position, view_frame);
+                const model_position = position_shifting.leave(view_position, view_frame);
 
                 let arrow = snapping.snap(
                     state_out.drag_state == DragState.draw? state_in.edited_arrow.start : model_position,
@@ -360,7 +415,7 @@
                     operations.copy(state_in, state_out);
                     state_out.edited_arrow.min_length_clockwise = min_length_clockwise_out;
                 } else {
-                    operations.zoom(state_in, glm.vec2(), log2_cell_width_change_per_scroll * event.deltaY, state_out);
+                    operations.zoom(state_in, glm.vec2(event.clientX, event.clientY), log2_cell_width_change_per_scroll * event.deltaY, state_out);
                 }
             },
             mousedown: function(state_in, event, state_out){
@@ -619,9 +674,11 @@
                 DiagramControls(
                     DiagramStateOperations(
                         ViewReferenceFrameStorage(),
+                        OffsetFrameShifting(), 
                         PositionFrameShifting(), 
+                        DiagramReferenceFrameShifting(PositionFrameShifting()), 
                         ArrowSnapping(
-                            PointSnapping(DiagramIds(), 0.03), // handle separation
+                            PositionSnapping(DiagramIds(), 0.03), // handle separation
                             0.07, 0.5, 0.25, 0.3 // min loop, max loop, loop snap, nonloop snap
                         ) 
                     ),
@@ -629,7 +686,7 @@
                     0.001 // min_length_change_per_scroll
                 ),
             view_frame_storage: ViewReferenceFrameStorage(), 
-            vector_shifting: PositionFrameShifting(),
+            position_shifting: PositionFrameShifting(),
             arrow_shifting: ArcFrameShifting(PositionFrameShifting()),
             ids: DiagramIds(),
         },
@@ -661,7 +718,7 @@
             cell_border_position: function(x, y) {
                 const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
                 const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(view_frame.origin).add(glm.ivec2(x-1,y-1)) );
-                return this.vector_shifting.enter(model_border_position, view_frame);
+                return this.position_shifting.enter(model_border_position, view_frame);
             },
             path: function(arrow) {
                 const svg = ArcSvg(ArcGeometry(), LineGeometry());
@@ -675,7 +732,7 @@
             },
             point: function(coordinate) {
                 const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
-                return this.vector_shifting.enter(coordinate, view_frame);
+                return this.position_shifting.enter(coordinate, view_frame);
             },
             midpath: function(arrow) {
                 const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
