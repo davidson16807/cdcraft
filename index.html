@@ -53,15 +53,17 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
-                <path class="arrow" v-bind:d="path(state.edited_arrow)"/>
+            <g v-for="arrow in state.arrows">
+                <path class="arrow" v-bind:d="path(view(arrow.arc))"/>
+            </g>
             <g v-if="is_drawing()">
-                <path class="arrow-highlight" v-bind:d="path(state.edited_arrow)" />
-                <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="15"/>
-                <circle class="arrow-tip-highlight" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="15" />
-                <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.start).x" v-bind:cy="point(state.edited_arrow.start).y" r="10"/>
-                <circle class="arrow-handle" v-bind:cx="point(state.edited_arrow.end).x" v-bind:cy="point(state.edited_arrow.end).y" r="10" />
-                <!-- <circle class="arrow-handle" v-bind:cx="midpath(state.edited_arrow).x" v-bind:cy="midpath(state.edited_arrow).y" r="10" /> -->
-                <path class="arrow" v-bind:d="path(state.edited_arrow)"/>
+                <path class="arrow-highlight" v-bind:d="path(view(state.edited_arrow.arc))" />
+                <circle class="arrow-tip-highlight" v-bind:cx="view(state.edited_arrow.arc).source.x" v-bind:cy="view(state.edited_arrow.arc).source.y" r="15"/>
+                <circle class="arrow-tip-highlight" v-bind:cx="view(state.edited_arrow.arc).target.x" v-bind:cy="view(state.edited_arrow.arc).target.y" r="15" />
+                <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).source.x" v-bind:cy="view(state.edited_arrow.arc).source.y" r="10"/>
+                <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).target.x" v-bind:cy="view(state.edited_arrow.arc).target.y" r="10" />
+                <!-- <circle class="arrow-handle" v-bind:cx="midpath(view(state.edited_arrow.arc)).x" v-bind:cy="midpath(view(state.edited_arrow.arc)).y" r="10" /> -->
+                <path class="arrow" v-bind:d="path(view(state.edited_arrow.arc))"/>
             </g>
         </g>
     </svg>
@@ -71,50 +73,10 @@
 <script type="text/javascript">
     'use strict';
 
-    /*
-    "Arrow" is a data structure that represents only the attributes within the mathematical definition of an arrow
-    */
-    class Arrow {
-        constructor(start, end){
-            this.start = start;
-            this.end = end;
-        }
-    }
+
 
     /*
-    "DiagramArc" is a data structure that represents a directed arc in a way that can be easily manipulated in the application
-    "min_length_clockwise" is the minimum length of an arc, where sign inidicates arc chirality (positive values are clockwise).
-    */
-    class DiagramArc {
-        constructor(start, end, min_length_clockwise){
-            this.start = start;
-            this.end = end;
-            this.min_length_clockwise = min_length_clockwise;
-        }
-    }
-
-    /*
-    "DiagramArrow" is a data structure that represents every property of an arrow that can be depicted within a diagram.
-    */
-    class DiagramArrow {
-        constructor(
-            start, end, min_length_clockwise, 
-            label, label_position_id, 
-            start_style_id, end_style_id, line_style_id
-        ){
-            this.start = start;
-            this.end = end;
-            this.min_length_clockwise = min_length_clockwise || 0.7;
-            this.label = label || "";
-            this.label_position_id = label_position_id;
-            this.start_style_id = start_style_id;
-            this.end_style_id = end_style_id;
-            this.line_style_id = line_style_id;
-        }
-    }
-
-    /*
-    "DiagramReferenceFrame" is a data structure that can be considered a degenerate case of an affine transform.
+    `DiagramReferenceFrame` is a data structure that can be considered a degenerate case of an affine transform.
     It permits scaling and translation but forbids rotation and shearing.
     Its origin and unit length are each stored in terms of another reference frame that the user must define.
     */
@@ -126,35 +88,9 @@
     }
 
     /*
-    "ViewReferenceFrame" is a data structure that expresses a DiagramReferenceFrame 
-    in a way that can be easily manipulated by the application while guaranteeing correctness 
-    for all real valued attributes.
-    */
-    class ViewReferenceFrameStore {
-        constructor(topleft_cell_position, log2_cell_width){
-            this.topleft_cell_position = topleft_cell_position;
-            this.log2_cell_width = log2_cell_width;
-        }
-    }
-
-    /*
-    "ViewReferenceFrameStorage" is a namespace of pure functions that describe the isomorphism 
-    between a ViewReferenceFrame and a DiagramReferenceFrame expressed in terms of "model space"
-    where each cell is of unit length.
-    */
-    function ViewReferenceFrameStorage(){
-        const pow = Math.pow;
-        const log2 = Math.log2;
-        return {
-            'pack': (frame) => new ViewReferenceFrameStore(frame.origin, log2(1/frame.unit_length)),
-            'unpack': (view) => new DiagramReferenceFrame(view.topleft_cell_position, 1/pow(2, view.log2_cell_width)),
-        };
-    }
-
-    /*
-    "OffsetFrameShifting" is a namespace of pure functions that describe an isomorphism.
-    "enter" accepts a offset and reference frame, both expressed in terms of an implicit user defined reference frame,
-    and returns a offset that is defined in terms of the reference frame. "leave" is inverse to "enter".
+    `OffsetFrameShifting` is a namespace of pure functions that describe an isomorphism.
+    `enter` accepts a offset and reference frame, both expressed in terms of an implicit user defined reference frame,
+    and returns a offset that is defined in terms of the reference frame. `leave` is inverse to `enter`.
     */
     function OffsetFrameShifting(){
         return {
@@ -164,9 +100,9 @@
     }
 
     /*
-    "PositionFrameShifting" is a namespace of pure functions that describe an isomorphism.
-    "enter" accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
-    and returns a position that is defined in terms of the reference frame. "leave" is inverse to "enter".
+    `PositionFrameShifting` is a namespace of pure functions that describe an isomorphism.
+    `enter` accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
+    and returns a position that is defined in terms of the reference frame. `leave` is inverse to `enter`.
     */
     function PositionFrameShifting(){
         return {
@@ -174,36 +110,338 @@
             'leave': (position, frame) => position.mul(frame.unit_length).add(frame.origin),
         };
     }
+    
+    /*
+    `DiagramIds` is a namespace describing a small category of pure functions mapping between position indicators in model space
+    */
+    function DiagramIds(){
+        const floor = Math.floor;
+        const round = Math.round;
+        const abs = Math.abs;
+        return {
+            'cell_position_to_border_id': cell_position => glm.vec2(floor(cell_position.x), floor(cell_position.y)),
+            'border_id_to_cell_position': border_id => border_id.add(0.5),
+            'cell_position_to_cell_id': cell_position => glm.vec2(round(cell_position.x), round(cell_position.y)),
+            'cell_position_and_cell_id_to_offset': (cell_position, cell_id) => cell_position.sub(cell_id),
+            'offset_to_offset_id': offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
+            'offset_id_to_offset_hash': offset_id => ((offset_id.x > offset_id.y) << 1) + (-offset_id.x > offset_id.y),
+            'offset_hash_to_offset_id': offset_hash => glm.normalize(glm.vec2(1,-1).mul(2*floor(offset_hash / 2)-1).add(glm.vec2(-1,-1).mul(2*(offset_hash % 2)-1))),
+        };
+    }
+    
+    /*
+    `LineGeometry` is intended as a namespace of pure functions describing useful analytic geometry of 2d lines
+    */
+    function LineGeometry(){
+        const abs = Math.abs;
+        return {
+            /*
+            A0 line reference
+            A  line direction, normalized
+            B0 line reference
+            B  line direction, normalized
+            */
+            distance_along_line_to_line: function(A0,A, B0,B){
+                return glm.cross((B0.sub(A0)), B).z / glm.cross(A, B).z;
+            }
+        };
+    }
 
     /*
-    "ArcFrameShifting" is a namespace of pure functions that describe the isomorphism.
-    "enter" accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
-    and returns a position that is defined in terms of the reference frame. "leave" is inverse to "enter".
+    `Arrow` is a data structure that represents only the attributes within the mathematical definition of an arrow
+    `source` and `target` are ivec2s indicating source and target in cell coordinates.
+    */
+    class Arrow {
+        constructor(source, target){
+            this.source = source;
+            this.target = target;
+        }
+    }
+
+
+    /*
+    `ArcSvg` is a data structure that represents a directed arc as represented by an svg path
+    */
+    class ArcSvg{
+        constructor(source, target, radius, is_large_arc, is_clockwise){
+            this.source = source;
+            this.target = target;
+            this.radius = radius;
+            this.is_large_arc = is_large_arc;
+            this.is_clockwise = is_clockwise;
+        }
+    };
+
+    /*
+    `ArcView` is a data structure that represents a directed arc in a way that's easily mapped to and from screen coordinates.
+    `source` and `target` are vec2 indicating source and target in either cell or screen coordinates.
+    `min_length_clockwise` is the minimum length of an arc, where sign inidicates arc chirality (positive values are clockwise).
+    */
+    class ArcView {
+        constructor(source, target, min_length_clockwise){
+            this.source = source;
+            this.target = target;
+            this.min_length_clockwise = min_length_clockwise;
+        }
+    }
+
+    /*
+    `ArcModel` is a data structure that represents a directed arc in a way that allows easy storage and manipulation by the application.
+    `source` and `target` are vec2s indicating source and target in cell coordinates. Their components are integers if `is_snapped == true`.
+    `min_length_clockwise` is the minimum length of an arc, where sign inidicates arc chirality (positive values are clockwise).
+    `target_offset_id` is an ivec2 that represents the direction of an offset applied to the target position to indicate the direction of loops.
+    `is_snapped` is a boolean indicating whether the arc has been associated with a definite source and target cell and should be included in the diagram.
+    */
+    class ArcModel {
+        constructor(source, target, min_length_clockwise, target_offset_id, is_snapped){
+            this.source = source;
+            this.target = target;
+            this.min_length_clockwise = min_length_clockwise;
+            this.target_offset_id = target_offset_id;
+            this.is_snapped = is_snapped;
+        }
+    }
+
+    /*
+    `ArcGeometry` is intended as a namespace of pure functions describing useful analytic geometry of arcs
+    */
+    function ArcGeometry(){
+        const pi = Math.PI;
+        const pow = Math.pow;
+        const acos = Math.acos;
+        const cos = Math.cos;
+        const sin = Math.sin;
+        const min = Math.min;
+        const max = Math.max;
+        const sqrt = Math.sqrt;
+        const sign = Math.sign;
+        const abs = Math.abs;
+        const epsilon = 1e-6;
+        return {
+            origin: function(source, target, min_length_clockwise, radius){
+                const chord = target.sub(source);
+                const chord_length = glm.length(chord);
+                const chord_direction = glm.normalize(chord);
+                const min_radius = abs(min_length_clockwise) / pi;
+                const v = chord_direction.mul(radius);
+                const theta = acos(chord_length/(2*radius)) * (chord_length < 2*min_radius? 1:-1) * -sign(min_length_clockwise);
+                return glm.vec2(
+                    v.x * cos(theta) - v.y * sin(theta),
+                    v.x * sin(theta) + v.y * cos(theta),
+                ).add(source);
+            },
+            position_at_distance_along_arc: function (source, origin, min_length_clockwise, radius, distance){
+                const v = source.sub(origin);
+                const theta = -distance / radius * -sign(min_length_clockwise);
+                return glm.vec2(
+                    v.x * cos(theta) - v.y * sin(theta),
+                    v.x * sin(theta) + v.y * cos(theta),
+                ).add(origin);
+            },
+            radius_for_chord_and_arc_length: function(source, target, min_length_clockwise){
+                /*
+                NOTE: 
+                Given the source position, target position, and length of an arc, we want to find the radius of the circle that is traced by the arc.
+                We find the problem reduces to finding the radius ("r") of a semicircle given half the chord length ("x") and half the arc length ("A").
+                We draw a right triangle on the semicircle with a hypoteneuse of r, a leg of x opposite to the origin, and angle of θ such that:
+                  x/r = sin(θ)
+                The angle subtended by the arc ("ϕ") takes up the rest of the semicircle, so if we use radians then:
+                  ϕ = π-θ = A/r
+                We have a lot of unknowns to work with (r, θ, and ϕ), so we first try to remove some from consideration.
+                Using the equations above we find that:
+                  x/(A/ϕ) = sin(π-ϕ)
+                which simplifies to:
+                  x/A = sin(ϕ)/ϕ
+                So we can solve the problem by approximating the inverse of sin(ϕ)/ϕ
+                We source our approximation by noticing that it resembles 2acos(ϕ) for our range of interest, [0,π]:
+                  https://www.desmos.com/calculator/unllvphdq0
+                It's slightly off towards the middle of the range, but all we have to do is find an expression for a factor that we can "nudge" it by.
+                We model this "nudge" factor as 1-axᵇ, and by fitting the function manually, we get adequate results using a = 0.147 and b = 0.65.
+                In summary, our approximation is:
+                  ϕ = A/r ≈ 2 (1-a(x/A)ᵇ) acos(x/A)
+                And our solution is:
+                  r ≈ A / (2 (1-a(x/A)ᵇ) acos(x/A))
+                */
+                const arc_length = abs(min_length_clockwise);
+                const a = 0.147;
+                const b = 0.650;
+                const x = glm.distance(source, target) / 2.0;
+                const A = max(x, arc_length/2 );
+                const xA = min(x/A, 1-epsilon);
+                const r = A / (2.0 * (1.0 - a*pow(xA, b)) * acos(xA));
+                return r;
+            },
+        }
+    }
+
+    /*
+    `ArcRendering` is a namespace of pure functions describing a small category mapping arcs to svg depictions
+    */
+    function ArcRendering(arc_geometry, line_geometry){
+        const pi = Math.PI;
+        const sqrt = Math.sqrt;
+        const max = Math.max;
+        const abs = Math.abs;
+        // A `SvgQuadraticBezier` is a representation for a quadratic Bezier that can be used by svg
+        class SvgQuadraticBezier{
+            constructor(points){
+                this.points = points;
+            }
+        };
+
+        return {
+            view_arc_to_svg_arc: function(arc){
+                const min_length = abs(arc.min_length_clockwise);
+                const length = max(min_length, glm.distance(arc.source, arc.target));
+                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.source, arc.target, arc.min_length_clockwise);
+                return new ArcSvg(arc.source, arc.target, 
+                    radius, abs(arc.min_length_clockwise)/radius > pi, !arc.is_clockwise);
+            },
+            view_arc_to_svg_bezier: function(arc, sample_point_count){
+                const min_length = abs(arc.min_length_clockwise);
+                const length = max(min_length, glm.distance(arc.source, arc.target));
+                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.source, arc.target, arc.min_length_clockwise);
+                const origin = arc_geometry.origin(arc.source, arc.target, arc.min_length_clockwise, radius);
+                const sample_points = [];
+                for (let i = 0; i <= sample_point_count; i++) {
+                    sample_points.push(arc_geometry.position_at_distance_along_arc(arc.source, origin, arc.min_length_clockwise, radius, length * i/sample_point_count));
+                }
+                const points = [sample_points[0]];
+                for (let i = 1; i <= sample_point_count; i++) {
+                    const a = sample_points[i-1].sub(origin);
+                    const b = sample_points[i].sub(origin);
+                    const k = glm.vec3(0,0,1);
+                    const a_tangent = glm.normalize(glm.cross(glm.vec3(a,0), k)).xy;
+                    const b_tangent = glm.normalize(glm.cross(glm.vec3(b,0), k)).xy;
+                    const intersection = a_tangent.mul(line_geometry.distance_along_line_to_line(a,a_tangent,b,b_tangent)).add(a).add(origin);
+                    points.push(intersection);
+                    points.push(sample_points[i]);
+                }
+                return new SvgQuadraticBezier(points);
+            },
+            svg_bezier_to_path: function(bezier){
+                const points = bezier.points;
+                const source = points[0];
+                let output = `M ${source.x} ${source.y}`;
+                for (let i = 1; i+1 < points.length; i+=2) {
+                    const control = points[i];
+                    const sample = points[i+1];
+                    output += ` Q ${control.x} ${control.y} ${sample.x} ${sample.y}`;
+                }
+                return output;
+            },
+            svg_arc_to_path: function(arc){
+                return `M ${arc.source.x} ${arc.source.y} A ${arc.radius} ${arc.radius} 0 ${arc.is_large_arc?1:0} ${arc.is_clockwise?0:1} ${arc.target.x} ${arc.target.y}` ;
+            },
+        }
+    }
+
+
+    /*
+    `ArcFrameShifting` is a namespace of pure functions that describe isomorphisms to and from a reference frame.
+    `enter` accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
+    and returns a position that is defined in terms of the reference frame. `leave` is inverse to `enter`.
     */
     function ArcFrameShifting(position_frame_shifting){
         const shifting = position_frame_shifting;
         return {
-            'enter': (model_arrow, frame) => 
-                new DiagramArc(
-                    shifting.enter(model_arrow.start, frame),
-                    shifting.enter(model_arrow.end, frame),
-                    model_arrow.min_length_clockwise / frame.unit_length,
+            'enter': (arrow, frame) => 
+                new ArcView(
+                    shifting.enter(arrow.source, frame),
+                    shifting.enter(arrow.target, frame),
+                    arrow.min_length_clockwise / frame.unit_length,
                 ),
-            'leave': (view_arrow, frame) =>
-                new DiagramArc(
-                    shifting.leave(view_arrow.start, frame),
-                    shifting.leave(view_arrow.end, frame),
-                    model_arrow.min_length_clockwise * frame.unit_length,
+            'leave': (arrow, frame) =>
+                new ArcView(
+                    shifting.leave(arrow.source, frame),
+                    shifting.leave(arrow.target, frame),
+                    arrow.min_length_clockwise * frame.unit_length,
                 ),
         };
     }
 
     /*
-    "ArcFrameShifting" is a namespace of pure functions that describe the isomorphism
-    "enter" accepts two reference frames, both expressed in terms of an implicit user defined reference frame,
-    and returns a new reference frame that is the first defined in terms of the second. "leave" is inverse to "enter".
+    `ArcRepresentation` is a namespace of pure functions that describe maps between `ArcView`s and `ArcModel`s
     */
-    function DiagramReferenceFrameShifting(position_frame_shifting){
+    function ArcRepresentation(
+        diagram_ids, 
+        min_loop_chord_length, 
+        max_loop_chord_length, 
+        max_loop_snap_distance, 
+        max_nonloop_snap_distance,
+        cell_to_target_distance
+    ) {
+        const ids = diagram_ids;
+        return {
+            'view_to_model': function(arc) {
+                const source_cell = ids.cell_position_to_cell_id(arc.source);
+                const target_cell = ids.cell_position_to_cell_id(arc.target);
+
+                const is_loop = glm.distance(arc.source, arc.target) < max_loop_chord_length;
+                const is_target_snapped = glm.distance(arc.target, target_cell) < (is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
+                const is_canceled = glm.distance(arc.target, source_cell) < min_loop_chord_length;
+                const is_snapped = is_target_snapped && !is_canceled;
+
+                const target = 
+                      is_canceled?       source_cell
+                    : is_target_snapped? target_cell
+                    :                    arc.target;
+
+                const target_offset_id = 
+                      !is_snapped?  glm.vec2()
+                    : is_loop?      ids.offset_to_offset_id(ids.cell_position_and_cell_id_to_offset(arc.target, target_cell)) 
+                    :               glm.vec2();
+
+                return new ArcModel(
+                    source_cell, 
+                    target, 
+                    arc.min_length_clockwise, 
+                    target_offset_id,
+                    is_snapped
+                );
+            },
+            'model_to_view': function(arc){
+                return new ArcView(
+                    arc.source, 
+                    arc.target_offset_id.mul(cell_to_target_distance).add(arc.target),
+                    arc.min_length_clockwise
+                );
+            }
+        };
+    }
+
+    /*
+    `ScreenReferenceFrame` is a data structure that expresses a DiagramReferenceFrame 
+    in a way that can be easily manipulated by the application while guaranteeing correctness 
+    for all real valued attributes.
+    */
+    class ScreenReferenceFrameStore {
+        constructor(topleft_cell_position, log2_cell_width){
+            this.topleft_cell_position = topleft_cell_position;
+            this.log2_cell_width = log2_cell_width;
+        }
+    }
+
+    /*
+    `ScreenReferenceFrameStorage` is a namespace of pure functions that describe the isomorphism 
+    between a ScreenReferenceFrame and a DiagramReferenceFrame expressed in terms of "model space"
+    where each cell is of unit length.
+    */
+    function ScreenReferenceFrameStorage(){
+        const pow = Math.pow;
+        const log2 = Math.log2;
+        return {
+            'pack': (frame) => new ScreenReferenceFrameStore(frame.origin, log2(1/frame.unit_length)),
+            'unpack': (store) => new DiagramReferenceFrame(store.topleft_cell_position, 1/pow(2, store.log2_cell_width)),
+        };
+    }
+
+    /*
+    `ReferenceFrameShifting` is a namespace of pure functions that describe the isomorphism
+    `enter` accepts two reference frames, both expressed in terms of an implicit user defined reference frame,
+    and returns a new reference frame that is the first defined in terms of the second. `leave` is inverse to `enter`.
+    */
+    function ReferenceFrameShifting(position_frame_shifting){
         const shifting = position_frame_shifting;
         return {
             'enter': (frame1, frame2) => 
@@ -220,73 +458,20 @@
     }
 
     /*
-    "DiagramIds" is a namespace describing a small category of pure functions mapping between position indicators in model space
+    `DiagramArrow` is a data structure that represents every property of an arrow that can be depicted within the application
     */
-    function DiagramIds(){
-        const floor = Math.floor;
-        const round = Math.round;
-        const abs = Math.abs;
-        return {
-            'cell_position_to_border_id': cell_position => glm.vec2(floor(cell_position.x), floor(cell_position.y)),
-            'border_id_to_cell_position': border_id => border_id.add(0.5),
-            'cell_position_to_cell_id': cell_position => glm.vec2(round(cell_position.x), round(cell_position.y)),
-            'cell_position_and_cell_id_to_offset': (cell_position, cell_id) => cell_position.sub(cell_id),
-            'offset_to_basis': offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
-            'offset_to_basis_id': offset => ((offset.x > offset.y) << 1) + (-offset.x > offset.y),
-        };
-    }
-
-    /*
-    "PositionSnapping" is a namespace of pure functions that describe equivalence classes of user specified positions
-    */
-    function PositionSnapping(diagram_ids, cell_to_target_distance) {
-        const ids = diagram_ids;
-        return {
-            /* 
-            A "cell" here is shorthand for the center position of a cell.
-            */
-            'snap_to_cell': model => ids.cell_position_to_cell_id(model),
-            /* 
-            A "handle" is any position within a cell that can be used as a target. 
-            This includes positions that are off of center to allow the user to specify how loops are oriented.
-            */
-            'snap_to_handle': function(model){
-                const cell_id = ids.cell_position_to_cell_id(model);
-                return ids.offset_to_basis(ids.cell_position_and_cell_id_to_offset(model, cell_id)).mul(cell_to_target_distance).add(cell_id);
-            },
-        };
-    }
-
-    /*
-    "ArrowSnapping" is a namespace of pure functions that describe equivalence classes of arrows for user specified start and stop positions
-    */
-    function ArrowSnapping(
-        point_snapping, 
-        min_loop_chord_length, 
-        max_loop_chord_length, 
-        max_loop_snap_distance, 
-        max_nonloop_snap_distance
-    ) {
-        const snapping = point_snapping;
-        return {
-            'snap': function(source_proposal, target_proposal) {
-                const source_cell = snapping.snap_to_cell(source_proposal);
-                const target_cell = snapping.snap_to_cell(target_proposal);
-                const target_handle = snapping.snap_to_handle(target_proposal);
-
-                const is_loop = glm.distance(source_cell, target_cell) < max_loop_chord_length;
-                const is_snapped = glm.distance(target_proposal, target_cell) < (is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
-                const is_canceled = glm.distance(target_proposal, source_cell) < min_loop_chord_length;
-
-                const source = source_cell;
-                const target = 
-                      is_canceled?  source_cell
-                    : is_snapped?  (is_loop? target_handle : target_cell)
-                    :               target_proposal;
-
-                return new Arrow(source, target);
-            }
-        };
+    class DiagramArrow {
+        constructor(
+            arc, label, label_position_id, 
+            source_style_id, end_style_id, line_style_id
+        ){
+            this.arc = arc;
+            this.label = label || "";
+            this.label_position_id = label_position_id;
+            this.source_style_id = source_style_id;
+            this.end_style_id = end_style_id;
+            this.line_style_id = line_style_id;
+        }
     }
 
     const DragState = {
@@ -297,105 +482,152 @@
     };
 
     /*
-    "ApplicationState" is a data structure that contains all state within the application. 
+    `ApplicationState` is a data structure that contains all state within the application. 
     It guarantees that for any combination of real numbered attribute values there is a valid application state.
     */
     class ApplicationState {
-        constructor(view_frame_store, drag_state, edited_arrow){
-            this.view_frame_store = view_frame_store;
+        constructor(screen_frame_store, drag_state, arrows, edited_arrow){
+            this.screen_frame_store = screen_frame_store;
             this.drag_state = drag_state;
+            this.arrows = arrows;
             this.edited_arrow = edited_arrow;
         }
     }
 
     /*
-    "DiagramStateOperations" is a namespace of *conceptually* pure functions 
+    `ApplicationStateOperations` is a namespace of *conceptually* pure functions 
     that operate with no concept of what hardware is being used (e.g. mouse, touchscreen, etc.).
     All functions represent the transformation of state in reponse to controller events. 
     */
-    function DiagramStateOperations(
-            view_frame_storage,  
+    function ApplicationStateOperations(
+            screen_frame_storage,  
             offset_frame_shifting, 
             position_frame_shifting, 
-            reference_frame_shifting, 
-            arrow_snapping
+            arc_representation,
+            default_min_length_clockwise
         ) {
-        const pow = Math.pow;
-        const storage = view_frame_storage;
+        const sign = Math.sign;
+        const abs = Math.abs;
+        const max = Math.max;
+        const storage = screen_frame_storage;
         const offset_shifting = offset_frame_shifting;
         const position_shifting = position_frame_shifting;
-        const reference_shifting = reference_frame_shifting;
-        const snapping = arrow_snapping;
         return {
-            zoom: function(state_in, view_focus, log2_cell_width_change, state_out) {
-                const view_frame_store = state_in.view_frame_store;
-                const view_frame = storage.unpack(view_frame_store);
-                const model_focus = position_shifting.leave(view_focus, view_frame);
+            zoom: function(state_in, screen_focus, log2_cell_width_change, state_out) {
+                const screen_frame_store = state_in.screen_frame_store;
+                const screen_frame = storage.unpack(screen_frame_store);
+                const model_focus = position_shifting.leave(screen_focus, screen_frame);
                 const topleft_zoom_frame_store = 
-                    new ViewReferenceFrameStore(
-                        view_frame_store.topleft_cell_position, 
-                        view_frame_store.log2_cell_width + log2_cell_width_change
-                    )
+                    new ScreenReferenceFrameStore(
+                        screen_frame_store.topleft_cell_position, 
+                        screen_frame_store.log2_cell_width + log2_cell_width_change
+                    );
                 const topleft_zoom_frame = storage.unpack(topleft_zoom_frame_store);
-                const view_zoom_offset = position_shifting.enter(model_focus, topleft_zoom_frame).sub(view_focus);
-                const model_zoom_offset = offset_shifting.leave(view_zoom_offset, view_frame);
-                state_out.view_frame_store.topleft_cell_position = view_frame_store.topleft_cell_position.add(model_zoom_offset);
-                state_out.view_frame_store.log2_cell_width = state_in.view_frame_store.log2_cell_width + log2_cell_width_change;
+                const screen_zoom_offset = position_shifting.enter(model_focus, topleft_zoom_frame).sub(screen_focus);
+                const model_zoom_offset = offset_shifting.leave(screen_zoom_offset, screen_frame);
+                state_out.screen_frame_store.topleft_cell_position = screen_frame_store.topleft_cell_position.add(model_zoom_offset);
+                state_out.screen_frame_store.log2_cell_width = state_in.screen_frame_store.log2_cell_width + log2_cell_width_change;
                 state_out.drag_state = DragState.zoom;
+                state_out.arrows = [ ...state_in.arrows];
                 state_out.edited_arrow = state_in.edited_arrow;
             },
-            pan: function(state_in, view_offset, state_out){
-                const view_frame = storage.unpack(state_in.view_frame_store);
-                const model_offset = offset_shifting.leave(view_offset, view_frame);
-                state_out.view_frame_store.topleft_cell_position = state_in.view_frame_store.topleft_cell_position.sub(model_offset);
-                state_out.view_frame_store.log2_cell_width = state_in.view_frame_store.log2_cell_width;
+            pan: function(state_in, screen_offset, state_out){
+                const screen_frame = storage.unpack(state_in.screen_frame_store);
+                const model_offset = offset_shifting.leave(screen_offset, screen_frame);
+                state_out.screen_frame_store.topleft_cell_position = state_in.screen_frame_store.topleft_cell_position.sub(model_offset);
+                state_out.screen_frame_store.log2_cell_width = state_in.screen_frame_store.log2_cell_width;
                 state_out.drag_state = DragState.pan;
+                state_out.arrows = [ ...state_in.arrows];
                 state_out.edited_arrow = state_in.edited_arrow;
             },
-            draw: function(state_in, view_position, state_out){
-                const view_frame = storage.unpack(state_in.view_frame_store);
-                const model_position = position_shifting.leave(view_position, view_frame);
+            draw: function(state_in, screen_position, state_out){
+                const screen_frame = storage.unpack(state_in.screen_frame_store);
+                const model_position = position_shifting.leave(screen_position, screen_frame);
 
-                let arrow = snapping.snap(
-                    state_out.drag_state == DragState.draw? state_in.edited_arrow.start : model_position,
-                    model_position
+                const arc_view = new ArcView(
+                    state_out.drag_state == DragState.draw? state_in.edited_arrow.arc.source : model_position, 
+                    model_position,
+                    state_out.drag_state == DragState.draw? state_in.edited_arrow.arc.min_length_clockwise : default_min_length_clockwise,
                 );
-                let diagram_arrow = new DiagramArrow(
-                    arrow.start, arrow.end,
-                    state_in.edited_arrow.min_length_clockwise,
+
+                const diagram_arrow = new DiagramArrow(
+                    arc_representation.view_to_model(arc_view),
                     state_in.edited_arrow.label,
                     state_in.edited_arrow.label_position_id,
-                    state_in.edited_arrow.start_style_id,
+                    state_in.edited_arrow.source_style_id,
                     state_in.edited_arrow.end_style_id,
                     state_in.edited_arrow.line_style_id,
                 );
 
-                state_out.view_frame_store = state_in.view_frame_store;
+                state_out.screen_frame_store = state_in.screen_frame_store;
                 state_out.drag_state = DragState.draw;
+                state_out.arrows = [ ...state_in.arrows];
                 state_out.edited_arrow = diagram_arrow;
             },
+            bend: function (state_in, min_length_clockwise_change, state_out) {
+                const arrow_in = state_in.edited_arrow;
+                const arc_in = arrow_in.arc;
+
+                const chord_length = glm.distance(arc_in.source, arc_in.target);
+                const arc_length1 = 0.7;
+                const arc_length2 = max(arc_length1, chord_length);
+                const min_arc_length = abs(arc_in.min_length_clockwise);
+                const clockwise_sign = sign(arc_in.min_length_clockwise);
+                const excess_in = clockwise_sign * max(min_arc_length - arc_length2, 0);
+                const excess_out = excess_in + min_length_clockwise_change;
+                const is_different_sign = sign(excess_in) * sign(excess_out) < 0;
+                const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
+
+                const diagram_arrow = new DiagramArrow(
+                    new ArcModel(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_snapped),
+                    arrow_in.label,
+                    arrow_in.label_position_id,
+                    arrow_in.source_style_id,
+                    arrow_in.end_style_id,
+                    arrow_in.line_style_id,
+                );
+
+                state_out.screen_frame_store = state_in.screen_frame_store;
+                state_out.drag_state = DragState.draw;
+                state_out.arrows = [ ...state_in.arrows];
+                state_out.edited_arrow = diagram_arrow;
+            },
+            release: function(state_in, state_out) {
+                state_out.screen_frame_store = state_in.screen_frame_store;
+                state_out.arrows = 
+                    state_in.drag_state == DragState.draw && state_in.edited_arrow.arc.is_snapped ? 
+                        [ ...state_in.arrows, state_in.edited_arrow] 
+                    : 
+                        [...state_in.arrows];
+                state_out.drag_state = DragState.released;
+                state_out.edited_arrow = new DiagramArrow(glm.vec2(), glm.vec2());
+            },
+            cancel: function(state_in, state_out) {
+                state_out.screen_frame_store = state_in.screen_frame_store;
+                state_out.drag_state = DragState.released;
+                state_out.arrows = [ ...state_in.arrows];
+                state_out.edited_arrow = new DiagramArrow(glm.vec2(), glm.vec2());
+            },
             copy: function(state_in, state_out){
-                state_out.view_frame_store = state_in.view_frame_store;
+                state_out.screen_frame_store = state_in.screen_frame_store;
                 state_out.drag_state = state_in.drag_state;
+                state_out.arrows = [ ...state_in.arrows];
                 state_out.edited_arrow = state_in.edited_arrow;
             }
         };
     }
 
     /*
-    "DiagramControls" is a namespace of *conceptually* pure functions that reflect how events map to actions.
+    `ApplicationControls` is a namespace of *conceptually* pure functions that reflect how events map to actions.
     All functions represent the transformation of state in reponse to controller events. 
     It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
     */
-    function DiagramControls(
-        diagram_state_operations, 
+    function ApplicationControls(
+        application_state_operations, 
         log2_cell_width_change_per_scroll,
-        min_length_change_per_scroll
+        min_length_clockwise_change_per_scroll
     ){
-        const sign = Math.sign;
-        const abs = Math.abs;
-        const max = Math.max;
-        const operations = diagram_state_operations;
+        const operations = application_state_operations;
         const mouse_actions = {
             'pan':  (state_in, event, state_out) => operations.pan(state_in, glm.vec2(event.movementX, event.movementY), state_out),
             'draw': (state_in, event, state_out) => operations.draw(state_in, glm.vec2(event.clientX, event.clientY), state_out),
@@ -403,17 +635,7 @@
         return {
             wheel: function(state_in, event, state_out){
                 if (state_in.drag_state == DragState.draw) {
-                    const chord_length = glm.distance(state_in.edited_arrow.start, state_in.edited_arrow.end);
-                    const arc_length1 = 0.7;
-                    const arc_length2 = max(arc_length1, chord_length);
-                    const min_arc_length = abs(state_in.edited_arrow.min_length_clockwise);
-                    const clockwise_sign = sign(state_in.edited_arrow.min_length_clockwise);
-                    const excess_in = clockwise_sign * max(min_arc_length - arc_length2, 0);
-                    const excess_out = excess_in + min_length_change_per_scroll * event.deltaY;
-                    const is_different_sign = sign(excess_in) * sign(excess_out) < 0;
-                    const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
-                    operations.copy(state_in, state_out);
-                    state_out.edited_arrow.min_length_clockwise = min_length_clockwise_out;
+                    operations.bend(state_in, min_length_clockwise_change_per_scroll * event.deltaY, state_out);
                 } else {
                     operations.zoom(state_in, glm.vec2(event.clientX, event.clientY), log2_cell_width_change_per_scroll * event.deltaY, state_out);
                 }
@@ -422,7 +644,7 @@
                 const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
                 if (state_in.drag_state == DragState.draw) { 
                     // cancel draw action
-                    state_out.drag_state = DragState.released;
+                    operations.cancel(state_in, state_out);
                 } else if (state in mouse_actions){
                     mouse_actions[state](state_in, event, state_out); 
                 }
@@ -435,9 +657,9 @@
                 }
             },
             mouseup: function(state_in, event, state_out){
-                state_out.drag_state = DragState.released;
+                operations.release(state_in, state_out);
             },
-            touchstart: function(state_in, event, state_out){
+            touchsource: function(state_in, event, state_out){
 
             },
             touchend: function(state_in, event, state_out){
@@ -450,7 +672,7 @@
     }
 
     /*
-    "EventQueueSideEffectWrapper" is a object oriented class that encapsulates all use of the javascript event system.
+    `EventQueueSideEffectWrapper` is a object oriented class that encapsulates all use of the javascript event system.
     This is done so that the rest of the application can be managed statelessly, using pure functions and categories.
     It practices RAII in that it binds events to a `domElement` upon construction and does not let go until dispose() is called.
     Events can be retrieved using `pollWithSideEffect()`, which returns a list of all events that occurred on 
@@ -476,7 +698,7 @@
             domElement.addEventListener('mousemove',      enqueuePrevent,     false);
             domElement.addEventListener('mouseup',        enqueue,            false);
             domElement.addEventListener('wheel',          enqueue,            false);
-            domElement.addEventListener('touchstart',     enqueue,            false);
+            domElement.addEventListener('touchsource',     enqueue,            false);
             domElement.addEventListener('touchmove',      enqueuePreventStop, false);
             domElement.addEventListener('touchend',       enqueue,            false);
             this.dispose = function(){
@@ -485,7 +707,7 @@
                 domElement.removeEventListener('mousemove',      enqueuePrevent,     false);
                 domElement.removeEventListener('mouseup',        enqueue,            false);
                 domElement.removeEventListener('wheel',          enqueue,            false);
-                domElement.removeEventListener('touchstart',     enqueue,            false);
+                domElement.removeEventListener('touchsource',     enqueue,            false);
                 domElement.removeEventListener('touchmove',      enqueuePreventStop, false);
                 domElement.removeEventListener('touchend',       enqueue,            false);
             }
@@ -498,196 +720,43 @@
     }
 
 
-    /*
-    "LineGeometry" is intended as a namespace of pure functions describing useful analytic geometry of 2d lines
-    */
-    function LineGeometry(){
-        const abs = Math.abs;
-        return {
-            /*
-            A0 line reference
-            A  line direction, normalized
-            B0 line reference
-            B  line direction, normalized
-            */
-            distance_along_line_to_line: function(A0,A, B0,B){
-                return glm.cross((B0.sub(A0)), B).z / glm.cross(A, B).z;
-            }
-        };
-    }
-
-    /*
-    "ArcGeometry" is intended as a namespace of pure functions describing useful analytic geometry of arcs
-    */
-    function ArcGeometry(){
-        const pi = Math.PI;
-        const pow = Math.pow;
-        const acos = Math.acos;
-        const cos = Math.cos;
-        const sin = Math.sin;
-        const min = Math.min;
-        const max = Math.max;
-        const sqrt = Math.sqrt;
-        const sign = Math.sign;
-        const abs = Math.abs;
-        const epsilon = 1e-6;
-        return {
-            origin: function(start, end, min_length_clockwise, radius){
-                const chord = end.sub(start);
-                const chord_length = glm.length(chord);
-                const chord_direction = glm.normalize(chord);
-                const min_radius = abs(min_length_clockwise) / pi;
-                const v = chord_direction.mul(radius);
-                const theta = acos(chord_length/(2*radius)) * (chord_length < 2*min_radius? 1:-1) * -sign(min_length_clockwise);
-                return glm.vec2(
-                    v.x * cos(theta) - v.y * sin(theta),
-                    v.x * sin(theta) + v.y * cos(theta),
-                ).add(start);
-            },
-            position_at_distance_along_arc: function (start, origin, min_length_clockwise, radius, distance){
-                const v = start.sub(origin);
-                const theta = -distance / radius * -sign(min_length_clockwise);
-                return glm.vec2(
-                    v.x * cos(theta) - v.y * sin(theta),
-                    v.x * sin(theta) + v.y * cos(theta),
-                ).add(origin);
-            },
-            radius_for_chord_and_arc_length: function(start, end, min_length_clockwise){
-                /*
-                NOTE: 
-                Given the start position, end position, and length of an arc, we want to find the radius of the circle that is traced by the arc.
-                We find the problem reduces to finding the radius ("r") of a semicircle given half the chord length ("x") and half the arc length ("A").
-                We draw a right triangle on the semicircle with a hypoteneuse of r, a leg of x opposite to the origin, and angle of θ such that:
-                  x/r = sin(θ)
-                The angle subtended by the arc ("ϕ") takes up the rest of the semicircle, so if we use radians then:
-                  ϕ = π-θ = A/r
-                We have a lot of unknowns to work with (r, θ, and ϕ), so we first try to remove some from consideration.
-                Using the equations above we find that:
-                  x/(A/ϕ) = sin(π-ϕ)
-                which simplifies to:
-                  x/A = sin(ϕ)/ϕ
-                So we can solve the problem by approximating the inverse of sin(ϕ)/ϕ
-                We start our approximation by noticing that it resembles 2acos(ϕ) for our range of interest, [0,π]:
-                  https://www.desmos.com/calculator/unllvphdq0
-                It's slightly off towards the middle of the range, but all we have to do is find an expression for a factor that we can "nudge" it by.
-                We model this "nudge" factor as 1-axᵇ, and by fitting the function manually, we get adequate results using a = 0.147 and b = 0.65.
-                In summary, our approximation is:
-                  ϕ = A/r ≈ 2 (1-a(x/A)ᵇ) acos(x/A)
-                And our solution is:
-                  r ≈ A / (2 (1-a(x/A)ᵇ) acos(x/A))
-                */
-                const arc_length = abs(min_length_clockwise);
-                const a = 0.147;
-                const b = 0.650;
-                const x = glm.distance(start, end) / 2.0;
-                const A = max(x, arc_length/2 );
-                const xA = min(x/A, 1-epsilon);
-                const r = A / (2.0 * (1.0 - a*pow(xA, b)) * acos(xA));
-                return r;
-            },
-        }
-    }
-
-    /*
-    "ArcSvg" is a namespace of pure functions describing a small category mapping arcs to svg depictions
-    */
-    function ArcSvg(arc_geometry, line_geometry){
-        const pi = Math.PI;
-        const sqrt = Math.sqrt;
-        const max = Math.max;
-        const abs = Math.abs;
-        // An "SvgArc" is an arc as defined by svg paths
-        class SvgArc{
-            constructor(start, end, radius, is_large_arc, is_clockwise){
-                this.start = start;
-                this.end = end;
-                this.radius = radius;
-                this.is_large_arc = is_large_arc;
-                this.is_clockwise = is_clockwise;
-            }
-        };
-        // A "SvgQuadraticBezier" is a representation for a quadratic Bezier that can be used by svg
-        class SvgQuadraticBezier{
-            constructor(points){
-                this.points = points;
-            }
-        };
-
-        return {
-            diagram_arc_to_svg_arc: function(arc){
-                const min_length = abs(arc.min_length_clockwise);
-                const length = max(min_length, glm.distance(arc.start, arc.end));
-                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.min_length_clockwise);
-                return new SvgArc(arc.start, arc.end, 
-                    radius, abs(arc.min_length_clockwise)/radius > pi, !arc.is_clockwise);
-            },
-            diagram_arc_to_svg_bezier: function(arc, sample_point_count){
-                const min_length = abs(arc.min_length_clockwise);
-                const length = max(min_length, glm.distance(arc.start, arc.end));
-                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.start, arc.end, arc.min_length_clockwise);
-                const origin = arc_geometry.origin(arc.start, arc.end, arc.min_length_clockwise, radius);
-                const sample_points = [];
-                for (let i = 0; i <= sample_point_count; i++) {
-                    sample_points.push(arc_geometry.position_at_distance_along_arc(arc.start, origin, arc.min_length_clockwise, radius, length * i/sample_point_count));
-                }
-                const points = [sample_points[0]];
-                for (let i = 1; i <= sample_point_count; i++) {
-                    const a = sample_points[i-1].sub(origin);
-                    const b = sample_points[i].sub(origin);
-                    const k = glm.vec3(0,0,1);
-                    const a_tangent = glm.normalize(glm.cross(glm.vec3(a,0), k)).xy;
-                    const b_tangent = glm.normalize(glm.cross(glm.vec3(b,0), k)).xy;
-                    const intersection = a_tangent.mul(line_geometry.distance_along_line_to_line(a,a_tangent,b,b_tangent)).add(a).add(origin);
-                    points.push(intersection);
-                    points.push(sample_points[i]);
-                }
-                return new SvgQuadraticBezier(points);
-            },
-            svg_bezier_to_path: function(bezier){
-                const points = bezier.points;
-                const start = points[0];
-                let output = `M ${start.x} ${start.y}`;
-                for (let i = 1; i+1 < points.length; i+=2) {
-                    const control = points[i];
-                    const sample = points[i+1];
-                    output += ` Q ${control.x} ${control.y} ${sample.x} ${sample.y}`;
-                }
-                return output;
-            },
-            svg_arc_to_path: function(arc){
-                return `M ${arc.start.x} ${arc.start.y} A ${arc.radius} ${arc.radius} 0 ${arc.is_large_arc?1:0} ${arc.is_clockwise?0:1} ${arc.end.x} ${arc.end.y}` ;
-            },
-        }
-    }
-
     const vue = new Vue({
         el: '#app',
         data:{
             state: 
                 new ApplicationState(
-                    new ViewReferenceFrameStore(glm.vec2(), Math.log2(200)), 
+                    new ScreenReferenceFrameStore(glm.vec2(), Math.log2(200)), 
                     DragState.released, 
+                    [],
                     new DiagramArrow(glm.vec2(), glm.vec2()),
                 ),
             queue: undefined,
             controls: 
-                DiagramControls(
-                    DiagramStateOperations(
-                        ViewReferenceFrameStorage(),
+                ApplicationControls(
+                    ApplicationStateOperations(
+                        ScreenReferenceFrameStorage(),
                         OffsetFrameShifting(), 
                         PositionFrameShifting(), 
-                        DiagramReferenceFrameShifting(PositionFrameShifting()), 
-                        ArrowSnapping(
-                            PositionSnapping(DiagramIds(), 0.03), // handle separation
-                            0.07, 0.5, 0.25, 0.3 // min loop, max loop, loop snap, nonloop snap
-                        ) 
+                        ArcRepresentation(
+                            DiagramIds(), 
+                            0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
+                            0.03, // cell to target distance
+                        ),
+                        0.7 // default_min_length_clockwise
                     ),
                     -0.001, // log2_cell_width_change_per_scroll
                     0.001 // min_length_change_per_scroll
                 ),
-            view_frame_storage: ViewReferenceFrameStorage(), 
+            arc_representation: 
+                ArcRepresentation(
+                    DiagramIds(), 
+                    0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
+                    0.03, // cell to target distance
+                ),
+            arc_shifting: ArcFrameShifting(PositionFrameShifting()),
+            arc_rendering: ArcRendering(ArcGeometry(), LineGeometry()),
+            screen_frame_storage: ScreenReferenceFrameStorage(), 
             position_shifting: PositionFrameShifting(),
-            arrow_shifting: ArcFrameShifting(PositionFrameShifting()),
             ids: DiagramIds(),
         },
         created: function() {
@@ -709,40 +778,39 @@
                 return this.state.drag_state == DragState.draw;
             },
             transformation: function() {
-                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
-                return `translate(${-view_frame.origin.x} ${-view_frame.origin.y})`;
+                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
             },
             cell_count: function() {
-                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.view_frame_store.log2_cell_width));
+                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.screen_frame_store.log2_cell_width));
             },
             cell_border_position: function(x, y) {
-                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
-                const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(view_frame.origin).add(glm.ivec2(x-1,y-1)) );
-                return this.position_shifting.enter(model_border_position, view_frame);
+                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(screen_frame.origin).add(glm.ivec2(x-1,y-1)) );
+                return this.position_shifting.enter(model_border_position, screen_frame);
             },
-            path: function(arrow) {
-                const svg = ArcSvg(ArcGeometry(), LineGeometry());
-                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
-                const view_arc = this.arrow_shifting.enter(arrow, view_frame);
-                const svg_arc = svg.diagram_arc_to_svg_arc(view_arc);
-                const svg_bezier = svg.diagram_arc_to_svg_bezier(view_arc, 10);
-                // const path = svg.svg_arc_to_path(svg_arc);
-                const path = svg.svg_bezier_to_path(svg_bezier);
-                return path;
+            view: function(model_arc) {
+                const view_arc = this.arc_representation.model_to_view(model_arc);
+                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const screen_arc = this.arc_shifting.enter(view_arc, screen_frame);
+                return screen_arc;
             },
-            point: function(coordinate) {
-                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
-                return this.position_shifting.enter(coordinate, view_frame);
+            path: function(screen_arc) {
+                const svg_bezier = this.arc_rendering.view_arc_to_svg_bezier(screen_arc, 10);
+                const svg_path = this.arc_rendering.svg_bezier_to_path(svg_bezier);
+                // const svg_arc = this.arc_rendering.view_arc_to_svg_arc(screen_arc);
+                // const svg_path = this.arc_rendering.svg_arc_to_path(svg_arc);
+                return svg_path;
             },
-            midpath: function(arrow) {
-                const view_frame = this.view_frame_storage.unpack(this.state.view_frame_store);
-                const view_arc = this.arrow_shifting.enter(arrow, view_frame);
+            midpath: function(model_arc) {
+                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const screen_arc = this.arc_shifting.enter(arrow, screen_frame);
                 const arcs = ArcGeometry();
                 const min_length = abs(arc.min_length_clockwise);
-                const length = Math.max(min_length, glm.distance(view_arc.start, view_arc.end));
-                const radius = arcs.radius_for_chord_and_arc_length(view_arc.start, view_arc.end, arc.min_length_clockwise);
-                const origin = arcs.origin(view_arc.start, view_arc.end, view_arc.min_length_clockwise, radius);
-                const midpath = arcs.position_at_distance_along_arc(view_arc.start, origin, view_arc.min_length_clockwise, radius, 1*length);
+                const length = Math.max(min_length, glm.distance(screen_arc.source, screen_arc.target));
+                const radius = arcs.radius_for_chord_and_arc_length(screen_arc.source, screen_arc.target, arc.min_length_clockwise);
+                const origin = arcs.origin(screen_arc.source, screen_arc.target, screen_arc.min_length_clockwise, radius);
+                const midpath = arcs.position_at_distance_along_arc(screen_arc.source, origin, screen_arc.min_length_clockwise, radius, 1*length);
                 return midpath;
             },
         }
