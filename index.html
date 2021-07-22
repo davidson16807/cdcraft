@@ -128,24 +128,6 @@
             'offset_hash_to_offset_id': offset_hash => glm.normalize(glm.vec2(1,-1).mul(2*floor(offset_hash / 2)-1).add(glm.vec2(-1,-1).mul(2*(offset_hash % 2)-1))),
         };
     }
-    
-    /*
-    `LineGeometry` is intended as a namespace of pure functions describing useful analytic geometry of 2d lines
-    */
-    function LineGeometry(){
-        const abs = Math.abs;
-        return {
-            /*
-            A0 line reference
-            A  line direction, normalized
-            B0 line reference
-            B  line direction, normalized
-            */
-            distance_along_line_to_line: function(A0,A, B0,B){
-                return glm.cross((B0.sub(A0)), B).z / glm.cross(A, B).z;
-            }
-        };
-    }
 
     /*
     `Arrow` is a data structure that represents only the attributes within the mathematical definition of an arrow
@@ -230,13 +212,29 @@
                     v.x * sin(theta) + v.y * cos(theta),
                 ).add(source);
             },
+            normal_at_distance_along_arc: function (source, origin, min_length_clockwise, radius, distance) {
+                const v = normalize(source.sub(origin));
+                const theta = distance / radius * sign(min_length_clockwise);
+                return glm.vec2(
+                    v.x * cos(theta) - v.y * sin(theta),
+                    v.x * sin(theta) + v.y * cos(theta),
+                );
+            },
             position_at_distance_along_arc: function (source, origin, min_length_clockwise, radius, distance){
                 const v = source.sub(origin);
-                const theta = -distance / radius * -sign(min_length_clockwise);
+                const theta = distance / radius * sign(min_length_clockwise);
                 return glm.vec2(
                     v.x * cos(theta) - v.y * sin(theta),
                     v.x * sin(theta) + v.y * cos(theta),
                 ).add(origin);
+            },
+            tangent_at_distance_along_arc: function (source, origin, min_length_clockwise, radius, distance) {
+                const v = normalize(source.sub(origin));
+                const theta = (distance / radius + pi/2.0) * sign(min_length_clockwise);
+                return glm.vec2(
+                    v.x * cos(theta) - v.y * sin(theta),
+                    v.x * sin(theta) + v.y * cos(theta),
+                );
             },
             radius_for_chord_and_arc_length: function(source, target, min_length_clockwise){
                 /*
@@ -277,17 +275,11 @@
     /*
     `ArcRendering` is a namespace of pure functions describing a small category mapping arcs to svg depictions
     */
-    function ArcRendering(arc_geometry, line_geometry){
+    function ArcRendering(arc_geometry){
         const pi = Math.PI;
         const sqrt = Math.sqrt;
         const max = Math.max;
         const abs = Math.abs;
-        // A `SvgQuadraticBezier` is a representation for a quadratic Bezier that can be used by svg
-        class SvgQuadraticBezier{
-            constructor(points){
-                this.points = points;
-            }
-        };
 
         return {
             view_arc_to_svg_arc: function(arc){
@@ -297,29 +289,50 @@
                 return new ArcSvg(arc.source, arc.target, 
                     radius, abs(arc.min_length_clockwise)/radius > pi, !arc.is_clockwise);
             },
-            view_arc_to_svg_bezier: function(arc, sample_point_count){
+            svg_arc_to_path: function(arc){
+                return `M ${arc.source.x} ${arc.source.y} A ${arc.radius} ${arc.radius} 0 ${arc.is_large_arc?1:0} ${arc.is_clockwise?0:1} ${arc.target.x} ${arc.target.y}` ;
+            },
+        }
+    }
+
+    /*
+    `ArcRenderingBezier` is a namespace of pure functions describing a small category mapping arcs to svg depictions
+    */
+    function ArcRenderingBezier(arc_geometry){
+        const pi = Math.PI;
+        const sqrt = Math.sqrt;
+        const max = Math.max;
+        const abs = Math.abs;
+        const cos = Math.cos;
+        // A `SvgQuadraticBezier` is a representation for a quadratic Bezier that can be used by svg
+        class SvgQuadraticBezier{
+            constructor(points){
+                this.points = points;
+            }
+        };
+
+        return {
+            view_arc_to_svg_arc: function(arc, sample_point_count){
                 const min_length = abs(arc.min_length_clockwise);
                 const length = max(min_length, glm.distance(arc.source, arc.target));
-                const radius = arc_geometry.radius_for_chord_and_arc_length(arc.source, arc.target, arc.min_length_clockwise);
-                const origin = arc_geometry.origin(arc.source, arc.target, arc.min_length_clockwise, radius);
-                const sample_points = [];
-                for (let i = 0; i <= sample_point_count; i++) {
-                    sample_points.push(arc_geometry.position_at_distance_along_arc(arc.source, origin, arc.min_length_clockwise, radius, length * i/sample_point_count));
-                }
-                const points = [sample_points[0]];
+
+                const inscribed_radius = arc_geometry.radius_for_chord_and_arc_length(arc.source, arc.target, arc.min_length_clockwise);
+                const circumscribed_radius = inscribed_radius / cos(2.0 * pi * (length/(2.0*pi*inscribed_radius))/(sample_point_count*2.0));
+
+                const origin = arc_geometry.origin(arc.source, arc.target, arc.min_length_clockwise, inscribed_radius);
+
+                const inscribed_source = arc.source;
+                const circumscribed_source = glm.normalize(arc.source.sub(origin)).mul(circumscribed_radius).add(origin);
+
+                const points = [ arc_geometry.position_at_distance_along_arc(inscribed_source, origin, arc.min_length_clockwise, inscribed_radius, 0.0) ];
                 for (let i = 1; i <= sample_point_count; i++) {
-                    const a = sample_points[i-1].sub(origin);
-                    const b = sample_points[i].sub(origin);
-                    const k = glm.vec3(0,0,1);
-                    const a_tangent = glm.normalize(glm.cross(glm.vec3(a,0), k)).xy;
-                    const b_tangent = glm.normalize(glm.cross(glm.vec3(b,0), k)).xy;
-                    const intersection = a_tangent.mul(line_geometry.distance_along_line_to_line(a,a_tangent,b,b_tangent)).add(a).add(origin);
-                    points.push(intersection);
-                    points.push(sample_points[i]);
+                    points.push(arc_geometry.position_at_distance_along_arc(circumscribed_source, origin, arc.min_length_clockwise, circumscribed_radius, length * (i-0.5)/sample_point_count));
+                    points.push(arc_geometry.position_at_distance_along_arc(inscribed_source, origin, arc.min_length_clockwise, inscribed_radius, length * i/sample_point_count));
                 }
+
                 return new SvgQuadraticBezier(points);
             },
-            svg_bezier_to_path: function(bezier){
+            svg_arc_to_path: function(bezier){
                 const points = bezier.points;
                 const source = points[0];
                 let output = `M ${source.x} ${source.y}`;
@@ -330,12 +343,8 @@
                 }
                 return output;
             },
-            svg_arc_to_path: function(arc){
-                return `M ${arc.source.x} ${arc.source.y} A ${arc.radius} ${arc.radius} 0 ${arc.is_large_arc?1:0} ${arc.is_clockwise?0:1} ${arc.target.x} ${arc.target.y}` ;
-            },
         }
     }
-
 
     /*
     `ArcFrameShifting` is a namespace of pure functions that describe isomorphisms to and from a reference frame.
@@ -462,12 +471,12 @@
     */
     class DiagramArrow {
         constructor(
-            arc, label, label_position_id, 
+            arc, label, label_offset, 
             source_style_id, end_style_id, line_style_id
         ){
             this.arc = arc;
             this.label = label || "";
-            this.label_position_id = label_position_id;
+            this.label_offset = label_offset || 1;
             this.source_style_id = source_style_id;
             this.end_style_id = end_style_id;
             this.line_style_id = line_style_id;
@@ -553,7 +562,7 @@
                 const diagram_arrow = new DiagramArrow(
                     arc_representation.view_to_model(arc_view),
                     state_in.edited_arrow.label,
-                    state_in.edited_arrow.label_position_id,
+                    state_in.edited_arrow.label_offset,
                     state_in.edited_arrow.source_style_id,
                     state_in.edited_arrow.end_style_id,
                     state_in.edited_arrow.line_style_id,
@@ -581,7 +590,7 @@
                 const diagram_arrow = new DiagramArrow(
                     new ArcModel(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_snapped),
                     arrow_in.label,
-                    arrow_in.label_position_id,
+                    arrow_in.label_offset,
                     arrow_in.source_style_id,
                     arrow_in.end_style_id,
                     arrow_in.line_style_id,
@@ -754,7 +763,7 @@
                     0.03, // cell to target distance
                 ),
             arc_shifting: ArcFrameShifting(PositionFrameShifting()),
-            arc_rendering: ArcRendering(ArcGeometry(), LineGeometry()),
+            arc_rendering: ArcRenderingBezier(ArcGeometry()),
             screen_frame_storage: ScreenReferenceFrameStorage(), 
             position_shifting: PositionFrameShifting(),
             ids: DiagramIds(),
@@ -796,15 +805,13 @@
                 return screen_arc;
             },
             path: function(screen_arc) {
-                const svg_bezier = this.arc_rendering.view_arc_to_svg_bezier(screen_arc, 10);
-                const svg_path = this.arc_rendering.svg_bezier_to_path(svg_bezier);
+                const svg_bezier = this.arc_rendering.view_arc_to_svg_arc(screen_arc, 30);
+                const svg_path = this.arc_rendering.svg_arc_to_path(svg_bezier);
                 // const svg_arc = this.arc_rendering.view_arc_to_svg_arc(screen_arc);
                 // const svg_path = this.arc_rendering.svg_arc_to_path(svg_arc);
                 return svg_path;
             },
-            midpath: function(model_arc) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
-                const screen_arc = this.arc_shifting.enter(arrow, screen_frame);
+            midpath: function(screen_arc) {
                 const arcs = ArcGeometry();
                 const min_length = abs(arc.min_length_clockwise);
                 const length = Math.max(min_length, glm.distance(screen_arc.source, screen_arc.target));
