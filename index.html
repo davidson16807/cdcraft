@@ -54,16 +54,18 @@
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
             <g v-for="arrow in state.arrows">
-                <path class="arrow" v-bind:d="path(view(arrow.arc))"/>
+                <path class="arrow" v-bind:d="arrowpath(view(arrow.arc))"/>
+                <path class="arrow" v-bind:d="arrowhead(view(arrow.arc))" />
             </g>
             <g v-if="is_drawing()">
-                <path class="arrow-highlight" v-bind:d="path(view(state.edited_arrow.arc))" />
+                <path class="arrow-highlight" v-bind:d="arrowpath(view(state.edited_arrow.arc))" />
                 <circle class="arrow-tip-highlight" v-bind:cx="view(state.edited_arrow.arc).source.x" v-bind:cy="view(state.edited_arrow.arc).source.y" r="15"/>
                 <circle class="arrow-tip-highlight" v-bind:cx="view(state.edited_arrow.arc).target.x" v-bind:cy="view(state.edited_arrow.arc).target.y" r="15" />
                 <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).source.x" v-bind:cy="view(state.edited_arrow.arc).source.y" r="10"/>
                 <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).target.x" v-bind:cy="view(state.edited_arrow.arc).target.y" r="10" />
                 <!-- <circle class="arrow-handle" v-bind:cx="midpath(view(state.edited_arrow.arc)).x" v-bind:cy="midpath(view(state.edited_arrow.arc)).y" r="10" /> -->
-                <path class="arrow" v-bind:d="path(view(state.edited_arrow.arc))"/>
+                <path class="arrow" v-bind:d="arrowhead(view(state.edited_arrow.arc))" />
+                <path class="arrow" v-bind:d="arrowpath(view(state.edited_arrow.arc))"/>
             </g>
         </g>
     </svg>
@@ -213,7 +215,7 @@
                 ).add(source);
             },
             normal_at_distance_along_arc: function (source, origin, min_length_clockwise, radius, distance) {
-                const v = normalize(source.sub(origin));
+                const v = glm.normalize(source.sub(origin));
                 const theta = distance / radius * sign(min_length_clockwise);
                 return glm.vec2(
                     v.x * cos(theta) - v.y * sin(theta),
@@ -229,7 +231,7 @@
                 ).add(origin);
             },
             tangent_at_distance_along_arc: function (source, origin, min_length_clockwise, radius, distance) {
-                const v = normalize(source.sub(origin));
+                const v = glm.normalize(source.sub(origin));
                 const theta = (distance / radius + pi/2.0) * sign(min_length_clockwise);
                 return glm.vec2(
                     v.x * cos(theta) - v.y * sin(theta),
@@ -317,16 +319,17 @@
                 const length = max(min_length, glm.distance(arc.source, arc.target));
 
                 const inscribed_radius = arc_geometry.radius_for_chord_and_arc_length(arc.source, arc.target, arc.min_length_clockwise);
-                const circumscribed_radius = inscribed_radius / cos(2.0 * pi * (length/(2.0*pi*inscribed_radius))/(sample_point_count*2.0));
+                const inscribed_circumference = 2.0*pi*inscribed_radius;
+                const c = 1 / cos(pi * length / (inscribed_circumference*sample_point_count) );
 
                 const origin = arc_geometry.origin(arc.source, arc.target, arc.min_length_clockwise, inscribed_radius);
 
                 const inscribed_source = arc.source;
-                const circumscribed_source = glm.normalize(arc.source.sub(origin)).mul(circumscribed_radius).add(origin);
+                const circumscribed_source = glm.normalize(arc.source.sub(origin)).mul(c * inscribed_radius).add(origin);
 
                 const points = [ arc_geometry.position_at_distance_along_arc(inscribed_source, origin, arc.min_length_clockwise, inscribed_radius, 0.0) ];
                 for (let i = 1; i <= sample_point_count; i++) {
-                    points.push(arc_geometry.position_at_distance_along_arc(circumscribed_source, origin, arc.min_length_clockwise, circumscribed_radius, length * (i-0.5)/sample_point_count));
+                    points.push(arc_geometry.position_at_distance_along_arc(circumscribed_source, origin, c * arc.min_length_clockwise, c * inscribed_radius, c * length * (i-0.5)/sample_point_count));
                     points.push(arc_geometry.position_at_distance_along_arc(inscribed_source, origin, arc.min_length_clockwise, inscribed_radius, length * i/sample_point_count));
                 }
 
@@ -766,6 +769,7 @@
             arc_rendering: ArcRenderingBezier(ArcGeometry()),
             screen_frame_storage: ScreenReferenceFrameStorage(), 
             position_shifting: PositionFrameShifting(),
+            offset_shifting: OffsetFrameShifting(),
             ids: DiagramIds(),
         },
         created: function() {
@@ -804,18 +808,35 @@
                 const screen_arc = this.arc_shifting.enter(view_arc, screen_frame);
                 return screen_arc;
             },
-            path: function(screen_arc) {
-                const svg_bezier = this.arc_rendering.view_arc_to_svg_arc(screen_arc, 30);
+            arrowpath: function(screen_arc) {
+                const svg_bezier = this.arc_rendering.view_arc_to_svg_arc(screen_arc, 10);
                 const svg_path = this.arc_rendering.svg_arc_to_path(svg_bezier);
                 // const svg_arc = this.arc_rendering.view_arc_to_svg_arc(screen_arc);
                 // const svg_path = this.arc_rendering.svg_arc_to_path(svg_arc);
                 return svg_path;
             },
+            arrowhead: function(screen_arc) {
+                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const arcs = ArcGeometry();
+                const min_length = Math.abs(screen_arc.min_length_clockwise);
+                const length = Math.max(min_length, glm.distance(screen_arc.source, screen_arc.target));
+                const radius = arcs.radius_for_chord_and_arc_length(screen_arc.source, screen_arc.target, screen_arc.min_length_clockwise);
+                const origin = arcs.origin(screen_arc.source, screen_arc.target, screen_arc.min_length_clockwise, radius);
+                const arrowhead_basis_x = arcs.normal_at_distance_along_arc(screen_arc.source, origin, screen_arc.min_length_clockwise, radius, 1*length);
+                const arrowhead_basis_y = arcs.tangent_at_distance_along_arc(screen_arc.source, origin, screen_arc.min_length_clockwise, radius, 1*length);
+                const arrowhead_origin = arcs.position_at_distance_along_arc(screen_arc.source, origin, screen_arc.min_length_clockwise, radius, 1*length);
+
+                const template = [glm.vec2(-0.03,-0.03), glm.vec2(0,0), glm.vec2(0.03,-0.03)];
+                const screen = template.map(point => this.offset_shifting.enter(point, screen_frame))
+                const rotated = screen.map(point => arrowhead_basis_x.mul(point.x).add(arrowhead_basis_y.mul(point.y)).add(arrowhead_origin));
+                const path = 'M ' + rotated.map(point => `${point.x} ${point.y}`).join(' L ');
+                return path;
+            },
             midpath: function(screen_arc) {
                 const arcs = ArcGeometry();
-                const min_length = abs(arc.min_length_clockwise);
+                const min_length = Math.abs(screen_arc.min_length_clockwise);
                 const length = Math.max(min_length, glm.distance(screen_arc.source, screen_arc.target));
-                const radius = arcs.radius_for_chord_and_arc_length(screen_arc.source, screen_arc.target, arc.min_length_clockwise);
+                const radius = arcs.radius_for_chord_and_arc_length(screen_arc.source, screen_arc.target, screen_arc.min_length_clockwise);
                 const origin = arcs.origin(screen_arc.source, screen_arc.target, screen_arc.min_length_clockwise, radius);
                 const midpath = arcs.position_at_distance_along_arc(screen_arc.source, origin, screen_arc.min_length_clockwise, radius, 1*length);
                 return midpath;
