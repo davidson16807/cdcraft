@@ -67,24 +67,23 @@
             </g>
             <g v-for="arrow in state.arrows">
                 <g class="show-on-hover">
-                    <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc, 0)" />
-                    <circle class="arrow-tip-highlight" v-bind:cx="view(arrow.arc).source.x" v-bind:cy="view(arrow.arc).source.y" r="15"/>
-                    <circle class="arrow-tip-highlight" v-bind:cx="view(arrow.arc).target.x" v-bind:cy="view(arrow.arc).target.y" r="15" />
-                    <circle class="arrow-handle" v-bind:cx="view(arrow.arc).source.x" v-bind:cy="view(arrow.arc).source.y" r="10"/>
-                    <circle class="arrow-handle" v-bind:cx="view(arrow.arc).target.x" v-bind:cy="view(arrow.arc).target.y" r="10" />
+                    <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
+                    <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
+                    <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15" />
+                    <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="10"/>
+                    <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="10" />
                 </g>
-                <path class="arrow" v-bind:d="arrowhead(arrow.arc, 0.07)" />
-                <path class="arrow" v-bind:d="arrowpath(arrow.arc, 0.07)"/>
+                <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
+                <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
             </g>
             <g v-if="is_drawing()">
-                <path class="arrow-highlight" v-bind:d="arrowpath(state.edited_arrow.arc, 0)" />
-                <circle class="arrow-tip-highlight" v-bind:cx="view(state.edited_arrow.arc).source.x" v-bind:cy="view(state.edited_arrow.arc).source.y" r="15"/>
-                <circle class="arrow-tip-highlight" v-bind:cx="view(state.edited_arrow.arc).target.x" v-bind:cy="view(state.edited_arrow.arc).target.y" r="15" />
-                <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).source.x" v-bind:cy="view(state.edited_arrow.arc).source.y" r="10"/>
-                <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).target.x" v-bind:cy="view(state.edited_arrow.arc).target.y" r="10" />
-                <!-- <circle class="arrow-handle" v-bind:cx="midpath(view(state.edited_arrow.arc)).x" v-bind:cy="midpath(view(state.edited_arrow.arc)).y" r="10" /> -->
-                <path class="arrow" v-bind:d="arrowhead(state.edited_arrow.arc, 0.07)" />
-                <path class="arrow" v-bind:d="arrowpath(state.edited_arrow.arc, 0.07)"/>
+                <path class="arrow-highlight" v-bind:d="arrowpath(state.edited_arrow.arc)" />
+                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(state.edited_arrow.arc, 0).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 0).y" r="15"/>
+                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(state.edited_arrow.arc, 1).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 1).y" r="15" />
+                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(state.edited_arrow.arc, 0).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 0).y" r="10"/> -->
+                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(state.edited_arrow.arc, 1).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 1).y" r="10" /> -->
+                <path class="arrow" v-bind:d="arrowhead(state.edited_arrow.arc)" />
+                <path class="arrow" v-bind:d="arrowpath(state.edited_arrow.arc)"/>
             </g>
         </g>
     </svg>
@@ -874,6 +873,7 @@
             offset_shifting: OffsetFrameShifting(),
             position_shifting: PositionFrameShifting(),
             user_arcs_and_sampler_arcs: UserArcsAndSamplerArcs(ArcGeometry()),
+            arrow_trimming_length: 0.07,
             ids: DiagramIds(),
         },
         created: function() {
@@ -906,28 +906,30 @@
                 const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(screen_frame.origin).add(glm.ivec2(x-1,y-1)) );
                 return this.position_shifting.enter(model_border_position, screen_frame);
             },
-            view: function(stored_arc) {
-                const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
-                const screen_arc = this.user_arc_shifting.enter(user_arc, screen_frame);
-                return screen_arc;
-            },
-            arrowpath: function(stored_arc, padding) {
+            arrowsample: function(stored_arc, fraction) {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
                 const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
                 const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, padding, -padding);
+                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
+                const screen_arc = this.sampler_arc_shifting.enter(resized_arc, screen_frame);
+                return this.sampler_arc_properties.position(screen_arc, fraction*screen_arc.length_clockwise);
+            },
+            arrowpath: function(stored_arc) {
+                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
+                const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
+                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
                 const screen_arc = this.sampler_arc_shifting.enter(resized_arc, screen_frame);
 
                 const svg_bezier = this.sampler_arc_rendering.sampler_arc_to_svg_bezier(screen_arc, 10);
                 const svg_path = this.sampler_arc_rendering.svg_bezier_to_path(svg_bezier);
                 return svg_path;
             },
-            arrowhead: function(stored_arc, padding) {
+            arrowhead: function(stored_arc) {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
                 const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
                 const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, padding, -padding);
+                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
                 const arrowhead_basis_x = this.offset_shifting.enter(this.sampler_arc_properties.normal(resized_arc, resized_arc.length_clockwise), screen_frame);
                 const arrowhead_basis_y = this.offset_shifting.enter(this.sampler_arc_properties.tangent(resized_arc, resized_arc.length_clockwise), screen_frame);
                 const arrowhead_origin = this.position_shifting.enter(this.sampler_arc_properties.position(resized_arc, resized_arc.length_clockwise), screen_frame);
@@ -936,15 +938,6 @@
                 const screen_points = cell_points.map(point => arrowhead_basis_x.mul(point.x).add(arrowhead_basis_y.mul(point.y)).add(arrowhead_origin));
                 const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
                 return path;
-            },
-            midpath: function(screen_arc) {
-                const arcs = ArcGeometry();
-                const min_length = Math.abs(screen_arc.min_length_clockwise);
-                const length = Math.max(min_length, glm.distance(screen_arc.source, screen_arc.target));
-                const radius = arcs.radius(screen_arc.source, screen_arc.target, screen_arc.min_length_clockwise);
-                const origin = arcs.origin(screen_arc.source, screen_arc.target, screen_arc.min_length_clockwise, radius);
-                const midpath = arcs.position(screen_arc.source, origin, screen_arc.min_length_clockwise, radius, length);
-                return midpath;
             },
         }
     });
