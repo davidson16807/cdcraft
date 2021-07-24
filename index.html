@@ -23,8 +23,10 @@
         }
         .arrow {
             fill: none;
-            stroke: dimgrey;
-            stroke-width:4;
+            stroke-width:2;
+        }
+        .arrow {
+            stroke: black;
         }
         .arrow-highlight {
             fill: none;
@@ -54,18 +56,18 @@
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
             <g v-for="arrow in state.arrows">
-                <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
-                <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
+                <path class="arrow" v-bind:d="arrowpath(arrow.arc, 10)"/>
+                <path class="arrow" v-bind:d="arrowhead(arrow.arc, 10)" />
             </g>
             <g v-if="is_drawing()">
-                <path class="arrow-highlight" v-bind:d="arrowpath(state.edited_arrow.arc)" />
+                <path class="arrow-highlight" v-bind:d="arrowpath(state.edited_arrow.arc, 0)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="view(state.edited_arrow.arc).source.x" v-bind:cy="view(state.edited_arrow.arc).source.y" r="15"/>
                 <circle class="arrow-tip-highlight" v-bind:cx="view(state.edited_arrow.arc).target.x" v-bind:cy="view(state.edited_arrow.arc).target.y" r="15" />
                 <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).source.x" v-bind:cy="view(state.edited_arrow.arc).source.y" r="10"/>
                 <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).target.x" v-bind:cy="view(state.edited_arrow.arc).target.y" r="10" />
                 <!-- <circle class="arrow-handle" v-bind:cx="midpath(view(state.edited_arrow.arc)).x" v-bind:cy="midpath(view(state.edited_arrow.arc)).y" r="10" /> -->
-                <path class="arrow" v-bind:d="arrowhead(state.edited_arrow.arc)" />
-                <path class="arrow" v-bind:d="arrowpath(state.edited_arrow.arc)"/>
+                <path class="arrow" v-bind:d="arrowhead(state.edited_arrow.arc, 10)" />
+                <path class="arrow" v-bind:d="arrowpath(state.edited_arrow.arc, 10)"/>
             </g>
         </g>
     </svg>
@@ -198,7 +200,7 @@
     }
 
     /*
-    `ArcGeometry` is intended as a namespace of pure functions describing useful analytic geometry of arcs
+    `ArcGeometry` is a namespace of pure functions describing useful analytic geometry of arcs
     */
     function ArcGeometry(){
         const pi = Math.PI;
@@ -281,7 +283,7 @@
     }
 
     /*
-    `SamplerArcProperties` is intended as a namespace of pure functions describing properties for any point along a `SamplerArc`
+    `SamplerArcProperties` is a namespace of pure functions describing properties for any point along a `SamplerArc`
     */
     function SamplerArcProperties(){
         const pi = Math.PI;
@@ -315,6 +317,25 @@
                     v.x * cos(theta) - v.y * sin(theta),
                     v.x * sin(theta) + v.y * cos(theta),
                 ).add(sampler_arc.origin);
+            },
+        }
+    }
+
+    /*
+    `SamplerArcTruncation` is a namespace of pure functions that shift the start and end position of a `SamplerArc`
+    */
+    function SamplerArcResizing(sampler_arc_properties){
+        const sign = Math.sign;
+        return {
+            resize: function (sampler_arc, source_offset, target_offset){
+                const clockwise_sign = sign(sampler_arc.length_clockwise);
+                source_offset *= clockwise_sign;
+                target_offset *= clockwise_sign;
+                return new SamplerArc(
+                    sampler_arc.origin, 
+                    sampler_arc_properties.position(sampler_arc, source_offset).sub(sampler_arc.origin), 
+                    sampler_arc.length_clockwise - source_offset + target_offset
+                );
             },
         }
     }
@@ -804,10 +825,11 @@
                 UserArcsAndStoredArcs(
                     DiagramIds(), 
                     0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
-                    0.03, // cell to target distance
+                    0.01, // cell to target distance
                 ),
             arc_shifting: UserArcFrameShifting(PositionFrameShifting()),
             sampler_arc_properties: SamplerArcProperties(),
+            sampler_arc_resizing: SamplerArcResizing(SamplerArcProperties()),
             sampler_arc_rendering: SamplerArcRendering(SamplerArcProperties()),
             screen_frame_storage: ScreenReferenceFrameStorage(), 
             position_shifting: PositionFrameShifting(),
@@ -851,25 +873,28 @@
                 const screen_arc = this.arc_shifting.enter(user_arc, screen_frame);
                 return screen_arc;
             },
-            arrowpath: function(stored_arc) {
+            arrowpath: function(stored_arc, padding) {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
                 const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
                 const screen_arc = this.arc_shifting.enter(user_arc, screen_frame);
                 const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(screen_arc);
+                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, padding, -padding);
 
-                const svg_bezier = this.sampler_arc_rendering.sampler_arc_to_svg_bezier(sampler_arc, 10);
+                const svg_bezier = this.sampler_arc_rendering.sampler_arc_to_svg_bezier(resized_arc, 10);
                 const svg_path = this.sampler_arc_rendering.svg_bezier_to_path(svg_bezier);
                 return svg_path;
             },
-            arrowhead: function(stored_arc) {
+            arrowhead: function(stored_arc, padding) {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
                 const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-                const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-                const arrowhead_basis_x = this.offset_shifting.enter(this.sampler_arc_properties.normal(sampler_arc, sampler_arc.length_clockwise), screen_frame);
-                const arrowhead_basis_y = this.offset_shifting.enter(this.sampler_arc_properties.tangent(sampler_arc, sampler_arc.length_clockwise), screen_frame);
-                const arrowhead_origin = this.position_shifting.enter(this.sampler_arc_properties.position(sampler_arc, sampler_arc.length_clockwise), screen_frame);
+                const screen_arc = this.arc_shifting.enter(user_arc, screen_frame);
+                const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(screen_arc);
+                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, padding, -padding);
+                const arrowhead_basis_x = this.offset_shifting.enter(this.sampler_arc_properties.normal(resized_arc, resized_arc.length_clockwise), screen_frame);
+                const arrowhead_basis_y = this.offset_shifting.enter(this.sampler_arc_properties.tangent(resized_arc, resized_arc.length_clockwise), screen_frame);
+                const arrowhead_origin = this.sampler_arc_properties.position(resized_arc, resized_arc.length_clockwise);
 
-                const cell_points = [glm.vec2(-0.055,-0.055), glm.vec2(0,0), glm.vec2(0.055,-0.055)];
+                const cell_points = [glm.vec2(-0.03,-0.03), glm.vec2(0,0), glm.vec2(0.03,-0.03)];
                 const screen_points = cell_points.map(point => arrowhead_basis_x.mul(point.x).add(arrowhead_basis_y.mul(point.y)).add(arrowhead_origin));
                 const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
                 return path;
