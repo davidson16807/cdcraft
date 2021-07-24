@@ -24,22 +24,32 @@
         .arrow {
             fill: none;
             stroke-width:2;
-        }
-        .arrow {
             stroke: black;
+            pointer-events: all;
         }
         .arrow-highlight {
             fill: none;
             stroke: darkgrey;
             stroke-width:30;
+            pointer-events: all;
         }
         .arrow-tip-highlight {
             fill: darkgrey;
             stroke: none;
+            pointer-events: all;
         }
         .arrow-handle {
             fill: lightgrey;
             stroke: none;
+            pointer-events: all;
+        }
+        .show-on-hover {
+            visibility: hidden;
+            pointer-events: all;
+        }
+        .show-on-hover:hover {
+            visibility: visible;
+            pointer-events: all;
         }
     </style>
 </head>
@@ -56,8 +66,15 @@
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
             <g v-for="arrow in state.arrows">
-                <path class="arrow" v-bind:d="arrowpath(arrow.arc, 0.05)"/>
-                <path class="arrow" v-bind:d="arrowhead(arrow.arc, 0.05)" />
+                <g class="show-on-hover">
+                    <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc, 0)" />
+                    <circle class="arrow-tip-highlight" v-bind:cx="view(arrow.arc).source.x" v-bind:cy="view(arrow.arc).source.y" r="15"/>
+                    <circle class="arrow-tip-highlight" v-bind:cx="view(arrow.arc).target.x" v-bind:cy="view(arrow.arc).target.y" r="15" />
+                    <circle class="arrow-handle" v-bind:cx="view(arrow.arc).source.x" v-bind:cy="view(arrow.arc).source.y" r="10"/>
+                    <circle class="arrow-handle" v-bind:cx="view(arrow.arc).target.x" v-bind:cy="view(arrow.arc).target.y" r="10" />
+                </g>
+                <path class="arrow" v-bind:d="arrowhead(arrow.arc, 0.07)" />
+                <path class="arrow" v-bind:d="arrowpath(arrow.arc, 0.07)"/>
             </g>
             <g v-if="is_drawing()">
                 <path class="arrow-highlight" v-bind:d="arrowpath(state.edited_arrow.arc, 0)" />
@@ -66,8 +83,8 @@
                 <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).source.x" v-bind:cy="view(state.edited_arrow.arc).source.y" r="10"/>
                 <circle class="arrow-handle" v-bind:cx="view(state.edited_arrow.arc).target.x" v-bind:cy="view(state.edited_arrow.arc).target.y" r="10" />
                 <!-- <circle class="arrow-handle" v-bind:cx="midpath(view(state.edited_arrow.arc)).x" v-bind:cy="midpath(view(state.edited_arrow.arc)).y" r="10" /> -->
-                <path class="arrow" v-bind:d="arrowhead(state.edited_arrow.arc, 0.05)" />
-                <path class="arrow" v-bind:d="arrowpath(state.edited_arrow.arc, 0.05)"/>
+                <path class="arrow" v-bind:d="arrowhead(state.edited_arrow.arc, 0.07)" />
+                <path class="arrow" v-bind:d="arrowpath(state.edited_arrow.arc, 0.07)"/>
             </g>
         </g>
     </svg>
@@ -882,7 +899,7 @@
                 return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
             },
             cell_count: function() {
-                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.screen_frame_store.log2_cell_width));
+                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.screen_frame_store.log2_cell_width))+1;
             },
             cell_border_position: function(x, y) {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
