@@ -39,17 +39,24 @@
             pointer-events: all;
         }
         .arrow-handle {
+            fill: grey;
+            stroke: none;
+            pointer-events: all;
+        }
+        .arrow-handle:hover {
             fill: lightgrey;
             stroke: none;
             pointer-events: all;
         }
-        .show-on-hover {
+        
+        .arrow-group {
             visibility: hidden;
-            pointer-events: all;
         }
-        .show-on-hover:hover {
+        .arrow-group:hover {
             visibility: visible;
-            pointer-events: all;
+        }
+        .arrow-group .arrow {
+            visibility: visible;
         }
     </style>
 </head>
@@ -66,15 +73,15 @@
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
             <g v-for="arrow in state.arrows">
-                <g class="show-on-hover">
-                    <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
+                <g class="arrow-group">
+                    <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" v-on:mousedown="edit(arrow, $event)"/>
                     <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
-                    <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15" />
+                    <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15"/>
                     <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="10"/>
                     <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="10" />
+                    <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
+                    <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
                 </g>
-                <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
-                <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
             </g>
             <g v-if="is_drawing()">
                 <path class="arrow-highlight" v-bind:d="arrowpath(state.edited_arrow.arc)" />
@@ -754,6 +761,7 @@
                 }
             },
             mousedown: function(state_in, event, state_out){
+                console.log(event)
                 const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
                 if (state_in.drag_state == DragState.draw) { 
                     // cancel draw action
@@ -780,6 +788,9 @@
             },
             touchmove: function(state_in, event, state_out){
 
+            },
+            arrowclick: function(state_in, event, state_out) {
+                // body...
             }
         }
     }
@@ -806,12 +817,13 @@
                 event.stopPropagation();
                 queue.push(event);
             };
+
             domElement.addEventListener('contextmenu',    enqueuePrevent,     false);
             domElement.addEventListener('mousedown',      enqueuePrevent,     false);
             domElement.addEventListener('mousemove',      enqueuePrevent,     false);
             domElement.addEventListener('mouseup',        enqueue,            false);
             domElement.addEventListener('wheel',          enqueue,            false);
-            domElement.addEventListener('touchsource',     enqueue,            false);
+            domElement.addEventListener('touchsource',    enqueue,            false);
             domElement.addEventListener('touchmove',      enqueuePreventStop, false);
             domElement.addEventListener('touchend',       enqueue,            false);
             this.dispose = function(){
@@ -820,7 +832,7 @@
                 domElement.removeEventListener('mousemove',      enqueuePrevent,     false);
                 domElement.removeEventListener('mouseup',        enqueue,            false);
                 domElement.removeEventListener('wheel',          enqueue,            false);
-                domElement.removeEventListener('touchsource',     enqueue,            false);
+                domElement.removeEventListener('touchsource',    enqueue,            false);
                 domElement.removeEventListener('touchmove',      enqueuePreventStop, false);
                 domElement.removeEventListener('touchend',       enqueue,            false);
             }
@@ -838,15 +850,18 @@
             0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
             0.01, // cell to target distance
         );
+    const application_state_operations = 
+        ApplicationStateOperations(
+            ScreenReferenceFrameStorage(),
+            OffsetFrameShifting(), 
+            PositionFrameShifting(), 
+            user_arcs_and_stored_arcs,
+            0.7 // default_min_length_clockwise
+        );
+
     const controls = 
         ApplicationControls(
-            ApplicationStateOperations(
-                ScreenReferenceFrameStorage(),
-                OffsetFrameShifting(), 
-                PositionFrameShifting(), 
-                user_arcs_and_stored_arcs,
-                0.7 // default_min_length_clockwise
-            ),
+            application_state_operations,
             -0.001, // log2_cell_width_change_per_scroll
             0.001 // min_length_change_per_scroll
         );
@@ -863,6 +878,7 @@
                 ),
             queue: undefined,
             controls: controls,
+            arrow_trimming_length: 0.07,
             user_arcs_and_stored_arcs: user_arcs_and_stored_arcs,
             user_arc_shifting: UserArcFrameShifting(PositionFrameShifting()),
             sampler_arc_shifting: SamplerArcFrameShifting(OffsetFrameShifting(), PositionFrameShifting()),
@@ -873,7 +889,6 @@
             offset_shifting: OffsetFrameShifting(),
             position_shifting: PositionFrameShifting(),
             user_arcs_and_sampler_arcs: UserArcsAndSamplerArcs(ArcGeometry()),
-            arrow_trimming_length: 0.07,
             ids: DiagramIds(),
         },
         created: function() {
@@ -939,6 +954,11 @@
                 const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
                 return path;
             },
+            edit: function(stored_arc, event) {
+                event.preventDefault(); 
+                event.stopPropagation();
+                console.log(stored_arc, event);
+            }
         }
     });
 </script>
