@@ -72,23 +72,21 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
-            <g v-for="arrow in state.arrows">
-                <g class="arrow-group">
-                    <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)"/>
-                    <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
-                    <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15"/>
-                    <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="10"/>
-                    <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="10"  v-on:mousedown="edit(arrow, $event)"/>
-                    <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
-                    <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
-                </g>
+            <g v-for="arrow in state.arrows" class="arrow-group" v-on:mousedown="arrowclick(arrow, $event)">
+                <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
+                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
+                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15"/>
+                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="13"/> -->
+                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="13" /> -->
+                <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
+                <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
             </g>
             <g v-if="is_drawing()">
                 <path class="arrow-highlight" v-bind:d="arrowpath(state.edited_arrow.arc)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(state.edited_arrow.arc, 0).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 0).y" r="15"/>
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(state.edited_arrow.arc, 1).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 1).y" r="15" />
-                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(state.edited_arrow.arc, 0).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 0).y" r="10"/> -->
-                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(state.edited_arrow.arc, 1).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 1).y" r="10" /> -->
+                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(state.edited_arrow.arc, 0).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 0).y" r="13"/> -->
+                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(state.edited_arrow.arc, 1).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 1).y" r="13" /> -->
                 <path class="arrow" v-bind:d="arrowhead(state.edited_arrow.arc)" />
                 <path class="arrow" v-bind:d="arrowpath(state.edited_arrow.arc)"/>
             </g>
@@ -733,6 +731,16 @@
                 state_out.drag_state = state_in.drag_state;
                 state_out.arrows = [ ...state_in.arrows];
                 state_out.edited_arrow = state_in.edited_arrow;
+            },
+            edit: function(state_in, arrow, state_out){
+                state_out.screen_frame_store = state_in.screen_frame_store;
+                state_out.drag_state = DragState.draw;
+                state_out.arrows = [ ...state_in.arrows];
+                const arrow_id = state_out.arrows.indexOf(arrow);
+                if (arrow_id >= 0) {
+                    state_out.arrows.splice(arrow_id, 1);
+                }
+                state_out.edited_arrow = arrow;
             }
         };
     }
@@ -761,7 +769,6 @@
                 }
             },
             mousedown: function(state_in, event, state_out){
-                console.log(event)
                 const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
                 if (state_in.drag_state == DragState.draw) { 
                     // cancel draw action
@@ -789,9 +796,6 @@
             touchmove: function(state_in, event, state_out){
 
             },
-            arrowclick: function(state_in, event, state_out) {
-                // body...
-            }
         }
     }
 
@@ -859,7 +863,7 @@
             0.7 // default_min_length_clockwise
         );
 
-    const controls = 
+    const application_controls = 
         ApplicationControls(
             application_state_operations,
             -0.001, // log2_cell_width_change_per_scroll
@@ -877,7 +881,8 @@
                     new DiagramArrow(glm.vec2(), glm.vec2()),
                 ),
             queue: undefined,
-            controls: controls,
+            controls: application_controls,
+            operations: application_state_operations,
             arrow_trimming_length: 0.07,
             user_arcs_and_stored_arcs: user_arcs_and_stored_arcs,
             user_arc_shifting: UserArcFrameShifting(PositionFrameShifting()),
@@ -954,14 +959,10 @@
                 const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
                 return path;
             },
-            edit: function(arrow, event) {
+            arrowclick: function(arrow, event) {
                 event.preventDefault(); 
                 event.stopPropagation();
-                const arrow_id = this.state.arrows.indexOf(arrow);
-                this.state.drag_state = DragState.draw;
-                this.state.arrows.splice(arrow_id, 1);
-                this.state.edited_arrow = arrow;
-                console.log(arrow, event);
+                this.operations.edit(this.state, arrow, this.state);
             }
         }
     });
