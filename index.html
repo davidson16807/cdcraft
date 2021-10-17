@@ -662,7 +662,7 @@
         const sign = Math.sign;
         const abs = Math.abs;
         const max = Math.max;
-        function scroll(arrow_in, screen_focus, scroll_count) {
+        function wheel(arrow_in, screen_focus, scroll_count) {
             const arc_in = arrow_in.arc;
 
             const min_length_clockwise_change = min_length_clockwise_change_per_scroll * scroll_count;
@@ -729,7 +729,7 @@
                             true,
                         ),
                     move: move,
-                    scroll: scroll,
+                    wheel: wheel,
                     release: release,
                     cancel: cancel,
                     // do nothing if not snapped, otherwise add the arrow
@@ -764,7 +764,7 @@
                             replaced_arrow.line_style_id,
                         ),
                     move: move,
-                    scroll: scroll,
+                    wheel: wheel,
                     release: release,
                     cancel: cancel,
                     // delete the arrow if not snapped, otherwise edit the arrow
@@ -806,7 +806,7 @@
                                 screen_frame_store.log2_cell_width
                             );
                     },
-                    scroll: screen_frame_store => screen_frame_store,
+                    wheel: screen_frame_store => screen_frame_store,
                     release: screen_frame_store => screen_frame_store,
                     cancel: screen_frame_store => screen_frame_store,
                     command: screen_frame_store => new Command(
@@ -817,7 +817,7 @@
                         )
                 };
             },
-            scroll: function(original_screen_frame_store){
+            wheel: function(original_screen_frame_store){
                 const max = Math.max;
                 return {
                     is_model_drag: false,
@@ -827,7 +827,7 @@
                             original_screen_frame_store.log2_cell_width
                         ),
                     move: (screen_frame_store, model_position, model_offset) => screen_frame_store,
-                    scroll: function(screen_frame_store, model_focus, scroll_count) {
+                    wheel: function(screen_frame_store, model_focus, scroll_count) {
                         const log2_cell_width_change = log2_cell_width_change_per_scroll * scroll_count;
                         const screen_frame = storage.unpack(screen_frame_store);
                         const updated_log2_cell_width = max(
@@ -897,7 +897,7 @@
         const offset_shifting = offset_frame_shifting;
         const position_shifting = position_frame_shifting;
         return {
-            scroll: function(state_in, screen_focus, scroll_count, state_out) {
+            wheel: function(state_in, screen_focus, scroll_count, state_out) {
                 const screen_frame_store = state_in.screen_frame_store;
                 const screen_frame = storage.unpack(screen_frame_store);
                 const model_focus = position_shifting.leave(screen_focus, screen_frame);
@@ -906,7 +906,7 @@
                 state_out.drag_state = DragState.released;
                 state_out.arrows = [ ...state_in.arrows];
                 state_out.dragging = state_in.dragging;
-                state_out.drag_state_object = state_in.dragging.scroll(state_in.drag_state_object, model_focus, scroll_count);
+                state_out.drag_state_object = state_in.dragging.wheel(state_in.drag_state_object, model_focus, scroll_count);
 
                 state_in.dragging.command(state_out.drag_state_object).forward(state_out);
             },
@@ -969,7 +969,7 @@
                 state_out.drag_state_object = state_in.dragging.release(state_in.drag_state_object);
                 state_in.dragging.command(state_out.drag_state_object).forward(state_out);
 
-                state_out.dragging = view_drags.scroll(state_in.screen_frame_store);
+                state_out.dragging = view_drags.wheel(state_in.screen_frame_store);
                 state_out.drag_state_object = state_out.dragging.initialize();
             },
             cancel: function(state_in, state_out) {
@@ -980,7 +980,7 @@
                 state_out.drag_state_object = state_in.dragging.cancel(state_in.drag_state_object);
                 state_in.dragging.command(state_out.drag_state_object).forward(state_out);
 
-                state_out.dragging = view_drags.scroll(state_in.screen_frame_store);
+                state_out.dragging = view_drags.wheel(state_in.screen_frame_store);
                 state_out.drag_state_object = state_out.dragging.initialize();
             },
             copy: function(state_in, state_out){
@@ -1005,7 +1005,7 @@
         };
         return {
             wheel: function(state_in, event, state_out){
-                operations.scroll(state_in, glm.vec2(event.clientX, event.clientY), event.deltaY, state_out);
+                operations.wheel(state_in, glm.vec2(event.clientX, event.clientY), event.deltaY, state_out);
             },
             mousedown: function(state_in, event, state_out){
                 const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
@@ -1083,44 +1083,47 @@
         }
     }
 
-    const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(200));
-    const user_arcs_and_stored_arcs =
-        UserArcsAndStoredArcs(
-            DiagramIds(), 
-            0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
-            0.01, // cell to target distance
-        );
-    const view_drags = 
-        ViewDrags(
-            ScreenReferenceFrameStorage(),
-            PositionFrameShifting(),
-            OffsetFrameShifting(),
-            -0.001, // log2_cell_width_change_per_scroll
-            Math.log2(30) // log2_cell_width_min
-        )
-    const disengaged_drag = view_drags.scroll(initial_screen_frame_store)
-    const disengaged_drag_state_object = disengaged_drag.initialize();
-    const application_state_operations = 
-        ApplicationStateOperations(
-            ArrowDrags(
-                user_arcs_and_stored_arcs,
-                0.7, // default_min_length_clockwise
-                0.001 // min_length_change_per_scroll
-            ),
-            view_drags,
-            ScreenReferenceFrameStorage(),
-            OffsetFrameShifting(), 
-            PositionFrameShifting(), 
-        );
+    function initial_vue_data() {
+        const diagram_ids = DiagramIds();
+        const user_arcs_and_stored_arcs =
+            UserArcsAndStoredArcs(
+                diagram_ids, 
+                0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
+                0.01, // cell to target distance
+            );
 
-    const application_controls = 
-        ApplicationControls(application_state_operations);
+        const screen_frame_storage = ScreenReferenceFrameStorage();
+        const offset_frame_shifting = OffsetFrameShifting();
+        const position_frame_shifting = PositionFrameShifting();
+        const view_drags = 
+            ViewDrags(
+                screen_frame_storage,
+                position_frame_shifting,
+                offset_frame_shifting,
+                -0.001, // log2_cell_width_change_per_scroll
+                Math.log2(30) // log2_cell_width_min
+            );
 
-    const vue = new Vue({
-        el: '#app',
-        data:{
-            state: 
-                new ApplicationState(
+        const application_state_operations = 
+            ApplicationStateOperations(
+                ArrowDrags(
+                    user_arcs_and_stored_arcs,
+                    0.7, // default_min_length_clockwise
+                    0.001 // min_length_clockwise_change_per_scroll
+                ),
+                view_drags,
+                screen_frame_storage,
+                offset_frame_shifting, 
+                position_frame_shifting, 
+            );
+
+        const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(200));
+        const disengaged_drag = view_drags.wheel(initial_screen_frame_store)
+        const disengaged_drag_state_object = disengaged_drag.initialize();
+        const sampler_arc_properties = SamplerArcProperties();
+
+        return {
+            state: new ApplicationState(
                     initial_screen_frame_store, 
                     DragState.released, 
                     [],
@@ -1128,21 +1131,26 @@
                     disengaged_drag_state_object,
                 ),
             queue: undefined,
-            controls: application_controls,
+            controls: ApplicationControls(application_state_operations),
             operations: application_state_operations,
             arrow_trimming_length: 0.07,
             user_arcs_and_stored_arcs: user_arcs_and_stored_arcs,
-            user_arc_shifting: UserArcFrameShifting(PositionFrameShifting()),
-            sampler_arc_shifting: SamplerArcFrameShifting(OffsetFrameShifting(), PositionFrameShifting()),
-            sampler_arc_properties: SamplerArcProperties(),
-            sampler_arc_resizing: SamplerArcResizing(SamplerArcProperties()),
-            sampler_arc_rendering: SamplerArcRendering(SamplerArcProperties()),
-            screen_frame_storage: ScreenReferenceFrameStorage(), 
-            offset_shifting: OffsetFrameShifting(),
-            position_shifting: PositionFrameShifting(),
+            user_arc_shifting: UserArcFrameShifting(position_frame_shifting),
+            sampler_arc_shifting: SamplerArcFrameShifting(offset_frame_shifting, position_frame_shifting),
+            sampler_arc_properties: sampler_arc_properties,
+            sampler_arc_resizing: SamplerArcResizing(sampler_arc_properties),
+            sampler_arc_rendering: SamplerArcRendering(sampler_arc_properties),
+            screen_frame_storage: screen_frame_storage, 
+            offset_shifting: offset_frame_shifting,
+            position_shifting: position_frame_shifting,
             user_arcs_and_sampler_arcs: UserArcsAndSamplerArcs(ArcGeometry()),
-            ids: DiagramIds(),
-        },
+            ids: diagram_ids,
+        };
+    }
+
+    const vue = new Vue({
+        el: '#app',
+        data: initial_vue_data(),
         created: function() {
             // Register event manager in setTimeout to prevent vue from inapproprately touching event listeners
             setTimeout(() => {this.queue = new EventQueueSideEffectWrapper(document.getElementById('svg'));}, 1000/60);
