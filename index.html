@@ -196,18 +196,18 @@
 
     /*
     `StoredArc` is a data structure that represents a directed arc in a way that allows easy storage and manipulation by the application.
-    `source` and `target` are vec2s indicating source and target in cell coordinates. Their components are integers if `is_snapped == true`.
+    `source` and `target` are vec2s indicating source and target in cell coordinates. Their components are integers if `is_valid == true`.
     `min_length_clockwise` is the minimum length of an arc, where sign inidicates arc chirality (positive values are clockwise).
     `target_offset_id` is an ivec2 that represents the direction of an offset applied to the target position to indicate the direction of loops.
-    `is_snapped` is a boolean indicating whether the arc has been associated with a definite source and target cell and should be included in the diagram.
+    `is_valid` is a boolean indicating whether the arc has been associated with a definite source and target cell and should be included in the diagram.
     */
     class StoredArc {
-        constructor(source, target, min_length_clockwise, target_offset_id, is_snapped){
+        constructor(source, target, min_length_clockwise, target_offset_id, is_valid){
             this.source = source;
             this.target = target;
             this.min_length_clockwise = min_length_clockwise;
             this.target_offset_id = target_offset_id;
-            this.is_snapped = is_snapped;
+            this.is_valid = is_valid;
         }
     }
 
@@ -489,17 +489,17 @@
                 const target_cell = ids.cell_position_to_cell_id(arc.target);
 
                 const is_loop = glm.distance(arc.source, arc.target) < max_loop_chord_length;
-                const is_target_snapped = glm.distance(arc.target, target_cell) < (is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
+                const is_snapped = glm.distance(arc.target, target_cell) < (is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
                 const is_canceled = glm.distance(arc.target, source_cell) < min_loop_chord_length;
-                const is_snapped = is_target_snapped && !is_canceled;
+                const is_valid = is_snapped && !is_canceled;
 
                 const target = 
                       is_canceled?       source_cell
-                    : is_target_snapped? target_cell
+                    : is_snapped? target_cell
                     :                    arc.target;
 
                 const target_offset_id = 
-                      !is_snapped?  glm.vec2()
+                      !is_valid?  glm.vec2()
                     : is_loop?      ids.offset_to_offset_id(ids.cell_position_and_cell_id_to_offset(arc.target, target_cell)) 
                     :               glm.vec2();
 
@@ -508,7 +508,7 @@
                     target, 
                     arc.min_length_clockwise, 
                     target_offset_id,
-                    is_snapped
+                    is_valid
                 );
             },
             stored_arc_to_user_arc: function(arc){
@@ -677,7 +677,7 @@
             const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
 
             return new DiagramArrow(
-                new StoredArc(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_snapped),
+                new StoredArc(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_valid),
                 arrow_in.is_edited,
                 arrow_in.label,
                 arrow_in.label_offset,
@@ -690,6 +690,19 @@
         function release(arrow_in) {
             return new DiagramArrow(
                 arrow_in.arc,
+                false,
+                arrow_in.label,
+                arrow_in.label_offset,
+                arrow_in.source_style_id,
+                arrow_in.end_style_id,
+                arrow_in.line_style_id,
+            );
+        }
+
+        function cancel(arrow_in) {
+            const arc_in = arrow_in.arc;
+            return new DiagramArrow(
+                new StoredArc(arc_in.source, arc_in.target, arc_in.min_length_clockwise, arc_in.target_offset_id, false),
                 false,
                 arrow_in.label,
                 arrow_in.label_offset,
@@ -718,14 +731,20 @@
                     move: move,
                     scroll: scroll,
                     release: release,
+                    cancel: cancel,
                     // do nothing if not snapped, otherwise add the arrow
-                    command: replacement_arrow => !replacement_arrow.is_edited && !replacement_arrow.arc.is_snapped?
-                          Command.identity
-                        : new Command(
-                            // forward
-                            modelview_inout => modelview_inout.arrows[original_length] = replacement_arrow,
-                            // backward
-                            modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                    command: replacement_arrow => !replacement_arrow.is_edited && !replacement_arrow.arc.is_valid?
+                        new Command(
+                          // forward
+                          modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                          // backward
+                          modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                        )
+                      : new Command(
+                          // forward
+                          modelview_inout => modelview_inout.arrows[original_length] = replacement_arrow,
+                          // backward
+                          modelview_inout => modelview_inout.arrows.splice(original_length, 1),
                         )
                 };
             },
@@ -747,8 +766,9 @@
                     move: move,
                     scroll: scroll,
                     release: release,
+                    cancel: cancel,
                     // delete the arrow if not snapped, otherwise edit the arrow
-                    command: replacement_arrow => !replacement_arrow.is_edited && !replacement_arrow.arc.is_snapped?
+                    command: replacement_arrow => !replacement_arrow.is_edited && !replacement_arrow.arc.is_valid?
                           new Command(
                             // forward
                             modelview_inout => modelview_inout.arrows.splice(arrow_id, 1),
@@ -767,7 +787,8 @@
     }
 
 
-    function ViewDrags(screen_frame_storage, position_shifting, offset_shifting, log2_cell_width_change_per_scroll){
+    function ViewDrags(screen_frame_storage, position_shifting, offset_shifting, 
+            log2_cell_width_change_per_scroll, log2_cell_width_min){
         const storage = screen_frame_storage;
         return {
             pan: function(original_screen_frame_store){
@@ -797,6 +818,7 @@
                 };
             },
             scroll: function(original_screen_frame_store){
+                const max = Math.max;
                 return {
                     is_model_drag: false,
                     is_view_drag: false,
@@ -808,18 +830,19 @@
                     scroll: function(screen_frame_store, model_focus, scroll_count) {
                         const log2_cell_width_change = log2_cell_width_change_per_scroll * scroll_count;
                         const screen_frame = storage.unpack(screen_frame_store);
+                        const updated_log2_cell_width = max(
+                            screen_frame_store.log2_cell_width + log2_cell_width_change, log2_cell_width_min
+                        );
                         const topleft_zoom_frame_store = 
                             new ScreenReferenceFrameStore(
-                                screen_frame_store.topleft_cell_position, 
-                                screen_frame_store.log2_cell_width + log2_cell_width_change
+                                screen_frame_store.topleft_cell_position, updated_log2_cell_width
                             );
                         const topleft_zoom_frame = storage.unpack(topleft_zoom_frame_store);
                         const screen_focus = position_shifting.enter(model_focus, screen_frame);
                         const screen_zoom_offset = position_shifting.enter(model_focus, topleft_zoom_frame).sub(screen_focus);
                         const model_zoom_offset = offset_shifting.leave(screen_zoom_offset, screen_frame);
                         return new ScreenReferenceFrameStore(
-                                screen_frame_store.topleft_cell_position.add(model_zoom_offset), 
-                                screen_frame_store.log2_cell_width + log2_cell_width_change
+                                screen_frame_store.topleft_cell_position.add(model_zoom_offset), updated_log2_cell_width
                             );
                     },
                     release: screen_frame_store => screen_frame_store,
@@ -880,7 +903,7 @@
                 const model_focus = position_shifting.leave(screen_focus, screen_frame);
 
                 state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.drag_state = DragState.draw;
+                state_out.drag_state = DragState.released;
                 state_out.arrows = [ ...state_in.arrows];
                 state_out.dragging = state_in.dragging;
                 state_out.drag_state_object = state_in.dragging.scroll(state_in.drag_state_object, model_focus, scroll_count);
@@ -895,7 +918,7 @@
                 state_out.drag_state = DragState.pan;
                 state_out.arrows = [ ...state_in.arrows];
                 state_out.dragging = view_drags.pan(state_in.screen_frame_store);
-                state_out.drag_state_object = state_in.dragging.initialize(state_in.drag_state_object, model_focus, scroll_count);
+                state_out.drag_state_object = state_in.dragging.initialize();
 
                 state_in.dragging.command(state_out.drag_state_object).forward(state_out);
             },
@@ -943,7 +966,6 @@
                 state_out.screen_frame_store = state_in.screen_frame_store;
                 state_out.drag_state = DragState.released;
 
-                state_in.dragging.command(state_in.drag_state_object).backward(state_out);
                 state_out.drag_state_object = state_in.dragging.release(state_in.drag_state_object);
                 state_in.dragging.command(state_out.drag_state_object).forward(state_out);
 
@@ -955,9 +977,8 @@
                 state_out.drag_state = DragState.released;
                 state_out.arrows = [ ...state_in.arrows];
 
-                if(state_in.dragging.is_model_drag){
-                    state_in.dragging.command(state_in.drag_state_object).backward(state_out);
-                }
+                state_out.drag_state_object = state_in.dragging.cancel(state_in.drag_state_object);
+                state_in.dragging.command(state_out.drag_state_object).forward(state_out);
 
                 state_out.dragging = view_drags.scroll(state_in.screen_frame_store);
                 state_out.drag_state_object = state_out.dragging.initialize();
@@ -992,7 +1013,6 @@
                     // cancel draw action
                     operations.cancel(state_in, state_out);
                 } else if (state in mouse_actions) {
-                    console.log(state)
                     mouse_actions[state](state_in, event, state_out)
                 }
             },
@@ -1076,6 +1096,7 @@
             PositionFrameShifting(),
             OffsetFrameShifting(),
             -0.001, // log2_cell_width_change_per_scroll
+            Math.log2(30) // log2_cell_width_min
         )
     const disengaged_drag = view_drags.scroll(initial_screen_frame_store)
     const disengaged_drag_state_object = disengaged_drag.initialize();
@@ -1146,6 +1167,9 @@
             },
             cell_count: function() {
                 return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.screen_frame_store.log2_cell_width))+1;
+            },
+            cell_width: function() {
+                return Math.pow(2.0, this.state.screen_frame_store.log2_cell_width);
             },
             cell_border_position: function(x, y) {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
