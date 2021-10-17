@@ -89,8 +89,6 @@
 <script type="text/javascript">
     'use strict';
 
-
-
     /*
     `DiagramReferenceFrame` is a data structure that can be considered a degenerate case of an affine transform.
     It permits scaling and translation but forbids rotation and shearing.
@@ -638,7 +636,6 @@
 
         function move(arrow_in, model_position, model_offset) {
             const arc_in = arrow_in.arc;
-
             const arrow_out = new DiagramArrow(
                 user_arcs_and_stored_arcs.user_arc_to_stored_arc(
                     new UserArc(
@@ -654,8 +651,6 @@
                 arrow_in.end_style_id,
                 arrow_in.line_style_id,
             );
-
-
             return arrow_out;
         };
 
@@ -716,6 +711,7 @@
             create: function(arrows) {
                 const original_length = arrows.length;
                 return {
+                    id: 'draw',
                     is_model_drag: true,
                     is_view_drag: false,
                     initialize: model_position => new DiagramArrow(
@@ -752,6 +748,7 @@
             edit: function(arrows, replaced_arrow) {
                 const arrow_id = arrows.indexOf(replaced_arrow);
                 return {
+                    id: 'draw',
                     is_model_drag: true,
                     is_view_drag: false,
                     initialize: () => new DiagramArrow(
@@ -793,6 +790,7 @@
         return {
             pan: function(original_screen_frame_store){
                 return {
+                    id: 'pan',
                     is_model_drag: false,
                     is_view_drag: true,
                     initialize: () => new ScreenReferenceFrameStore(
@@ -820,6 +818,7 @@
             wheel: function(original_screen_frame_store){
                 const max = Math.max;
                 return {
+                    id: 'released',
                     is_model_drag: false,
                     is_view_drag: false,
                     initialize: () => new ScreenReferenceFrameStore(
@@ -871,12 +870,11 @@
     It guarantees that for any combination of real numbered attribute values there is a valid application state.
     */
     class ApplicationState {
-        constructor(screen_frame_store, drag_state, arrows, dragging, drag_state_object){
+        constructor(screen_frame_store, arrows, dragging, drag_state){
             this.screen_frame_store = screen_frame_store;
-            this.drag_state = drag_state;
             this.arrows = arrows;
-            this.dragging = dragging;
-            this.drag_state_object = drag_state_object;
+            this.drag_type = dragging;
+            this.drag_state = drag_state;
         }
     }
 
@@ -903,24 +901,22 @@
                 const model_focus = position_shifting.leave(screen_focus, screen_frame);
 
                 state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.drag_state = DragState.released;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.dragging = state_in.dragging;
-                state_out.drag_state_object = state_in.dragging.wheel(state_in.drag_state_object, model_focus, scroll_count);
+                state_out.drag_type = state_in.drag_type;
+                state_out.drag_state = state_in.drag_type.wheel(state_in.drag_state, model_focus, scroll_count);
 
-                state_in.dragging.command(state_out.drag_state_object).forward(state_out);
+                state_in.drag_type.command(state_out.drag_state).forward(state_out);
             },
             pan: function(state_in, screen_offset, state_out){
                 const screen_frame = storage.unpack(state_in.screen_frame_store);
                 const model_offset = offset_shifting.leave(screen_offset, screen_frame);
                 state_out.screen_frame_store.topleft_cell_position = state_in.screen_frame_store.topleft_cell_position.sub(model_offset);
                 state_out.screen_frame_store.log2_cell_width = state_in.screen_frame_store.log2_cell_width;
-                state_out.drag_state = DragState.pan;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.dragging = view_drags.pan(state_in.screen_frame_store);
-                state_out.drag_state_object = state_in.dragging.initialize();
+                state_out.drag_type = view_drags.pan(state_in.screen_frame_store);
+                state_out.drag_state = state_in.drag_type.initialize();
 
-                state_in.dragging.command(state_out.drag_state_object).forward(state_out);
+                state_in.drag_type.command(state_out.drag_state).forward(state_out);
             },
             draw: function(state_in, screen_position, state_out){
                 const screen_frame = storage.unpack(state_in.screen_frame_store);
@@ -930,24 +926,22 @@
                 const drag_arrow = arrow_dragging.initialize(model_position);
 
                 state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.drag_state = DragState.draw;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.dragging = arrow_dragging;
-                state_out.drag_state_object = drag_arrow;
+                state_out.drag_type = arrow_dragging;
+                state_out.drag_state = drag_arrow;
 
-                state_in.dragging.command(drag_arrow).forward(state_out);
+                state_in.drag_type.command(drag_arrow).forward(state_out);
             },
             edit: function(state_in, arrow, state_out){
                 const arrow_dragging = arrow_drags.edit(state_in.arrows, arrow);
                 const drag_arrow = arrow_dragging.initialize();
 
                 state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.drag_state = DragState.draw;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.dragging = arrow_dragging;
-                state_out.drag_state_object = drag_arrow;
+                state_out.drag_type = arrow_dragging;
+                state_out.drag_state = drag_arrow;
 
-                state_in.dragging.command(drag_arrow).forward(state_out);
+                state_in.drag_type.command(drag_arrow).forward(state_out);
             },
             move: function (state_in, screen_position, screen_offset, state_out) {
                 const screen_frame = storage.unpack(state_in.screen_frame_store);
@@ -955,39 +949,35 @@
                 const model_offset = offset_shifting.leave(screen_offset, screen_frame);
 
                 state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.drag_state = state_in.drag_state;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.dragging = state_in.dragging;
-                state_out.drag_state_object = state_in.dragging.move(state_in.drag_state_object, model_position, model_offset);
+                state_out.drag_type = state_in.drag_type;
+                state_out.drag_state = state_in.drag_type.move(state_in.drag_state, model_position, model_offset);
 
-                state_in.dragging.command(state_in.drag_state_object).forward(state_out);
+                state_in.drag_type.command(state_in.drag_state).forward(state_out);
             },
             release: function(state_in, state_out) {
                 state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.drag_state = DragState.released;
 
-                state_out.drag_state_object = state_in.dragging.release(state_in.drag_state_object);
-                state_in.dragging.command(state_out.drag_state_object).forward(state_out);
+                state_out.drag_state = state_in.drag_type.release(state_in.drag_state);
+                state_in.drag_type.command(state_out.drag_state).forward(state_out);
 
-                state_out.dragging = view_drags.wheel(state_in.screen_frame_store);
-                state_out.drag_state_object = state_out.dragging.initialize();
+                state_out.drag_type = view_drags.wheel(state_in.screen_frame_store);
+                state_out.drag_state = state_out.drag_type.initialize();
             },
             cancel: function(state_in, state_out) {
                 state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.drag_state = DragState.released;
                 state_out.arrows = [ ...state_in.arrows];
 
-                state_out.drag_state_object = state_in.dragging.cancel(state_in.drag_state_object);
-                state_in.dragging.command(state_out.drag_state_object).forward(state_out);
+                state_out.drag_state = state_in.drag_type.cancel(state_in.drag_state);
+                state_in.drag_type.command(state_out.drag_state).forward(state_out);
 
-                state_out.dragging = view_drags.wheel(state_in.screen_frame_store);
-                state_out.drag_state_object = state_out.dragging.initialize();
+                state_out.drag_type = view_drags.wheel(state_in.screen_frame_store);
+                state_out.drag_state = state_out.drag_type.initialize();
             },
             copy: function(state_in, state_out){
                 state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.drag_state = state_in.drag_state;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.dragging = state_in.dragging;
+                state_out.drag_type = state_in.drag_type;
             }
         };
     }
@@ -1009,7 +999,7 @@
             },
             mousedown: function(state_in, event, state_out){
                 const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
-                if (state_in.drag_state == DragState.draw) { 
+                if (state_in.drag_type.id != DragState.released) { 
                     // cancel draw action
                     operations.cancel(state_in, state_out);
                 } else if (state in mouse_actions) {
@@ -1119,16 +1109,15 @@
 
         const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(200));
         const disengaged_drag = view_drags.wheel(initial_screen_frame_store)
-        const disengaged_drag_state_object = disengaged_drag.initialize();
+        const disengaged_drag_state = disengaged_drag.initialize();
         const sampler_arc_properties = SamplerArcProperties();
 
         return {
             state: new ApplicationState(
                     initial_screen_frame_store, 
-                    DragState.released, 
                     [],
                     disengaged_drag,
-                    disengaged_drag_state_object,
+                    disengaged_drag_state,
                 ),
             queue: undefined,
             controls: ApplicationControls(application_state_operations),
@@ -1167,7 +1156,7 @@
         },
         methods: {
             is_drawing: function(){
-                return this.state.drag_state == DragState.draw && this.state.drag_state_object != null;
+                return this.state.drag_state == DragState.draw && this.state.drag_state != null;
             },
             transformation: function() {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
