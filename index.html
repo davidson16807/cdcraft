@@ -72,7 +72,7 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
-            <g v-for="arrow in state.arrows" class="arrow-group" v-on:mousedown="arrowclick(arrow, $event)">
+            <g v-for="arrow in state.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
                 <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15"/>
@@ -80,15 +80,6 @@
                 <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="13" /> -->
                 <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
                 <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
-            </g>
-            <g v-if="is_drawing()">
-                <path class="arrow-highlight" v-bind:d="arrowpath(state.edited_arrow.arc)" />
-                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(state.edited_arrow.arc, 0).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 0).y" r="15"/>
-                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(state.edited_arrow.arc, 1).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 1).y" r="15" />
-                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(state.edited_arrow.arc, 0).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 0).y" r="13"/> -->
-                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(state.edited_arrow.arc, 1).x" v-bind:cy="arrowsample(state.edited_arrow.arc, 1).y" r="13" /> -->
-                <path class="arrow" v-bind:d="arrowhead(state.edited_arrow.arc)" />
-                <path class="arrow" v-bind:d="arrowpath(state.edited_arrow.arc)"/>
             </g>
         </g>
     </svg>
@@ -119,8 +110,8 @@
     */
     function OffsetFrameShifting(){
         return {
-            'enter': (position, frame) => position.div(frame.unit_length),
-            'leave': (position, frame) => position.mul(frame.unit_length),
+            enter: (position, frame) => position.div(frame.unit_length),
+            leave: (position, frame) => position.mul(frame.unit_length),
         };
     }
 
@@ -131,8 +122,8 @@
     */
     function PositionFrameShifting(){
         return {
-            'enter': (position, frame) => position.sub(frame.origin).div(frame.unit_length),
-            'leave': (position, frame) => position.mul(frame.unit_length).add(frame.origin),
+            enter: (position, frame) => position.sub(frame.origin).div(frame.unit_length),
+            leave: (position, frame) => position.mul(frame.unit_length).add(frame.origin),
         };
     }
     
@@ -144,13 +135,13 @@
         const round = Math.round;
         const abs = Math.abs;
         return {
-            'cell_position_to_border_id': cell_position => glm.vec2(floor(cell_position.x), floor(cell_position.y)),
-            'border_id_to_cell_position': border_id => border_id.add(0.5),
-            'cell_position_to_cell_id': cell_position => glm.vec2(round(cell_position.x), round(cell_position.y)),
-            'cell_position_and_cell_id_to_offset': (cell_position, cell_id) => cell_position.sub(cell_id),
-            'offset_to_offset_id': offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
-            'offset_id_to_offset_hash': offset_id => ((offset_id.x > offset_id.y) << 1) + (-offset_id.x > offset_id.y),
-            'offset_hash_to_offset_id': offset_hash => glm.normalize(glm.vec2(1,-1).mul(2*floor(offset_hash / 2)-1).add(glm.vec2(-1,-1).mul(2*(offset_hash % 2)-1))),
+            cell_position_to_border_id: cell_position => glm.vec2(floor(cell_position.x), floor(cell_position.y)),
+            border_id_to_cell_position: border_id => border_id.add(0.5),
+            cell_position_to_cell_id: cell_position => glm.vec2(round(cell_position.x), round(cell_position.y)),
+            cell_position_and_cell_id_to_offset: (cell_position, cell_id) => cell_position.sub(cell_id),
+            offset_to_offset_id: offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
+            offset_id_to_offset_hash: offset_id => ((offset_id.x > offset_id.y) << 1) + (-offset_id.x > offset_id.y),
+            offset_hash_to_offset_id: offset_hash => glm.normalize(glm.vec2(1,-1).mul(2*floor(offset_hash / 2)-1).add(glm.vec2(-1,-1).mul(2*(offset_hash % 2)-1))),
         };
     }
 
@@ -291,7 +282,7 @@
         const abs = Math.abs;
         const max = Math.max;
         return {
-            'user_arc_to_sampler_arc': function(user_arc) {
+            user_arc_to_sampler_arc: function(user_arc) {
                 const radius = arc_geometry.radius(user_arc.source, user_arc.target, user_arc.min_length_clockwise);
                 const origin = arc_geometry.origin(user_arc.source, user_arc.target, user_arc.min_length_clockwise, radius);
                 const clockwise_sign = sign(user_arc.min_length_clockwise);
@@ -334,10 +325,12 @@
                 const v = sampler_arc.source_offset;
                 const radius = glm.length(sampler_arc.source_offset);
                 const theta = distance / radius;
-                return glm.vec2(
-                    v.x * cos(theta) - v.y * sin(theta),
-                    v.x * sin(theta) + v.y * cos(theta),
-                ).add(sampler_arc.origin);
+                return radius == 0? 
+                      sampler_arc.origin 
+                    : glm.vec2(
+                        v.x * cos(theta) - v.y * sin(theta),
+                        v.x * sin(theta) + v.y * cos(theta),
+                    ).add(sampler_arc.origin);
             },
         }
     }
@@ -368,13 +361,13 @@
     */
     function SamplerArcFrameShifting(offset_frame_shifting, position_frame_shifting){
         return {
-            'enter': (user_arrow, frame) => 
+            enter: (user_arrow, frame) => 
                 new SamplerArc(
                     position_frame_shifting.enter(user_arrow.origin, frame),
                     offset_frame_shifting.enter(user_arrow.source_offset, frame),
                     user_arrow.length_clockwise / frame.unit_length,
                 ),
-            'leave': (user_arrow, frame) =>
+            leave: (user_arrow, frame) =>
                 new SamplerArc(
                     position_frame_shifting.leave(user_arrow.origin, frame),
                     offset_frame_shifting.leave(user_arrow.source_offset, frame),
@@ -462,13 +455,13 @@
     function UserArcFrameShifting(position_frame_shifting){
         const shifting = position_frame_shifting;
         return {
-            'enter': (user_arrow, frame) => 
+            enter: (user_arrow, frame) => 
                 new UserArc(
                     shifting.enter(user_arrow.source, frame),
                     shifting.enter(user_arrow.target, frame),
                     user_arrow.min_length_clockwise / frame.unit_length,
                 ),
-            'leave': (user_arrow, frame) =>
+            leave: (user_arrow, frame) =>
                 new UserArc(
                     shifting.leave(user_arrow.source, frame),
                     shifting.leave(user_arrow.target, frame),
@@ -491,7 +484,7 @@
     ) {
         const ids = diagram_ids;
         return {
-            'user_arc_to_stored_arc': function(arc) {
+            user_arc_to_stored_arc: function(arc) {
                 const source_cell = ids.cell_position_to_cell_id(arc.source);
                 const target_cell = ids.cell_position_to_cell_id(arc.target);
 
@@ -518,7 +511,7 @@
                     is_snapped
                 );
             },
-            'stored_arc_to_user_arc': function(arc){
+            stored_arc_to_user_arc: function(arc){
                 return new UserArc(
                     arc.source, 
                     arc.target_offset_id.mul(cell_to_target_distance).add(arc.target),
@@ -549,8 +542,8 @@
         const pow = Math.pow;
         const log2 = Math.log2;
         return {
-            'pack': (frame) => new ScreenReferenceFrameStore(frame.origin, log2(1/frame.unit_length)),
-            'unpack': (store) => new DiagramReferenceFrame(store.topleft_cell_position, 1/pow(2, store.log2_cell_width)),
+            pack: (frame) => new ScreenReferenceFrameStore(frame.origin, log2(1/frame.unit_length)),
+            unpack: (store) => new DiagramReferenceFrame(store.topleft_cell_position, 1/pow(2, store.log2_cell_width)),
         };
     }
 
@@ -562,12 +555,12 @@
     function ReferenceFrameShifting(position_frame_shifting){
         const shifting = position_frame_shifting;
         return {
-            'enter': (frame1, frame2) => 
+            enter: (frame1, frame2) => 
                 new DiagramReferenceFrame(
                     shifting.enter(frame1.origin, frame2),
                     frame1.unit_length / frame2.unit_length,
                 ),
-            'leave': (frame1, frame2) =>
+            leave: (frame1, frame2) =>
                 new DiagramReferenceFrame(
                     shifting.leave(frame1.origin, frame2),
                     frame1.unit_length * frame2.unit_length,
@@ -580,17 +573,268 @@
     */
     class DiagramArrow {
         constructor(
-            arc, label, label_offset, 
-            source_style_id, end_style_id, line_style_id
+            arc, is_edited, label, label_offset, 
+            source_style_id, end_style_id, line_style_id, 
         ){
             this.arc = arc;
+            this.is_edited = is_edited || false;
             this.label = label || "";
             this.label_offset = label_offset || 1;
-            this.source_style_id = source_style_id;
-            this.end_style_id = end_style_id;
-            this.line_style_id = line_style_id;
+            this.source_style_id = source_style_id || 0;
+            this.end_style_id = end_style_id || 0;
+            this.line_style_id = line_style_id || 0;
         }
     }
+
+    /*
+    `Command` is an isomorphism implemented as a tuple of functions. It is used here to implement undo/redo history. 
+    Its name alludes to the "Command" pattern of object oriented programming.
+    The two functions within a `Command` are:
+
+    * `forward(state)`, a function that maps the state of a modelview to another state. 
+      It represents a change in state issued by the user. The modelview is modified in-place for performance reasons.
+    * `backward(state)`, a function that is inverse to `forward(state)`
+
+    All changes to state within a Diagram are made using the `forward()` and `backward()` functions, 
+    even when not using undo/redo functionality. This is done to reduce the number of cases that must be considered within code.
+
+    We have chosen to implement undo/redo using `Command` since this approach corresponds to a categorial interpretation
+    that allows flexibility while preserving essential behavior. 
+    State objects do not need to be stored if the user wants to reduce memory consumption, 
+    but can be returned by `backward()` functions if doing so is easier or the alternative is not possible.
+    Custom `*Command` can also be implemented if the size of the `forward` and `backward` functions are also of concern.
+    */
+    class Command{
+        constructor(forward, backward){
+            this.forward = forward;
+            this.backward = backward;
+        }
+        copy(){
+            return new Command(this.forward, this.backward);
+        }
+        static identity = new Command(modelview_inout=>{}, modelview_inout=>{});
+    }
+
+    /*
+    `*Dragging`s are small categories of pure functions that are functorial to themselves.
+    They each describe dragging operations performed by mice or touchpads.
+    When the drag starts, the application initializes an instance of the category and a state object within it.
+    When the drag is in progress, the application applies operations to the state object returning a new state object.
+    These operations reflect user actions that occur mid-drag, such as movement or scrolling.
+
+    A state object can be used at any point to return a command object.
+    The command objects are small categories of idempotent isomorphic functions that return application state 
+    from any point during the drag to the points immediately before or after.
+
+    The functions within a `Dragging` category can be considered the successively curried versions of pure functions.
+    The currying allows the functions to be able to compose and form small categories 
+    where the output of one is the input of another. 
+    The curried parameters are treated as private constants within the category,
+    and are analogous to private attributes within object oriented programming (OOP), 
+    except unlike typical OOP we actually bother to practice encapsulation 
+    and not merely pretend to using getters and setters.
+    */
+    function ArrowDrags(user_arcs_and_stored_arcs, default_min_length_clockwise, min_length_clockwise_change_per_scroll){
+
+        function move(arrow_in, model_position, model_offset) {
+            const arc_in = arrow_in.arc;
+
+            const arrow_out = new DiagramArrow(
+                user_arcs_and_stored_arcs.user_arc_to_stored_arc(
+                    new UserArc(
+                        arc_in.source,
+                        model_position,
+                        arc_in.min_length_clockwise,
+                    )
+                ),
+                arrow_in.is_edited,
+                arrow_in.label,
+                arrow_in.label_offset,
+                arrow_in.source_style_id,
+                arrow_in.end_style_id,
+                arrow_in.line_style_id,
+            );
+
+
+            return arrow_out;
+        };
+
+        const sign = Math.sign;
+        const abs = Math.abs;
+        const max = Math.max;
+        function scroll(arrow_in, screen_focus, scroll_count) {
+            const arc_in = arrow_in.arc;
+
+            const min_length_clockwise_change = min_length_clockwise_change_per_scroll * scroll_count;
+            const chord_length = glm.distance(arc_in.source, arc_in.target);
+            const arc_length1 = 0.7;
+            const arc_length2 = max(arc_length1, chord_length);
+            const min_arc_length = abs(arc_in.min_length_clockwise);
+            const clockwise_sign = sign(arc_in.min_length_clockwise);
+            const excess_in = clockwise_sign * max(min_arc_length - arc_length2, 0);
+            const excess_out = excess_in + min_length_clockwise_change;
+            const is_different_sign = sign(excess_in) * sign(excess_out) < 0;
+            const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
+
+            return new DiagramArrow(
+                new StoredArc(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_snapped),
+                arrow_in.is_edited,
+                arrow_in.label,
+                arrow_in.label_offset,
+                arrow_in.source_style_id,
+                arrow_in.end_style_id,
+                arrow_in.line_style_id,
+            );
+        };
+
+        function release(arrow_in) {
+            return new DiagramArrow(
+                arrow_in.arc,
+                false,
+                arrow_in.label,
+                arrow_in.label_offset,
+                arrow_in.source_style_id,
+                arrow_in.end_style_id,
+                arrow_in.line_style_id,
+            );
+        }
+
+        return {
+            create: function(arrows) {
+                const original_length = arrows.length;
+                return {
+                    is_model_drag: true,
+                    is_view_drag: false,
+                    initialize: model_position => new DiagramArrow(
+                            user_arcs_and_stored_arcs.user_arc_to_stored_arc(
+                                new UserArc(
+                                    model_position, 
+                                    model_position,
+                                    default_min_length_clockwise,
+                                )
+                            ),
+                            true,
+                        ),
+                    move: move,
+                    scroll: scroll,
+                    release: release,
+                    // do nothing if not snapped, otherwise add the arrow
+                    command: replacement_arrow => !replacement_arrow.is_edited && !replacement_arrow.arc.is_snapped?
+                          Command.identity
+                        : new Command(
+                            // forward
+                            modelview_inout => modelview_inout.arrows[original_length] = replacement_arrow,
+                            // backward
+                            modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                        )
+                };
+            },
+
+            edit: function(arrows, replaced_arrow) {
+                const arrow_id = arrows.indexOf(replaced_arrow);
+                return {
+                    is_model_drag: true,
+                    is_view_drag: false,
+                    initialize: () => new DiagramArrow(
+                            replaced_arrow.arc,
+                            true,
+                            replaced_arrow.label,
+                            replaced_arrow.label_offset,
+                            replaced_arrow.source_style_id,
+                            replaced_arrow.end_style_id,
+                            replaced_arrow.line_style_id,
+                        ),
+                    move: move,
+                    scroll: scroll,
+                    release: release,
+                    // delete the arrow if not snapped, otherwise edit the arrow
+                    command: replacement_arrow => !replacement_arrow.is_edited && !replacement_arrow.arc.is_snapped?
+                          new Command(
+                            // forward
+                            modelview_inout => modelview_inout.arrows.splice(arrow_id, 1),
+                            // backward
+                            modelview_inout => modelview_inout.arrows[arrow_id] = replaced_arrow,
+                          )
+                        : new Command(
+                              // forward
+                              modelview_inout => modelview_inout.arrows[arrow_id] = replacement_arrow,
+                              // backward
+                              modelview_inout => modelview_inout.arrows[arrow_id] = replaced_arrow,
+                          )
+                };
+            },
+        };
+    }
+
+
+    function ViewDrags(screen_frame_storage, position_shifting, offset_shifting, log2_cell_width_change_per_scroll){
+        const storage = screen_frame_storage;
+        return {
+            pan: function(original_screen_frame_store){
+                return {
+                    is_model_drag: false,
+                    is_view_drag: true,
+                    initialize: () => new ScreenReferenceFrameStore(
+                            original_screen_frame_store.topleft_cell_position, 
+                            original_screen_frame_store.log2_cell_width
+                        ),
+                    move: function(screen_frame_store, model_position, model_offset) {
+                        const screen_frame = storage.unpack(screen_frame_store);
+                        return new ScreenReferenceFrameStore(
+                                screen_frame_store.topleft_cell_position.sub(model_offset), 
+                                screen_frame_store.log2_cell_width
+                            );
+                    },
+                    scroll: screen_frame_store => screen_frame_store,
+                    release: screen_frame_store => screen_frame_store,
+                    cancel: screen_frame_store => screen_frame_store,
+                    command: screen_frame_store => new Command(
+                            // forward
+                            modelview_inout => { modelview_inout.screen_frame_store = screen_frame_store },
+                            // backward
+                            modelview_inout => { modelview_inout.screen_frame_store = original_screen_frame_store },
+                        )
+                };
+            },
+            scroll: function(original_screen_frame_store){
+                return {
+                    is_model_drag: false,
+                    is_view_drag: false,
+                    initialize: () => new ScreenReferenceFrameStore(
+                            original_screen_frame_store.topleft_cell_position, 
+                            original_screen_frame_store.log2_cell_width
+                        ),
+                    move: (screen_frame_store, model_position, model_offset) => screen_frame_store,
+                    scroll: function(screen_frame_store, model_focus, scroll_count) {
+                        const log2_cell_width_change = log2_cell_width_change_per_scroll * scroll_count;
+                        const screen_frame = storage.unpack(screen_frame_store);
+                        const topleft_zoom_frame_store = 
+                            new ScreenReferenceFrameStore(
+                                screen_frame_store.topleft_cell_position, 
+                                screen_frame_store.log2_cell_width + log2_cell_width_change
+                            );
+                        const topleft_zoom_frame = storage.unpack(topleft_zoom_frame_store);
+                        const screen_focus = position_shifting.enter(model_focus, screen_frame);
+                        const screen_zoom_offset = position_shifting.enter(model_focus, topleft_zoom_frame).sub(screen_focus);
+                        const model_zoom_offset = offset_shifting.leave(screen_zoom_offset, screen_frame);
+                        return new ScreenReferenceFrameStore(
+                                screen_frame_store.topleft_cell_position.add(model_zoom_offset), 
+                                screen_frame_store.log2_cell_width + log2_cell_width_change
+                            );
+                    },
+                    release: screen_frame_store => screen_frame_store,
+                    cancel: screen_frame_store => screen_frame_store,
+                    command: screen_frame_store => new Command(
+                            // forward
+                            modelview_inout => { modelview_inout.screen_frame_store = screen_frame_store },
+                            // backward
+                            modelview_inout => { modelview_inout.screen_frame_store = original_screen_frame_store },
+                        )
+                };
+            }
+        };
+    }
+
 
     const DragState = {
         released: 'released',
@@ -604,13 +848,15 @@
     It guarantees that for any combination of real numbered attribute values there is a valid application state.
     */
     class ApplicationState {
-        constructor(screen_frame_store, drag_state, arrows, edited_arrow){
+        constructor(screen_frame_store, drag_state, arrows, dragging, drag_state_object){
             this.screen_frame_store = screen_frame_store;
             this.drag_state = drag_state;
             this.arrows = arrows;
-            this.edited_arrow = edited_arrow;
+            this.dragging = dragging;
+            this.drag_state_object = drag_state_object;
         }
     }
+
 
     /*
     `ApplicationStateOperations` is a namespace of *conceptually* pure functions 
@@ -618,36 +864,28 @@
     All functions represent the transformation of state in reponse to controller events. 
     */
     function ApplicationStateOperations(
+            arrow_drags,
+            view_drags,
             screen_frame_storage,  
             offset_frame_shifting, 
             position_frame_shifting, 
-            user_arcs_and_stored_arcs,
-            default_min_length_clockwise
         ) {
-        const sign = Math.sign;
-        const abs = Math.abs;
-        const max = Math.max;
         const storage = screen_frame_storage;
         const offset_shifting = offset_frame_shifting;
         const position_shifting = position_frame_shifting;
         return {
-            zoom: function(state_in, screen_focus, log2_cell_width_change, state_out) {
+            scroll: function(state_in, screen_focus, scroll_count, state_out) {
                 const screen_frame_store = state_in.screen_frame_store;
                 const screen_frame = storage.unpack(screen_frame_store);
                 const model_focus = position_shifting.leave(screen_focus, screen_frame);
-                const topleft_zoom_frame_store = 
-                    new ScreenReferenceFrameStore(
-                        screen_frame_store.topleft_cell_position, 
-                        screen_frame_store.log2_cell_width + log2_cell_width_change
-                    );
-                const topleft_zoom_frame = storage.unpack(topleft_zoom_frame_store);
-                const screen_zoom_offset = position_shifting.enter(model_focus, topleft_zoom_frame).sub(screen_focus);
-                const model_zoom_offset = offset_shifting.leave(screen_zoom_offset, screen_frame);
-                state_out.screen_frame_store.topleft_cell_position = screen_frame_store.topleft_cell_position.add(model_zoom_offset);
-                state_out.screen_frame_store.log2_cell_width = state_in.screen_frame_store.log2_cell_width + log2_cell_width_change;
-                state_out.drag_state = DragState.zoom;
+
+                state_out.screen_frame_store = state_in.screen_frame_store;
+                state_out.drag_state = DragState.draw;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.edited_arrow = state_in.edited_arrow;
+                state_out.dragging = state_in.dragging;
+                state_out.drag_state_object = state_in.dragging.scroll(state_in.drag_state_object, model_focus, scroll_count);
+
+                state_in.dragging.command(state_out.drag_state_object).forward(state_out);
             },
             pan: function(state_in, screen_offset, state_out){
                 const screen_frame = storage.unpack(state_in.screen_frame_store);
@@ -656,91 +894,79 @@
                 state_out.screen_frame_store.log2_cell_width = state_in.screen_frame_store.log2_cell_width;
                 state_out.drag_state = DragState.pan;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.edited_arrow = state_in.edited_arrow;
+                state_out.dragging = view_drags.pan(state_in.screen_frame_store);
+                state_out.drag_state_object = state_in.dragging.initialize(state_in.drag_state_object, model_focus, scroll_count);
+
+                state_in.dragging.command(state_out.drag_state_object).forward(state_out);
             },
             draw: function(state_in, screen_position, state_out){
                 const screen_frame = storage.unpack(state_in.screen_frame_store);
                 const model_position = position_shifting.leave(screen_position, screen_frame);
 
-                const arc_view = new UserArc(
-                    state_out.drag_state == DragState.draw? state_in.edited_arrow.arc.source : model_position, 
-                    model_position,
-                    state_out.drag_state == DragState.draw? state_in.edited_arrow.arc.min_length_clockwise : default_min_length_clockwise,
-                );
-
-                const diagram_arrow = new DiagramArrow(
-                    user_arcs_and_stored_arcs.user_arc_to_stored_arc(arc_view),
-                    state_in.edited_arrow.label,
-                    state_in.edited_arrow.label_offset,
-                    state_in.edited_arrow.source_style_id,
-                    state_in.edited_arrow.end_style_id,
-                    state_in.edited_arrow.line_style_id,
-                );
+                const arrow_dragging = arrow_drags.create(state_in.arrows);
+                const drag_arrow = arrow_dragging.initialize(model_position);
 
                 state_out.screen_frame_store = state_in.screen_frame_store;
                 state_out.drag_state = DragState.draw;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.edited_arrow = diagram_arrow;
+                state_out.dragging = arrow_dragging;
+                state_out.drag_state_object = drag_arrow;
+
+                state_in.dragging.command(drag_arrow).forward(state_out);
             },
-            bend: function (state_in, min_length_clockwise_change, state_out) {
-                const arrow_in = state_in.edited_arrow;
-                const arc_in = arrow_in.arc;
-
-                const chord_length = glm.distance(arc_in.source, arc_in.target);
-                const arc_length1 = 0.7;
-                const arc_length2 = max(arc_length1, chord_length);
-                const min_arc_length = abs(arc_in.min_length_clockwise);
-                const clockwise_sign = sign(arc_in.min_length_clockwise);
-                const excess_in = clockwise_sign * max(min_arc_length - arc_length2, 0);
-                const excess_out = excess_in + min_length_clockwise_change;
-                const is_different_sign = sign(excess_in) * sign(excess_out) < 0;
-                const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
-
-                const diagram_arrow = new DiagramArrow(
-                    new StoredArc(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_snapped),
-                    arrow_in.label,
-                    arrow_in.label_offset,
-                    arrow_in.source_style_id,
-                    arrow_in.end_style_id,
-                    arrow_in.line_style_id,
-                );
+            edit: function(state_in, arrow, state_out){
+                const arrow_dragging = arrow_drags.edit(state_in.arrows, arrow);
+                const drag_arrow = arrow_dragging.initialize();
 
                 state_out.screen_frame_store = state_in.screen_frame_store;
                 state_out.drag_state = DragState.draw;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.edited_arrow = diagram_arrow;
+                state_out.dragging = arrow_dragging;
+                state_out.drag_state_object = drag_arrow;
+
+                state_in.dragging.command(drag_arrow).forward(state_out);
+            },
+            move: function (state_in, screen_position, screen_offset, state_out) {
+                const screen_frame = storage.unpack(state_in.screen_frame_store);
+                const model_position = position_shifting.leave(screen_position, screen_frame);
+                const model_offset = offset_shifting.leave(screen_offset, screen_frame);
+
+                state_out.screen_frame_store = state_in.screen_frame_store;
+                state_out.drag_state = state_in.drag_state;
+                state_out.arrows = [ ...state_in.arrows];
+                state_out.dragging = state_in.dragging;
+                state_out.drag_state_object = state_in.dragging.move(state_in.drag_state_object, model_position, model_offset);
+
+                state_in.dragging.command(state_in.drag_state_object).forward(state_out);
             },
             release: function(state_in, state_out) {
                 state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.arrows = 
-                    state_in.drag_state == DragState.draw && state_in.edited_arrow.arc.is_snapped ? 
-                        [ ...state_in.arrows, state_in.edited_arrow] 
-                    : 
-                        [...state_in.arrows];
                 state_out.drag_state = DragState.released;
-                state_out.edited_arrow = new DiagramArrow(glm.vec2(), glm.vec2());
+
+                state_in.dragging.command(state_in.drag_state_object).backward(state_out);
+                state_out.drag_state_object = state_in.dragging.release(state_in.drag_state_object);
+                state_in.dragging.command(state_out.drag_state_object).forward(state_out);
+
+                state_out.dragging = view_drags.scroll(state_in.screen_frame_store);
+                state_out.drag_state_object = state_out.dragging.initialize();
             },
             cancel: function(state_in, state_out) {
                 state_out.screen_frame_store = state_in.screen_frame_store;
                 state_out.drag_state = DragState.released;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.edited_arrow = new DiagramArrow(glm.vec2(), glm.vec2());
+
+                if(state_in.dragging.is_model_drag){
+                    state_in.dragging.command(state_in.drag_state_object).backward(state_out);
+                }
+
+                state_out.dragging = view_drags.scroll(state_in.screen_frame_store);
+                state_out.drag_state_object = state_out.dragging.initialize();
             },
             copy: function(state_in, state_out){
                 state_out.screen_frame_store = state_in.screen_frame_store;
                 state_out.drag_state = state_in.drag_state;
                 state_out.arrows = [ ...state_in.arrows];
-                state_out.edited_arrow = state_in.edited_arrow;
-            },
-            edit: function(state_in, arrow, state_out){
-                state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.drag_state = DragState.draw;
-                state_out.arrows = [ ...state_in.arrows];
-                const arrow_id = state_out.arrows.indexOf(arrow);
-                if (arrow_id >= 0) {
-                    state_out.arrows.splice(arrow_id, 1);
-                }
-                state_out.edited_arrow = arrow;
+                state_out.dragging = state_in.dragging;
             }
         };
     }
@@ -750,39 +976,28 @@
     All functions represent the transformation of state in reponse to controller events. 
     It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
     */
-    function ApplicationControls(
-        application_state_operations, 
-        log2_cell_width_change_per_scroll,
-        min_length_clockwise_change_per_scroll
-    ){
+    function ApplicationControls(application_state_operations){
         const operations = application_state_operations;
         const mouse_actions = {
-            'pan':  (state_in, event, state_out) => operations.pan(state_in, glm.vec2(event.movementX, event.movementY), state_out),
-            'draw': (state_in, event, state_out) => operations.draw(state_in, glm.vec2(event.clientX, event.clientY), state_out),
+            pan:  (state_in, event, state_out) => operations.pan(state_in, glm.vec2(event.movementX, event.movementY), state_out),
+            draw: (state_in, event, state_out) => operations.draw(state_in, glm.vec2(event.clientX, event.clientY), state_out),
         };
         return {
             wheel: function(state_in, event, state_out){
-                if (state_in.drag_state == DragState.draw) {
-                    operations.bend(state_in, min_length_clockwise_change_per_scroll * event.deltaY, state_out);
-                } else {
-                    operations.zoom(state_in, glm.vec2(event.clientX, event.clientY), log2_cell_width_change_per_scroll * event.deltaY, state_out);
-                }
+                operations.scroll(state_in, glm.vec2(event.clientX, event.clientY), event.deltaY, state_out);
             },
             mousedown: function(state_in, event, state_out){
                 const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
                 if (state_in.drag_state == DragState.draw) { 
                     // cancel draw action
                     operations.cancel(state_in, state_out);
-                } else if (state in mouse_actions){
-                    mouse_actions[state](state_in, event, state_out); 
+                } else if (state in mouse_actions) {
+                    console.log(state)
+                    mouse_actions[state](state_in, event, state_out)
                 }
-                
             },
             mousemove: function(state_in, event, state_out){
-                const state = state_in.drag_state;
-                if (state in mouse_actions){
-                    mouse_actions[state](state_in, event, state_out); 
-                }
+                operations.move(state_in, glm.vec2(event.clientX, event.clientY), glm.vec2(event.movementX, event.movementY), state_out);
             },
             mouseup: function(state_in, event, state_out){
                 operations.release(state_in, state_out);
@@ -848,37 +1063,48 @@
         }
     }
 
+    const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(200));
     const user_arcs_and_stored_arcs =
         UserArcsAndStoredArcs(
             DiagramIds(), 
             0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
             0.01, // cell to target distance
         );
+    const view_drags = 
+        ViewDrags(
+            ScreenReferenceFrameStorage(),
+            PositionFrameShifting(),
+            OffsetFrameShifting(),
+            -0.001, // log2_cell_width_change_per_scroll
+        )
+    const disengaged_drag = view_drags.scroll(initial_screen_frame_store)
+    const disengaged_drag_state_object = disengaged_drag.initialize();
     const application_state_operations = 
         ApplicationStateOperations(
+            ArrowDrags(
+                user_arcs_and_stored_arcs,
+                0.7, // default_min_length_clockwise
+                0.001 // min_length_change_per_scroll
+            ),
+            view_drags,
             ScreenReferenceFrameStorage(),
             OffsetFrameShifting(), 
             PositionFrameShifting(), 
-            user_arcs_and_stored_arcs,
-            0.7 // default_min_length_clockwise
         );
 
     const application_controls = 
-        ApplicationControls(
-            application_state_operations,
-            -0.001, // log2_cell_width_change_per_scroll
-            0.001 // min_length_change_per_scroll
-        );
+        ApplicationControls(application_state_operations);
 
     const vue = new Vue({
         el: '#app',
         data:{
             state: 
                 new ApplicationState(
-                    new ScreenReferenceFrameStore(glm.vec2(), Math.log2(200)), 
+                    initial_screen_frame_store, 
                     DragState.released, 
                     [],
-                    new DiagramArrow(glm.vec2(), glm.vec2()),
+                    disengaged_drag,
+                    disengaged_drag_state_object,
                 ),
             queue: undefined,
             controls: application_controls,
@@ -912,7 +1138,7 @@
         },
         methods: {
             is_drawing: function(){
-                return this.state.drag_state == DragState.draw;
+                return this.state.drag_state == DragState.draw && this.state.drag_state_object != null;
             },
             transformation: function() {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
