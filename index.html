@@ -72,7 +72,7 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
-            <g v-for="arrow in state.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
+            <g v-for="arrow in state.modelview.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
                 <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15"/>
@@ -614,7 +614,7 @@
     }
 
     /*
-    `*Dragging`s are small categories of pure functions that are functorial to themselves.
+    `*Drag`s are small categories of pure functions that are functorial to themselves.
     They each describe dragging operations performed by mice or touchpads.
     When the drag starts, the application initializes an instance of the category and a state object within it.
     When the drag is in progress, the application applies operations to the state object returning a new state object.
@@ -624,7 +624,7 @@
     The command objects are small categories of idempotent isomorphic functions that return application state 
     from any point during the drag to the points immediately before or after.
 
-    The functions within a `Dragging` category can be considered the successively curried versions of pure functions.
+    The functions within a `Drag` category can be considered the successively curried versions of pure functions.
     The currying allows the functions to be able to compose and form small categories 
     where the output of one is the input of another. 
     The curried parameters are treated as private constants within the category,
@@ -866,13 +866,26 @@
     };
 
     /*
+    `ModelView` is a data structure that contains all state relating to a diagram and its presentation.
+    Its name alludes to the "Model/View" patterns that occur within application development, 
+    and its usage in the application is most heavily inspired by "Model-View-Updater" (A.K.A. "Elm" architecture).
+    Notably absent from `ModelView` is control state and undo/redo history, 
+    which are dealt with at the `Application*` level.
+    */
+    class ModelView {
+        constructor(arrows, screen_frame_store){
+            this.arrows = arrows;
+            this.screen_frame_store = screen_frame_store;
+        }
+    }
+
+    /*
     `ApplicationState` is a data structure that contains all state within the application. 
     It guarantees that for any combination of real numbered attribute values there is a valid application state.
     */
     class ApplicationState {
-        constructor(screen_frame_store, arrows, dragging, drag_state){
-            this.screen_frame_store = screen_frame_store;
-            this.arrows = arrows;
+        constructor(modelview, dragging, drag_state){
+            this.modelview = modelview;
             this.drag_type = dragging;
             this.drag_state = drag_state;
         }
@@ -881,7 +894,7 @@
 
     /*
     `ApplicationStateOperations` is a namespace of *conceptually* pure functions 
-    that operate with no concept of what hardware is being used (e.g. mouse, touchscreen, etc.).
+    Its responsibility is to track undo/redo history
     All functions represent the transformation of state in reponse to controller events. 
     */
     function ApplicationStateOperations(
@@ -896,87 +909,95 @@
         const position_shifting = position_frame_shifting;
         return {
             wheel: function(state_in, screen_focus, scroll_count, state_out) {
-                const screen_frame_store = state_in.screen_frame_store;
+                const screen_frame_store = state_in.modelview.screen_frame_store;
                 const screen_frame = storage.unpack(screen_frame_store);
                 const model_focus = position_shifting.leave(screen_focus, screen_frame);
 
-                state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.arrows = [ ...state_in.arrows];
+                state_out.modelview.screen_frame_store = screen_frame_store;
+                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
                 state_out.drag_type = state_in.drag_type;
                 state_out.drag_state = state_in.drag_type.wheel(state_in.drag_state, model_focus, scroll_count);
 
-                state_in.drag_type.command(state_out.drag_state).forward(state_out);
+                state_in.drag_type.command(state_out.drag_state).forward(state_out.modelview);
             },
             pan: function(state_in, screen_offset, state_out){
-                const screen_frame = storage.unpack(state_in.screen_frame_store);
+                const screen_frame_store = state_in.modelview.screen_frame_store;
+                const screen_frame = storage.unpack(screen_frame_store);
                 const model_offset = offset_shifting.leave(screen_offset, screen_frame);
-                state_out.screen_frame_store.topleft_cell_position = state_in.screen_frame_store.topleft_cell_position.sub(model_offset);
-                state_out.screen_frame_store.log2_cell_width = state_in.screen_frame_store.log2_cell_width;
-                state_out.arrows = [ ...state_in.arrows];
-                state_out.drag_type = view_drags.pan(state_in.screen_frame_store);
+                state_out.modelview.screen_frame_store.topleft_cell_position = screen_frame_store.topleft_cell_position.sub(model_offset); // TODO: make sure you can remove this!
+                state_out.modelview.screen_frame_store.log2_cell_width = screen_frame_store.log2_cell_width;
+                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
+                state_out.drag_type = view_drags.pan(screen_frame_store);
                 state_out.drag_state = state_in.drag_type.initialize();
 
-                state_in.drag_type.command(state_out.drag_state).forward(state_out);
+                state_in.drag_type.command(state_out.drag_state).forward(state_out.modelview);
             },
             draw: function(state_in, screen_position, state_out){
-                const screen_frame = storage.unpack(state_in.screen_frame_store);
+                const screen_frame_store = state_in.modelview.screen_frame_store;
+                const screen_frame = storage.unpack(screen_frame_store);
                 const model_position = position_shifting.leave(screen_position, screen_frame);
 
-                const arrow_dragging = arrow_drags.create(state_in.arrows);
+                console.log('draw', state_in.modelview)
+                const arrow_dragging = arrow_drags.create(state_in.modelview.arrows);
                 const drag_arrow = arrow_dragging.initialize(model_position);
 
-                state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.arrows = [ ...state_in.arrows];
+                state_out.modelview.screen_frame_store = screen_frame_store;
+                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
                 state_out.drag_type = arrow_dragging;
                 state_out.drag_state = drag_arrow;
 
-                state_in.drag_type.command(drag_arrow).forward(state_out);
+                state_in.drag_type.command(drag_arrow).forward(state_out.modelview);
             },
             edit: function(state_in, arrow, state_out){
-                const arrow_dragging = arrow_drags.edit(state_in.arrows, arrow);
+                const screen_frame_store = state_in.modelview.screen_frame_store;
+                const arrow_dragging = arrow_drags.edit(state_in.modelview.arrows, arrow);
                 const drag_arrow = arrow_dragging.initialize();
 
-                state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.arrows = [ ...state_in.arrows];
+                state_out.modelview.screen_frame_store = screen_frame_store;
+                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
                 state_out.drag_type = arrow_dragging;
                 state_out.drag_state = drag_arrow;
 
-                state_in.drag_type.command(drag_arrow).forward(state_out);
+                state_in.drag_type.command(drag_arrow).forward(state_out.modelview);
             },
             move: function (state_in, screen_position, screen_offset, state_out) {
-                const screen_frame = storage.unpack(state_in.screen_frame_store);
+                const screen_frame_store = state_in.modelview.screen_frame_store;
+                const screen_frame = storage.unpack(screen_frame_store);
                 const model_position = position_shifting.leave(screen_position, screen_frame);
                 const model_offset = offset_shifting.leave(screen_offset, screen_frame);
 
-                state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.arrows = [ ...state_in.arrows];
+                state_out.modelview.screen_frame_store = screen_frame_store;
+                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
                 state_out.drag_type = state_in.drag_type;
                 state_out.drag_state = state_in.drag_type.move(state_in.drag_state, model_position, model_offset);
 
-                state_in.drag_type.command(state_in.drag_state).forward(state_out);
+                state_in.drag_type.command(state_in.drag_state).forward(state_out.modelview);
             },
             release: function(state_in, state_out) {
-                state_out.screen_frame_store = state_in.screen_frame_store;
+                const screen_frame_store = state_in.modelview.screen_frame_store;
+                state_out.modelview.screen_frame_store = screen_frame_store;
 
                 state_out.drag_state = state_in.drag_type.release(state_in.drag_state);
-                state_in.drag_type.command(state_out.drag_state).forward(state_out);
+                state_in.drag_type.command(state_out.drag_state).forward(state_out.modelview);
 
-                state_out.drag_type = view_drags.wheel(state_in.screen_frame_store);
+                state_out.drag_type = view_drags.wheel(screen_frame_store);
                 state_out.drag_state = state_out.drag_type.initialize();
             },
             cancel: function(state_in, state_out) {
-                state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.arrows = [ ...state_in.arrows];
+                const screen_frame_store = state_in.modelview.screen_frame_store;
+                state_out.modelview.screen_frame_store = screen_frame_store;
+                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
 
                 state_out.drag_state = state_in.drag_type.cancel(state_in.drag_state);
-                state_in.drag_type.command(state_out.drag_state).forward(state_out);
+                state_in.drag_type.command(state_out.drag_state).forward(state_out.modelview);
 
-                state_out.drag_type = view_drags.wheel(state_in.screen_frame_store);
+                state_out.drag_type = view_drags.wheel(screen_frame_store);
                 state_out.drag_state = state_out.drag_type.initialize();
             },
             copy: function(state_in, state_out){
-                state_out.screen_frame_store = state_in.screen_frame_store;
-                state_out.arrows = [ ...state_in.arrows];
+                const screen_frame_store = state_in.modelview.screen_frame_store;
+                state_out.modelview.screen_frame_store = screen_frame_store;
+                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
                 state_out.drag_type = state_in.drag_type;
             }
         };
@@ -1114,11 +1135,10 @@
 
         return {
             state: new ApplicationState(
-                    initial_screen_frame_store, 
-                    [],
-                    disengaged_drag,
-                    disengaged_drag_state,
-                ),
+                new ModelView([], initial_screen_frame_store), 
+                disengaged_drag,
+                disengaged_drag_state,
+            ),
             queue: undefined,
             controls: ApplicationControls(application_state_operations),
             operations: application_state_operations,
@@ -1159,22 +1179,22 @@
                 return this.state.drag_state == DragState.draw && this.state.drag_state != null;
             },
             transformation: function() {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const screen_frame = this.screen_frame_storage.unpack(this.state.modelview.screen_frame_store);
                 return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
             },
             cell_count: function() {
-                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.screen_frame_store.log2_cell_width))+1;
+                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.modelview.screen_frame_store.log2_cell_width))+1;
             },
             cell_width: function() {
-                return Math.pow(2.0, this.state.screen_frame_store.log2_cell_width);
+                return Math.pow(2.0, this.state.modelview.screen_frame_store.log2_cell_width);
             },
             cell_border_position: function(x, y) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const screen_frame = this.screen_frame_storage.unpack(this.state.modelview.screen_frame_store);
                 const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(screen_frame.origin).add(glm.ivec2(x-1,y-1)) );
                 return this.position_shifting.enter(model_border_position, screen_frame);
             },
             arrowsample: function(stored_arc, fraction) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const screen_frame = this.screen_frame_storage.unpack(this.state.modelview.screen_frame_store);
                 const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
                 const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
                 const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
@@ -1182,7 +1202,7 @@
                 return this.sampler_arc_properties.position(screen_arc, fraction*screen_arc.length_clockwise);
             },
             arrowpath: function(stored_arc) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const screen_frame = this.screen_frame_storage.unpack(this.state.modelview.screen_frame_store);
                 const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
                 const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
                 const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
@@ -1193,7 +1213,7 @@
                 return svg_path;
             },
             arrowhead: function(stored_arc) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.screen_frame_store);
+                const screen_frame = this.screen_frame_storage.unpack(this.state.modelview.screen_frame_store);
                 const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
                 const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
                 const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
