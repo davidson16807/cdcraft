@@ -682,31 +682,6 @@
             );
         };
 
-        function release(arrow_in) {
-            return new DiagramArrow(
-                arrow_in.arc,
-                false,
-                arrow_in.label,
-                arrow_in.label_offset,
-                arrow_in.source_style_id,
-                arrow_in.end_style_id,
-                arrow_in.line_style_id,
-            );
-        }
-
-        function cancel(arrow_in) {
-            const arc_in = arrow_in.arc;
-            return new DiagramArrow(
-                new StoredArc(arc_in.source, arc_in.target, arc_in.min_length_clockwise, arc_in.target_offset_id, false),
-                false,
-                arrow_in.label,
-                arrow_in.label_offset,
-                arrow_in.source_style_id,
-                arrow_in.end_style_id,
-                arrow_in.line_style_id,
-            );
-        }
-
         return {
             create: function(arrows) {
                 const original_length = arrows.length;
@@ -726,10 +701,8 @@
                         ),
                     move: move,
                     wheel: wheel,
-                    release: release,
-                    cancel: cancel,
                     // do nothing if not snapped, otherwise add the arrow
-                    command: replacement_arrow => !replacement_arrow.is_edited && !replacement_arrow.arc.is_valid?
+                    command: (replacement_arrow, is_released, is_canceled) => !replacement_arrow.is_edited && !arc_in.is_valid || is_canceled?
                         new Command(
                           // forward
                           modelview_inout => modelview_inout.arrows.splice(original_length, 1),
@@ -738,7 +711,15 @@
                         )
                       : new Command(
                           // forward
-                          modelview_inout => modelview_inout.arrows[original_length] = replacement_arrow,
+                          modelview_inout => modelview_inout.arrows[original_length] = new DiagramArrow(
+                                replacement_arrow.arc,
+                                !is_released,
+                                replacement_arrow.label,
+                                replacement_arrow.label_offset,
+                                replacement_arrow.source_style_id,
+                                replacement_arrow.end_style_id,
+                                replacement_arrow.line_style_id,
+                            ),
                           // backward
                           modelview_inout => modelview_inout.arrows.splice(original_length, 1),
                         )
@@ -762,10 +743,8 @@
                         ),
                     move: move,
                     wheel: wheel,
-                    release: release,
-                    cancel: cancel,
                     // delete the arrow if not snapped, otherwise edit the arrow
-                    command: replacement_arrow => !replacement_arrow.is_edited && !replacement_arrow.arc.is_valid?
+                    command: (replacement_arrow, is_released, is_canceled) => !replacement_arrow.is_edited && !arc_in.is_valid || is_canceled?
                           new Command(
                             // forward
                             modelview_inout => modelview_inout.arrows.splice(arrow_id, 1),
@@ -774,7 +753,15 @@
                           )
                         : new Command(
                               // forward
-                              modelview_inout => modelview_inout.arrows[arrow_id] = replacement_arrow,
+                              modelview_inout => modelview_inout.arrows[arrow_id] = new DiagramArrow(
+                                    replacement_arrow.arc,
+                                    !is_released,
+                                    replacement_arrow.label,
+                                    replacement_arrow.label_offset,
+                                    replacement_arrow.source_style_id,
+                                    replacement_arrow.end_style_id,
+                                    replacement_arrow.line_style_id,
+                                ),
                               // backward
                               modelview_inout => modelview_inout.arrows[arrow_id] = replaced_arrow,
                           )
@@ -804,10 +791,8 @@
                                 screen_frame_store.log2_cell_width
                             );
                     },
-                    wheel: screen_frame_store => screen_frame_store,
-                    release: screen_frame_store => screen_frame_store,
-                    cancel: screen_frame_store => screen_frame_store,
-                    command: screen_frame_store => new Command(
+                    wheel: (screen_frame_store, screen_focus, scroll_count) => screen_frame_store,
+                    command: (replacement_arrow, is_released, is_canceled) => new Command(
                             // forward
                             modelview_inout => { modelview_inout.screen_frame_store = screen_frame_store },
                             // backward
@@ -844,9 +829,7 @@
                                 screen_frame_store.topleft_cell_position.add(model_zoom_offset), updated_log2_cell_width
                             );
                     },
-                    release: screen_frame_store => screen_frame_store,
-                    cancel: screen_frame_store => screen_frame_store,
-                    command: screen_frame_store => new Command(
+                    command: (replacement_arrow, is_released, is_canceled) => new Command(
                             // forward
                             modelview_inout => { modelview_inout.screen_frame_store = screen_frame_store },
                             // backward
@@ -918,19 +901,17 @@
                 state_out.drag_type = state_in.drag_type;
                 state_out.drag_state = state_in.drag_type.wheel(state_in.drag_state, model_focus, scroll_count);
 
-                state_in.drag_type.command(state_out.drag_state).forward(state_out.modelview);
+                state_in.drag_type.command(state_out.drag_state, false, false).forward(state_out.modelview);
             },
             pan: function(state_in, screen_offset, state_out){
                 const screen_frame_store = state_in.modelview.screen_frame_store;
                 const screen_frame = storage.unpack(screen_frame_store);
                 const model_offset = offset_shifting.leave(screen_offset, screen_frame);
-                state_out.modelview.screen_frame_store.topleft_cell_position = screen_frame_store.topleft_cell_position.sub(model_offset); // TODO: make sure you can remove this!
-                state_out.modelview.screen_frame_store.log2_cell_width = screen_frame_store.log2_cell_width;
                 state_out.modelview.arrows = [ ...state_in.modelview.arrows];
                 state_out.drag_type = view_drags.pan(screen_frame_store);
                 state_out.drag_state = state_in.drag_type.initialize();
 
-                state_in.drag_type.command(state_out.drag_state).forward(state_out.modelview);
+                state_in.drag_type.command(state_out.drag_state, false, false).forward(state_out.modelview);
             },
             draw: function(state_in, screen_position, state_out){
                 const screen_frame_store = state_in.modelview.screen_frame_store;
@@ -946,7 +927,7 @@
                 state_out.drag_type = arrow_dragging;
                 state_out.drag_state = drag_arrow;
 
-                state_in.drag_type.command(drag_arrow).forward(state_out.modelview);
+                state_in.drag_type.command(drag_arrow, false, false).forward(state_out.modelview);
             },
             edit: function(state_in, arrow, state_out){
                 const screen_frame_store = state_in.modelview.screen_frame_store;
@@ -958,7 +939,7 @@
                 state_out.drag_type = arrow_dragging;
                 state_out.drag_state = drag_arrow;
 
-                state_in.drag_type.command(drag_arrow).forward(state_out.modelview);
+                state_in.drag_type.command(drag_arrow, false, false).forward(state_out.modelview);
             },
             move: function (state_in, screen_position, screen_offset, state_out) {
                 const screen_frame_store = state_in.modelview.screen_frame_store;
@@ -971,14 +952,13 @@
                 state_out.drag_type = state_in.drag_type;
                 state_out.drag_state = state_in.drag_type.move(state_in.drag_state, model_position, model_offset);
 
-                state_in.drag_type.command(state_in.drag_state).forward(state_out.modelview);
+                state_in.drag_type.command(state_in.drag_state, false, false).forward(state_out.modelview);
             },
             release: function(state_in, state_out) {
                 const screen_frame_store = state_in.modelview.screen_frame_store;
                 state_out.modelview.screen_frame_store = screen_frame_store;
 
-                state_out.drag_state = state_in.drag_type.release(state_in.drag_state);
-                state_in.drag_type.command(state_out.drag_state).forward(state_out.modelview);
+                state_in.drag_type.command(state_out.drag_state, true, false).forward(state_out.modelview);
 
                 state_out.drag_type = view_drags.wheel(screen_frame_store);
                 state_out.drag_state = state_out.drag_type.initialize();
@@ -988,8 +968,7 @@
                 state_out.modelview.screen_frame_store = screen_frame_store;
                 state_out.modelview.arrows = [ ...state_in.modelview.arrows];
 
-                state_out.drag_state = state_in.drag_type.cancel(state_in.drag_state);
-                state_in.drag_type.command(state_out.drag_state).forward(state_out.modelview);
+                state_in.drag_type.command(state_out.drag_state, true, true).forward(state_out.modelview);
 
                 state_out.drag_type = view_drags.wheel(screen_frame_store);
                 state_out.drag_state = state_out.drag_type.initialize();
