@@ -702,7 +702,7 @@
                     move: move,
                     wheel: wheel,
                     // do nothing if not snapped, otherwise add the arrow
-                    command: (replacement_arrow, is_released, is_canceled) => !replacement_arrow.is_edited && !arc_in.is_valid || is_canceled?
+                    command: (replacement_arrow, is_released, is_canceled) => is_released && (!replacement_arrow.arc.is_valid || is_canceled)?
                         new Command(
                           // forward
                           modelview_inout => modelview_inout.arrows.splice(original_length, 1),
@@ -744,7 +744,7 @@
                     move: move,
                     wheel: wheel,
                     // delete the arrow if not snapped, otherwise edit the arrow
-                    command: (replacement_arrow, is_released, is_canceled) => !replacement_arrow.is_edited && !arc_in.is_valid || is_canceled?
+                    command: (replacement_arrow, is_released, is_canceled) => is_released && (!replacement_arrow.arc.is_valid || is_canceled)?
                           new Command(
                             // forward
                             modelview_inout => modelview_inout.arrows.splice(arrow_id, 1),
@@ -792,7 +792,7 @@
                             );
                     },
                     wheel: (screen_frame_store, screen_focus, scroll_count) => screen_frame_store,
-                    command: (replacement_arrow, is_released, is_canceled) => new Command(
+                    command: (screen_frame_store, is_released, is_canceled) => new Command(
                             // forward
                             modelview_inout => { modelview_inout.screen_frame_store = screen_frame_store },
                             // backward
@@ -829,7 +829,7 @@
                                 screen_frame_store.topleft_cell_position.add(model_zoom_offset), updated_log2_cell_width
                             );
                     },
-                    command: (replacement_arrow, is_released, is_canceled) => new Command(
+                    command: (screen_frame_store, is_released, is_canceled) => new Command(
                             // forward
                             modelview_inout => { modelview_inout.screen_frame_store = screen_frame_store },
                             // backward
@@ -903,6 +903,20 @@
 
                 state_in.drag_type.command(state_out.drag_state, false, false).forward(state_out.modelview);
             },
+            move: function (state_in, screen_position, screen_offset, state_out) {
+                const screen_frame_store = state_in.modelview.screen_frame_store;
+                const screen_frame = storage.unpack(screen_frame_store);
+                const model_position = position_shifting.leave(screen_position, screen_frame);
+                const model_offset = offset_shifting.leave(screen_offset, screen_frame);
+
+                state_out.modelview.screen_frame_store = screen_frame_store;
+                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
+                state_out.drag_type = state_in.drag_type;
+                state_out.drag_state = state_in.drag_type.move(state_in.drag_state, model_position, model_offset);
+
+                state_in.drag_type.command(state_in.drag_state, false, false).forward(state_out.modelview);
+            },
+            
             pan: function(state_in, screen_offset, state_out){
                 const screen_frame_store = state_in.modelview.screen_frame_store;
                 const screen_frame = storage.unpack(screen_frame_store);
@@ -918,7 +932,6 @@
                 const screen_frame = storage.unpack(screen_frame_store);
                 const model_position = position_shifting.leave(screen_position, screen_frame);
 
-                console.log('draw', state_in.modelview)
                 const arrow_dragging = arrow_drags.create(state_in.modelview.arrows);
                 const drag_arrow = arrow_dragging.initialize(model_position);
 
@@ -941,44 +954,16 @@
 
                 state_in.drag_type.command(drag_arrow, false, false).forward(state_out.modelview);
             },
-            move: function (state_in, screen_position, screen_offset, state_out) {
+            release: function(state_in, is_canceled, state_out) {
                 const screen_frame_store = state_in.modelview.screen_frame_store;
-                const screen_frame = storage.unpack(screen_frame_store);
-                const model_position = position_shifting.leave(screen_position, screen_frame);
-                const model_offset = offset_shifting.leave(screen_offset, screen_frame);
-
                 state_out.modelview.screen_frame_store = screen_frame_store;
                 state_out.modelview.arrows = [ ...state_in.modelview.arrows];
-                state_out.drag_type = state_in.drag_type;
-                state_out.drag_state = state_in.drag_type.move(state_in.drag_state, model_position, model_offset);
 
-                state_in.drag_type.command(state_in.drag_state, false, false).forward(state_out.modelview);
-            },
-            release: function(state_in, state_out) {
-                const screen_frame_store = state_in.modelview.screen_frame_store;
-                state_out.modelview.screen_frame_store = screen_frame_store;
-
-                state_in.drag_type.command(state_out.drag_state, true, false).forward(state_out.modelview);
+                state_in.drag_type.command(state_out.drag_state, true, is_canceled).forward(state_out.modelview);
 
                 state_out.drag_type = view_drags.wheel(screen_frame_store);
                 state_out.drag_state = state_out.drag_type.initialize();
             },
-            cancel: function(state_in, state_out) {
-                const screen_frame_store = state_in.modelview.screen_frame_store;
-                state_out.modelview.screen_frame_store = screen_frame_store;
-                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
-
-                state_in.drag_type.command(state_out.drag_state, true, true).forward(state_out.modelview);
-
-                state_out.drag_type = view_drags.wheel(screen_frame_store);
-                state_out.drag_state = state_out.drag_type.initialize();
-            },
-            copy: function(state_in, state_out){
-                const screen_frame_store = state_in.modelview.screen_frame_store;
-                state_out.modelview.screen_frame_store = screen_frame_store;
-                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
-                state_out.drag_type = state_in.drag_type;
-            }
         };
     }
 
@@ -1000,8 +985,7 @@
             mousedown: function(state_in, event, state_out){
                 const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
                 if (state_in.drag_type.id != DragState.released) { 
-                    // cancel draw action
-                    operations.cancel(state_in, state_out);
+                    operations.release(state_in, true, state_out)
                 } else if (state in mouse_actions) {
                     mouse_actions[state](state_in, event, state_out)
                 }
@@ -1010,7 +994,7 @@
                 operations.move(state_in, glm.vec2(event.clientX, event.clientY), glm.vec2(event.movementX, event.movementY), state_out);
             },
             mouseup: function(state_in, event, state_out){
-                operations.release(state_in, state_out);
+                operations.release(state_in, false, state_out);
             },
             touchsource: function(state_in, event, state_out){
 
