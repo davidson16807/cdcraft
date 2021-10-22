@@ -618,7 +618,7 @@
     They each describe dragging operations performed by mice or touchpads.
     When the drag starts, the application initializes an instance of the category and a state object within it.
     When the drag is in progress, the application applies operations to the state object returning a new state object.
-    These operations reflect user actions that occur mid-drag, such as movement or scrolling.
+    These operations reflect user actions that occur mid-drag, and are so far limited to movement or scrolling.
 
     A state object can be used at any point to return a command object.
     The command objects are small categories of idempotent isomorphic functions that return application state 
@@ -683,17 +683,17 @@
         };
 
         return {
-            create: function(arrows) {
+            create: function(arrows, initial_model_position) {
                 const original_length = arrows.length;
                 return {
                     id: 'draw',
                     is_model_drag: true,
                     is_view_drag: false,
-                    initialize: model_position => new DiagramArrow(
+                    initialize: () => new DiagramArrow(
                             user_arcs_and_stored_arcs.user_arc_to_stored_arc(
                                 new UserArc(
-                                    model_position, 
-                                    model_position,
+                                    initial_model_position, 
+                                    initial_model_position,
                                     default_min_length_clockwise,
                                 )
                             ),
@@ -702,27 +702,28 @@
                     move: move,
                     wheel: wheel,
                     // do nothing if not snapped, otherwise add the arrow
-                    command: (replacement_arrow, is_released, is_canceled) => is_released && (!replacement_arrow.arc.is_valid || is_canceled)?
-                        new Command(
-                          // forward
-                          modelview_inout => modelview_inout.arrows.splice(original_length, 1),
-                          // backward
-                          modelview_inout => modelview_inout.arrows.splice(original_length, 1),
-                        )
-                      : new Command(
-                          // forward
-                          modelview_inout => modelview_inout.arrows[original_length] = new DiagramArrow(
-                                replacement_arrow.arc,
-                                !is_released,
-                                replacement_arrow.label,
-                                replacement_arrow.label_offset,
-                                replacement_arrow.source_style_id,
-                                replacement_arrow.end_style_id,
-                                replacement_arrow.line_style_id,
-                            ),
-                          // backward
-                          modelview_inout => modelview_inout.arrows.splice(original_length, 1),
-                        )
+                    command: (replacement_arrow, is_released, is_canceled) => 
+                        is_released && (!replacement_arrow.arc.is_valid || is_canceled)?
+                            new Command(
+                              // forward
+                              modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                              // backward
+                              modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                            )
+                          : new Command(
+                              // forward
+                              modelview_inout => modelview_inout.arrows[original_length] = new DiagramArrow(
+                                    replacement_arrow.arc,
+                                    !is_released,
+                                    replacement_arrow.label,
+                                    replacement_arrow.label_offset,
+                                    replacement_arrow.source_style_id,
+                                    replacement_arrow.end_style_id,
+                                    replacement_arrow.line_style_id,
+                                ),
+                              // backward
+                              modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                            )
                 };
             },
 
@@ -744,27 +745,28 @@
                     move: move,
                     wheel: wheel,
                     // delete the arrow if not snapped, otherwise edit the arrow
-                    command: (replacement_arrow, is_released, is_canceled) => is_released && (!replacement_arrow.arc.is_valid || is_canceled)?
-                          new Command(
-                            // forward
-                            modelview_inout => modelview_inout.arrows.splice(arrow_id, 1),
-                            // backward
-                            modelview_inout => modelview_inout.arrows[arrow_id] = replaced_arrow,
-                          )
-                        : new Command(
+                    command: (replacement_arrow, is_released, is_canceled) => 
+                        is_released && (!replacement_arrow.arc.is_valid || is_canceled)?
+                            new Command(
                               // forward
-                              modelview_inout => modelview_inout.arrows[arrow_id] = new DiagramArrow(
-                                    replacement_arrow.arc,
-                                    !is_released,
-                                    replacement_arrow.label,
-                                    replacement_arrow.label_offset,
-                                    replacement_arrow.source_style_id,
-                                    replacement_arrow.end_style_id,
-                                    replacement_arrow.line_style_id,
-                                ),
+                              modelview_inout => modelview_inout.arrows.splice(arrow_id, 1),
                               // backward
                               modelview_inout => modelview_inout.arrows[arrow_id] = replaced_arrow,
-                          )
+                            )
+                          : new Command(
+                                // forward
+                                modelview_inout => modelview_inout.arrows[arrow_id] = new DiagramArrow(
+                                      replacement_arrow.arc,
+                                      !is_released,
+                                      replacement_arrow.label,
+                                      replacement_arrow.label_offset,
+                                      replacement_arrow.source_style_id,
+                                      replacement_arrow.end_style_id,
+                                      replacement_arrow.line_style_id,
+                                  ),
+                                // backward
+                                modelview_inout => modelview_inout.arrows[arrow_id] = replaced_arrow,
+                            )
                 };
             },
         };
@@ -785,7 +787,6 @@
                             original_screen_frame_store.log2_cell_width
                         ),
                     move: function(screen_frame_store, model_position, model_offset) {
-                        const screen_frame = storage.unpack(screen_frame_store);
                         return new ScreenReferenceFrameStore(
                                 screen_frame_store.topleft_cell_position.sub(model_offset), 
                                 screen_frame_store.log2_cell_width
@@ -800,7 +801,7 @@
                         )
                 };
             },
-            wheel: function(original_screen_frame_store){
+            release: function(original_screen_frame_store){
                 const max = Math.max;
                 return {
                     id: 'released',
@@ -916,14 +917,18 @@
 
                 state_in.drag_type.command(state_in.drag_state, false, false).forward(state_out.modelview);
             },
-            
+
+
             pan: function(state_in, screen_offset, state_out){
                 const screen_frame_store = state_in.modelview.screen_frame_store;
-                const screen_frame = storage.unpack(screen_frame_store);
-                const model_offset = offset_shifting.leave(screen_offset, screen_frame);
+
+                const arrow_dragging = view_drags.pan(screen_frame_store);
+                const drag_arrow = arrow_dragging.initialize();
+
+                state_out.modelview.screen_frame_store = screen_frame_store;
                 state_out.modelview.arrows = [ ...state_in.modelview.arrows];
-                state_out.drag_type = view_drags.pan(screen_frame_store);
-                state_out.drag_state = state_in.drag_type.initialize();
+                state_out.drag_type = arrow_dragging;
+                state_out.drag_state = drag_arrow;
 
                 state_in.drag_type.command(state_out.drag_state, false, false).forward(state_out.modelview);
             },
@@ -932,18 +937,19 @@
                 const screen_frame = storage.unpack(screen_frame_store);
                 const model_position = position_shifting.leave(screen_position, screen_frame);
 
-                const arrow_dragging = arrow_drags.create(state_in.modelview.arrows);
-                const drag_arrow = arrow_dragging.initialize(model_position);
+                const arrow_dragging = arrow_drags.create(state_in.modelview.arrows, model_position);
+                const drag_arrow = arrow_dragging.initialize();
 
                 state_out.modelview.screen_frame_store = screen_frame_store;
                 state_out.modelview.arrows = [ ...state_in.modelview.arrows];
                 state_out.drag_type = arrow_dragging;
                 state_out.drag_state = drag_arrow;
 
-                state_in.drag_type.command(drag_arrow, false, false).forward(state_out.modelview);
+                state_in.drag_type.command(state_out.drag_state, false, false).forward(state_out.modelview);
             },
             edit: function(state_in, arrow, state_out){
                 const screen_frame_store = state_in.modelview.screen_frame_store;
+                
                 const arrow_dragging = arrow_drags.edit(state_in.modelview.arrows, arrow);
                 const drag_arrow = arrow_dragging.initialize();
 
@@ -952,17 +958,21 @@
                 state_out.drag_type = arrow_dragging;
                 state_out.drag_state = drag_arrow;
 
-                state_in.drag_type.command(drag_arrow, false, false).forward(state_out.modelview);
+                state_in.drag_type.command(state_out.drag_state, false, false).forward(state_out.modelview);
             },
             release: function(state_in, is_canceled, state_out) {
                 const screen_frame_store = state_in.modelview.screen_frame_store;
+
+                const arrow_dragging = view_drags.release(screen_frame_store);
+                const drag_arrow = arrow_dragging.initialize();
+
                 state_out.modelview.screen_frame_store = screen_frame_store;
                 state_out.modelview.arrows = [ ...state_in.modelview.arrows];
 
-                state_in.drag_type.command(state_out.drag_state, true, is_canceled).forward(state_out.modelview);
+                state_in.drag_type.command(state_in.drag_state, true, is_canceled).forward(state_out.modelview);
 
-                state_out.drag_type = view_drags.wheel(screen_frame_store);
-                state_out.drag_state = state_out.drag_type.initialize();
+                state_out.drag_type = arrow_dragging;
+                state_out.drag_state = drag_arrow;
             },
         };
     }
@@ -991,6 +1001,7 @@
                 }
             },
             mousemove: function(state_in, event, state_out){
+                // mouse motion is a degenerate case of touchscreen motion where the number of touchpoints is one
                 operations.move(state_in, glm.vec2(event.clientX, event.clientY), glm.vec2(event.movementX, event.movementY), state_out);
             },
             mouseup: function(state_in, event, state_out){
@@ -1092,7 +1103,7 @@
             );
 
         const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(200));
-        const disengaged_drag = view_drags.wheel(initial_screen_frame_store)
+        const disengaged_drag = view_drags.release(initial_screen_frame_store)
         const disengaged_drag_state = disengaged_drag.initialize();
         const sampler_arc_properties = SamplerArcProperties();
 
@@ -1138,9 +1149,6 @@
             }, 1000/60);
         },
         methods: {
-            is_drawing: function(){
-                return this.state.drag_state == DragState.draw && this.state.drag_state != null;
-            },
             transformation: function() {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.modelview.screen_frame_store);
                 return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
