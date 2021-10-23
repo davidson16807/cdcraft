@@ -4,9 +4,12 @@
     <title>Diagram editor</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="./styles/katex.min.css">
     <link rel="stylesheet" href="./styles/bootstrap.min.css">
     <script src="./libraries/vue.js"></script>
     <script src="./libraries/glm-js.min.js"></script>
+    <script src="./libraries/katex.min.js"></script>
+    <script src="./libraries/auto-render.min.js"></script>
     <style type="text/css">
         svg {
             position: fixed;
@@ -16,11 +19,13 @@
             width:100%;
             user-select: none;
         }
+
         .cell-border {
             stroke:grey;
             stroke-width:0.5;
             stroke-dasharray: 10,10;
         }
+
         .arrow {
             fill: none;
             stroke-width:2;
@@ -48,7 +53,6 @@
             stroke: none;
             pointer-events: all;
         }
-        
         .arrow-group {
             visibility: hidden;
         }
@@ -58,6 +62,13 @@
         .arrow-group .arrow {
             visibility: visible;
         }
+
+        .object {
+            color: black;
+            text-align: center;
+            transform: translate(0px, -13px);
+        }
+
     </style>
 </head>
 <body>
@@ -81,6 +92,12 @@
                 <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
                 <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
             </g>
+            <g v-for="object in state.diagram.objects">
+                <foreignObject v-bind:x="object_position(object).x-60" v-bind:y="object_position(object).y"  class="object"
+                    width="120" height="40">
+                    <div v-katex>\( \bullet \)</div>
+                </foreignObject>
+            </g>
         </g>
     </svg>
 </div>
@@ -88,6 +105,7 @@
 <!-- logo -->
 <script type="text/javascript">
     'use strict';
+
 
     /*
     `DiagramReferenceFrame` is a data structure that can be considered a degenerate case of an affine transform.
@@ -585,6 +603,30 @@
     }
 
     /*
+    `DiagramObject` is a data structure that represents every property of an object that can be depicted within the application.
+    */
+    class DiagramObject {
+        constructor(position, depiction, annotation){
+            this.position = position;
+            this.depiction = depiction;
+            this.annotation = annotation;
+        }
+    }
+
+
+    /*
+    `Diagram` is a data structure that represents every property of a diagram that can be depicted within the application.
+    It serves as the "Model" of a "Model-View-Updater" pattern (A.K.A. "Elm" architecture).
+    */
+    class Diagram {
+        constructor(arrows, objects){
+            this.arrows = arrows;
+            this.objects = objects;
+        }
+    }
+
+
+    /*
     `Command` is an isomorphism implemented as a tuple of functions. It is used here to implement undo/redo history. 
     Its name alludes to the "Command" pattern of object oriented programming.
     The two functions within a `Command` are:
@@ -775,7 +817,7 @@
 
 
     function ViewDrags(screen_frame_storage, position_shifting, offset_shifting, 
-            log2_cell_width_change_per_scroll, log2_cell_width_min){
+            log2_cell_width_change_per_scroll, log2_cell_width_min, log2_cell_width_max){
         const storage = screen_frame_storage;
         return {
             pan: function(original_screen_frame_store){
@@ -804,6 +846,7 @@
             },
             release: function(original_screen_frame_store){
                 const max = Math.max;
+                const min = Math.min;
                 return {
                     id: 'released',
                     is_model_drag: false,
@@ -816,9 +859,10 @@
                     wheel: function(screen_frame_store, model_focus, scroll_count) {
                         const log2_cell_width_change = log2_cell_width_change_per_scroll * scroll_count;
                         const screen_frame = storage.unpack(screen_frame_store);
-                        const updated_log2_cell_width = max(
-                            screen_frame_store.log2_cell_width + log2_cell_width_change, log2_cell_width_min
-                        );
+                        const updated_log2_cell_width = min(max(
+                                screen_frame_store.log2_cell_width + log2_cell_width_change, 
+                                log2_cell_width_min
+                            ), log2_cell_width_max);
                         const topleft_zoom_frame_store = 
                             new ScreenReferenceFrameStore(
                                 screen_frame_store.topleft_cell_position, updated_log2_cell_width
@@ -851,23 +895,24 @@
     };
 
     /*
-    `Diagram` is a data structure that represents every property of a diagram that can be depicted within the application.
-    It serves as the "Model" of a "Model-View-Updater" pattern (A.K.A. "Elm" architecture).
+    `DiagramViewState` is a data structure that contains all state relating to the presentation of a diagram.
+    It serves as the "View" of a "Model-View-Updater" pattern (A.K.A. "Elm" architecture).
     */
-    class Diagram {
-        constructor(arrows, objects){
-            this.arrows = arrows;
-            this.objects = objects;
+    class DiagramViewState {
+        constructor(screen_frame_store){
+            this.screen_frame_store = screen_frame_store;
         }
     }
 
     /*
-    `DiagramView` is a data structure that contains all state relating to the presentation of a diagram.
-    It serves as the "View" of a "Model-View-Updater" pattern (A.K.A. "Elm" architecture).
+    `DiagramControlState` is a data structure that contains all state relating to the presentation of a diagram.
+    It expresses control state such as the kind of drag applied, and the undo/redo history that can be traversed.
     */
-    class DiagramView {
-        constructor(screen_frame_store){
-            this.screen_frame_store = screen_frame_store;
+    class DiagramControlState {
+        constructor(drag_type, drag_state, command_history){
+            this.drag_type = drag_type;
+            this.drag_state = drag_state;
+            this.command_history = command_history;
         }
     }
 
@@ -1076,7 +1121,8 @@
                 position_frame_shifting,
                 offset_frame_shifting,
                 -0.001, // log2_cell_width_change_per_scroll
-                Math.log2(30) // log2_cell_width_min
+                Math.log2(30), // log2_cell_width_min
+                Math.log2(500) // log2_cell_width_max
             );
 
         const drag_state_operations = 
@@ -1086,15 +1132,15 @@
                 position_frame_shifting, 
             );
 
-        const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(200));
+        const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(150));
         const disengaged_drag = view_drags.release(initial_screen_frame_store)
         const disengaged_drag_state = disengaged_drag.initialize();
         const sampler_arc_properties = SamplerArcProperties();
 
         return {
             state: new ApplicationState(
-                new Diagram([], []), 
-                new DiagramView(initial_screen_frame_store), 
+                new Diagram([], [ new DiagramObject(glm.vec2(), '\\( \\bullet \\)') ]), 
+                new DiagramViewState(initial_screen_frame_store), 
                 disengaged_drag,
                 disengaged_drag_state,
             ),
@@ -1102,7 +1148,7 @@
             controls: ApplicationUpdater(
                 ArrowDrags(
                     user_arcs_and_stored_arcs,
-                    0.7, // default_min_length_clockwise
+                    1.0, // default_min_length_clockwise
                     0.001 // min_length_clockwise_change_per_scroll
                 ),
                 view_drags,
@@ -1110,7 +1156,7 @@
                 position_frame_shifting,
                 drag_state_operations
             ),
-            arrow_trimming_length: 0.07,
+            arrow_trimming_length: 0.12,
             user_arcs_and_stored_arcs: user_arcs_and_stored_arcs,
             user_arc_shifting: UserArcFrameShifting(position_frame_shifting),
             sampler_arc_shifting: SamplerArcFrameShifting(offset_frame_shifting, position_frame_shifting),
@@ -1125,6 +1171,23 @@
         };
     }
 
+
+    const KatexDirective = (renderMathInElement) => ({
+          name: 'katex',
+          directive: function(el, binding) {
+            renderMathInElement(el);
+          },
+        });
+
+    const KatexPlugin = (renderMathInElement) => ({
+          install: (vue, options) => {
+            const katex_directive = KatexDirective(renderMathInElement);
+            vue.directive(katex_directive.name, katex_directive.directive);
+          },
+        });
+
+    Vue.use(KatexPlugin(renderMathInElement))
+    // Vue.directive('katex',{inserted:(el, binding) => renderMathInElement(el)});
     const vue = new Vue({
         el: '#app',
         data: initial_vue_data(),
@@ -1158,6 +1221,7 @@
                 const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(screen_frame.origin).add(glm.ivec2(x-1,y-1)) );
                 return this.position_shifting.enter(model_border_position, screen_frame);
             },
+
             arrowsample: function(stored_arc, fraction) {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
                 const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
@@ -1186,7 +1250,7 @@
                 const arrowhead_basis_y = this.offset_shifting.enter(this.sampler_arc_properties.tangent(resized_arc, resized_arc.length_clockwise), screen_frame);
                 const arrowhead_origin = this.position_shifting.enter(this.sampler_arc_properties.position(resized_arc, resized_arc.length_clockwise), screen_frame);
 
-                const cell_points = [glm.vec2(-0.03,-0.03), glm.vec2(0,0), glm.vec2(0.03,-0.03)];
+                const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
                 const screen_points = cell_points.map(point => arrowhead_basis_x.mul(point.x).add(arrowhead_basis_y.mul(point.y)).add(arrowhead_origin));
                 const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
                 return path;
@@ -1195,9 +1259,15 @@
                 event.preventDefault(); 
                 event.stopPropagation();
                 this.controls.arrowclick(this.state, arrow, this.state);
+            },
+
+            object_position: function(object) {
+                const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
+                return this.position_shifting.enter(glm.vec2(2,2), screen_frame);
             }
         }
     });
+
 </script>
 </body>
 </html>
