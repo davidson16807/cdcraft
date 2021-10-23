@@ -878,11 +878,12 @@
 
 
     /*
-    `DragStateOperations` is a namespace of *conceptually* pure functions 
-    Its responsibility is to track undo/redo history
-    All functions represent the transformation of state in reponse to controller events. 
+    `ApplicationStateDragOperations` is a namespace of *conceptually* pure functions 
+    that describe how ApplicationState changes in response to drag operations: 
+    its modifications to the ModelView, its transitions in drag state, and its update to the undo/redo history
+    as drags are initialized, transformed, and released.
     */
-    function DragStateOperations(
+    function ApplicationStateDragOperations(
             screen_frame_storage,  
             offset_frame_shifting, 
             position_frame_shifting, 
@@ -942,11 +943,11 @@
     }
 
     /*
-    `ApplicationControls` is a namespace of *conceptually* pure functions that reflect how events map to actions.
+    `ApplicationUpdater` is a namespace of *conceptually* pure functions that reflect how events map to state operations.
     All functions represent the transformation of state in reponse to controller events. 
     It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
     */
-    function ApplicationControls(
+    function ApplicationUpdater(
             arrow_drags,
             view_drags,
             screen_frame_storage,
@@ -1071,7 +1072,7 @@
             );
 
         const drag_state_operations = 
-            DragStateOperations(
+            ApplicationStateDragOperations(
                 screen_frame_storage,
                 offset_frame_shifting, 
                 position_frame_shifting, 
@@ -1089,7 +1090,7 @@
                 disengaged_drag_state,
             ),
             queue: undefined,
-            controls: ApplicationControls(
+            controls: ApplicationUpdater(
                 ArrowDrags(
                     user_arcs_and_stored_arcs,
                     0.7, // default_min_length_clockwise
