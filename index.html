@@ -66,7 +66,8 @@
         .object {
             color: black;
             text-align: center;
-            transform: translate(0px, -13px);
+            /*NOTE: I have found no better way to align a <foreignObject> component than through manual adjustment.*/
+            transform: translate(0px, -13px); 
         }
 
     </style>
@@ -92,9 +93,10 @@
                 <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
                 <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
             </g>
-            <g v-for="object in state.diagram.objects">
-                <foreignObject v-bind:x="object_position(object).x-60" v-bind:y="object_position(object).y"  class="object"
-                    width="120" height="40">
+            <g v-for="object in inferred_objects(state.diagram)">
+                <!-- NOTE: object position is offset along the axis by half the width of the <foreignObject> -->
+                <foreignObject v-bind:x="object_position(object).x-40" v-bind:y="object_position(object).y"  class="object"
+                    width="80" height="40">
                     <div v-katex>\( \bullet \)</div>
                 </foreignObject>
             </g>
@@ -105,6 +107,48 @@
 <!-- logo -->
 <script type="text/javascript">
     'use strict';
+
+    /* 
+    `PositiveCellHashing` generates a namspace with a single pure function exposed, `hash()`.
+    The function maps any positive whole number 2d coordinates to a unique positive integer.
+    */
+    function PositiveCellHashing() {
+        return {
+            hash: (x,y) => (x+1)*(x/2) + y,
+        };
+    }
+
+    /* 
+    `UnboundedCellHashing` generates a namspace with a single pure function exposed, `hash()`.
+    The function maps any whole number 2d coordinates, regardless of sign, to a unique positive integer.
+    */
+    function UnboundedCellHashing(positive_cell_hashing) {
+        const abs = Math.abs;
+        return {
+            // there are four quadrants on an unbounded 2d grid, 
+            // so multiply the hash for the absolute values by four and offset by a unique id for the quadrant
+            hash: (x,y) => 4*positive_cell_hashing.hash(abs(x),abs(y)) + 2*(y<0) + (x<0),
+        };
+    }
+
+    /*
+    `DiagramIds` is a namespace describing a small category of pure functions mapping between position indicators in model space
+    */
+    function DiagramIds(cell_hashing){
+        const floor = Math.floor;
+        const round = Math.round;
+        const abs = Math.abs;
+        return {
+            cell_position_to_border_id: cell_position => glm.vec2(floor(cell_position.x), floor(cell_position.y)),
+            border_id_to_cell_position: border_id => border_id.add(0.5),
+            cell_position_to_cell_id: cell_position => glm.vec2(round(cell_position.x), round(cell_position.y)),
+            cell_id_to_cell_hash: cell_id => cell_hashing.hash(cell_id.x, cell_id.y),
+            cell_position_and_cell_id_to_offset: (cell_position, cell_id) => cell_position.sub(cell_id),
+            offset_to_offset_id: offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
+            offset_id_to_offset_hash: offset_id => ((offset_id.x > offset_id.y) << 1) + (-offset_id.x > offset_id.y),
+            offset_hash_to_offset_id: offset_hash => glm.normalize(glm.vec2(1,-1).mul(2*floor(offset_hash / 2)-1).add(glm.vec2(-1,-1).mul(2*(offset_hash % 2)-1))),
+        };
+    }
 
 
     /*
@@ -120,7 +164,7 @@
     }
 
     /*
-    `OffsetFrameShifting` is a namespace of pure functions that describe an isomorphism.
+    `OffsetFrameShifting` returns a namespace of pure functions that describe an isomorphism.
     `enter` accepts a offset and reference frame, both expressed in terms of an implicit user defined reference frame,
     and returns a offset that is defined in terms of the reference frame. `leave` is inverse to `enter`.
     */
@@ -132,7 +176,7 @@
     }
 
     /*
-    `PositionFrameShifting` is a namespace of pure functions that describe an isomorphism.
+    `PositionFrameShifting` returns a namespace of pure functions that describe an isomorphism.
     `enter` accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
     and returns a position that is defined in terms of the reference frame. `leave` is inverse to `enter`.
     */
@@ -140,24 +184,6 @@
         return {
             enter: (position, frame) => position.sub(frame.origin).div(frame.unit_length),
             leave: (position, frame) => position.mul(frame.unit_length).add(frame.origin),
-        };
-    }
-    
-    /*
-    `DiagramIds` is a namespace describing a small category of pure functions mapping between position indicators in model space
-    */
-    function DiagramIds(){
-        const floor = Math.floor;
-        const round = Math.round;
-        const abs = Math.abs;
-        return {
-            cell_position_to_border_id: cell_position => glm.vec2(floor(cell_position.x), floor(cell_position.y)),
-            border_id_to_cell_position: border_id => border_id.add(0.5),
-            cell_position_to_cell_id: cell_position => glm.vec2(round(cell_position.x), round(cell_position.y)),
-            cell_position_and_cell_id_to_offset: (cell_position, cell_id) => cell_position.sub(cell_id),
-            offset_to_offset_id: offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
-            offset_id_to_offset_hash: offset_id => ((offset_id.x > offset_id.y) << 1) + (-offset_id.x > offset_id.y),
-            offset_hash_to_offset_id: offset_hash => glm.normalize(glm.vec2(1,-1).mul(2*floor(offset_hash / 2)-1).add(glm.vec2(-1,-1).mul(2*(offset_hash % 2)-1))),
         };
     }
 
@@ -228,7 +254,7 @@
     }
 
     /*
-    `ArcGeometry` is a namespace of pure functions describing useful analytic geometry of arcs
+    `ArcGeometry` returns a namespace of pure functions describing useful analytic geometry of arcs
     */
     function ArcGeometry(){
         const pi = Math.PI;
@@ -291,7 +317,7 @@
     }
 
     /*
-    `UserArcsAndSamplerArcs` is a namespace of pure functions that describe maps between `SamplerArc`s and `UserArc`s
+    `UserArcsAndSamplerArcs` returns a namespace of pure functions that describe maps between `SamplerArc`s and `UserArc`s
     */
     function UserArcsAndSamplerArcs(arc_geometry) {
         const sign = Math.sign;
@@ -311,7 +337,7 @@
     }
 
     /*
-    `SamplerArcProperties` is a namespace of pure functions describing properties for any point along a `SamplerArc`
+    `SamplerArcProperties` returns a namespace of pure functions describing properties for any point along a `SamplerArc`
     */
     function SamplerArcProperties(){
         const pi = Math.PI;
@@ -352,7 +378,7 @@
     }
 
     /*
-    `SamplerArcTruncation` is a namespace of pure functions that shift the start and end position of a `SamplerArc`
+    `SamplerArcTruncation` returns a namespace of pure functions that shift the start and end position of a `SamplerArc`
     */
     function SamplerArcResizing(sampler_arc_properties){
         const sign = Math.sign;
@@ -371,7 +397,7 @@
     }
 
     /*
-    `SamplerArcFrameShifting` is a namespace of pure functions that describe isomorphisms to and from a reference frame.
+    `SamplerArcFrameShifting` returns a namespace of pure functions that describe isomorphisms to and from a reference frame.
     `enter` accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
     and returns a position that is defined in terms of the reference frame. `leave` is inverse to `enter`.
     */
@@ -393,7 +419,7 @@
     }
 
     /*
-    `UserArcRendering` is a namespace of pure functions describing a small category mapping arcs to svg depictions
+    `UserArcRendering` returns a namespace of pure functions describing a small category mapping arcs to svg depictions
     */
     function UserArcRendering(arc_geometry){
         const pi = Math.PI;
@@ -416,7 +442,7 @@
     }
 
     /*
-    `SamplerArcRendering` is a namespace of pure functions describing a small category mapping arcs to svg depictions
+    `SamplerArcRendering` returns a namespace of pure functions describing a small category mapping arcs to svg depictions
     */
     function SamplerArcRendering(sampler_arc_properties){
         const pi = Math.PI;
@@ -464,7 +490,7 @@
     }
 
     /*
-    `UserArcFrameShifting` is a namespace of pure functions that describe isomorphisms to and from a reference frame.
+    `UserArcFrameShifting` returns a namespace of pure functions that describe isomorphisms to and from a reference frame.
     `enter` accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
     and returns a position that is defined in terms of the reference frame. `leave` is inverse to `enter`.
     */
@@ -488,7 +514,7 @@
 
 
     /*
-    `UserArcsAndStoredArcs` is a namespace of pure functions that describe maps between `UserArc`s and `StoredArc`s
+    `UserArcsAndStoredArcs` returns a namespace of pure functions that describe maps between `UserArc`s and `StoredArc`s
     */
     function UserArcsAndStoredArcs(
         diagram_ids, 
@@ -550,7 +576,7 @@
     }
 
     /*
-    `ScreenReferenceFrameStorage` is a namespace of pure functions that describe the isomorphism 
+    `ScreenReferenceFrameStorage` returns a namespace of pure functions that describe the isomorphism 
     between a ScreenReferenceFrame and a DiagramReferenceFrame expressed in terms of "model space"
     where each cell is of unit length.
     */
@@ -564,7 +590,7 @@
     }
 
     /*
-    `ReferenceFrameShifting` is a namespace of pure functions that describe the isomorphism
+    `ReferenceFrameShifting` returns a namespace of pure functions that describe an isomorphism
     `enter` accepts two reference frames, both expressed in terms of an implicit user defined reference frame,
     and returns a new reference frame that is the first defined in terms of the second. `leave` is inverse to `enter`.
     */
@@ -608,9 +634,52 @@
     class DiagramObject {
         constructor(position, depiction, annotation){
             this.position = position;
-            this.depiction = depiction;
-            this.annotation = annotation;
+            this.depiction = depiction || '\\( \\bullet \\)';
+            this.annotation = annotation || '';
         }
+    }
+
+    /*
+    `DiagramObjectInference` returns a namespace of pure functions operating on sets of objects.
+    Object sets are represented using associative arrays for the sake of simplicity,
+    where objects are stored using a cell hash from the given `diagram_ids` namespace. 
+    The two functions within `DiagramObjectSetOperations` so far are:
+
+    * `initialize`: list→set a function that, given a list of `DiagramObject`s, 
+      returns the set of all objects represented within the list according to the cell hash.
+    * `infer`: arrows→objects: a function that, given a list of `DiagramArrow`s, 
+      returns a set of all objects that are implied by the existance of those arrows within a category
+    * `update`: objects×objects→objects: a function that returns the union of two sets of objects,
+      using references from the second set when objects from the two sets share the same hash.
+    */
+    function DiagramObjectSetOperations(diagram_ids){
+        return {
+            initialize: (object_list) => {
+                const objects = {};
+                for(let object of object_list){
+                    objects[diagram_ids.cell_id_to_cell_hash(object.position.x, object.position.y)] = object;
+                }
+                return objects;
+            },
+            infer: (arrows) => {
+                const objects = {};
+                for(let arrow of arrows){
+                    objects[diagram_ids.cell_id_to_cell_hash(arrow.arc.source)] = new DiagramObject(arrow.arc.source);
+                    objects[diagram_ids.cell_id_to_cell_hash(arrow.arc.target)] = new DiagramObject(arrow.arc.target);
+                }
+                return objects;
+            },
+            update: (updated, updates) => {
+                const result = {};
+                for(let hash in updated){
+                    result[hash] = updated[hash];
+                }
+                for(let hash in updates){
+                    result[hash] = updates[hash];
+                }
+                return result;
+            }
+        };
     }
 
 
@@ -631,9 +700,9 @@
     Its name alludes to the "Command" pattern of object oriented programming.
     The two functions within a `Command` are:
 
-    * `forward(state)`, a function that maps the state of a modelview to another state. 
+    * `forward:state→state`, a function that maps the state of a modelview to another state. 
       It represents a change in state issued by the user. The modelview is modified in-place for performance reasons.
-    * `backward(state)`, a function that is inverse to `forward(state)`
+    * `backward:state→state`, a function that is inverse to `forward(state)`
 
     All changes to state within a Diagram are made using the `forward()` and `backward()` functions, 
     even when not using undo/redo functionality. This is done to reduce the number of cases that must be considered within code.
@@ -656,7 +725,7 @@
     }
 
     /*
-    `*Drag`s are small categories of pure functions that are functorial to themselves.
+    `*Drag`s are namespaces representing small categories that are functorial to themselves.
     They each describe dragging operations performed by mice or touchpads.
     When the drag starts, the application initializes an instance of the category and a state object within it.
     When the drag is in progress, the application applies operations to the state object returning a new state object.
@@ -819,6 +888,9 @@
     function ViewDrags(screen_frame_storage, position_shifting, offset_shifting, 
             log2_cell_width_change_per_scroll, log2_cell_width_min, log2_cell_width_max){
         const storage = screen_frame_storage;
+        const max = Math.max;
+        const min = Math.min;
+        const clamp = (x, lo, hi) => min(max(x, lo), hi);
         return {
             pan: function(original_screen_frame_store){
                 return {
@@ -859,10 +931,11 @@
                     wheel: function(screen_frame_store, model_focus, scroll_count) {
                         const log2_cell_width_change = log2_cell_width_change_per_scroll * scroll_count;
                         const screen_frame = storage.unpack(screen_frame_store);
-                        const updated_log2_cell_width = min(max(
+                        const updated_log2_cell_width = clamp(
                                 screen_frame_store.log2_cell_width + log2_cell_width_change, 
-                                log2_cell_width_min
-                            ), log2_cell_width_max);
+                                log2_cell_width_min, 
+                                log2_cell_width_max
+                            );
                         const topleft_zoom_frame_store = 
                             new ScreenReferenceFrameStore(
                                 screen_frame_store.topleft_cell_position, updated_log2_cell_width
@@ -931,7 +1004,7 @@
 
 
     /*
-    `ApplicationStateDragOperations` is a namespace of *conceptually* pure functions 
+    `ApplicationStateDragOperations` returns a namespace of *conceptually* pure functions 
     that describe how ApplicationState changes in response to drag operations: 
     its modifications to the ModelView, its transitions in drag state, and its update to the undo/redo history
     as drags are initialized, transformed, and released.
@@ -996,7 +1069,7 @@
     }
 
     /*
-    `ApplicationUpdater` is a namespace of *conceptually* pure functions that reflect how events map to state operations.
+    `ApplicationUpdater` returns a namespace of *conceptually* pure functions that reflect how events map to state operations.
     All functions represent the transformation of state in reponse to controller events. 
     It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
     */
@@ -1055,8 +1128,9 @@
     }
 
     /*
-    `EventQueueSideEffectWrapper` is a object oriented class that encapsulates all use of the javascript event system.
-    This is done so that the rest of the application can be managed statelessly, using pure functions and categories.
+    `EventQueueSideEffectWrapper` is a object oriented class as traditionally understood.
+    It encapsulates all use of the javascript event system so that the rest of the 
+    application can be managed statelessly, using pure functions and categories. 
     It practices RAII in that it binds events to a `domElement` upon construction and does not let go until dispose() is called.
     Events can be retrieved using `pollWithSideEffect()`, which returns a list of all events that occurred on 
     the diagram since the last invocation.
@@ -1104,7 +1178,7 @@
     }
 
     function initial_vue_data() {
-        const diagram_ids = DiagramIds();
+        const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
         const user_arcs_and_stored_arcs =
             UserArcsAndStoredArcs(
                 diagram_ids, 
@@ -1121,7 +1195,7 @@
                 position_frame_shifting,
                 offset_frame_shifting,
                 -0.001, // log2_cell_width_change_per_scroll
-                Math.log2(30), // log2_cell_width_min
+                Math.log2(50), // log2_cell_width_min
                 Math.log2(500) // log2_cell_width_max
             );
 
@@ -1139,7 +1213,7 @@
 
         return {
             state: new ApplicationState(
-                new Diagram([], [ new DiagramObject(glm.vec2(), '\\( \\bullet \\)') ]), 
+                new Diagram([], []), 
                 new DiagramViewState(initial_screen_frame_store), 
                 disengaged_drag,
                 disengaged_drag_state,
@@ -1167,6 +1241,7 @@
             offset_shifting: offset_frame_shifting,
             position_shifting: position_frame_shifting,
             user_arcs_and_sampler_arcs: UserArcsAndSamplerArcs(ArcGeometry()),
+            object_sets: DiagramObjectSetOperations(diagram_ids),
             ids: diagram_ids,
         };
     }
@@ -1261,9 +1336,12 @@
                 this.controls.arrowclick(this.state, arrow, this.state);
             },
 
+            inferred_objects: function(diagram) {
+                return this.object_sets.update(this.object_sets.infer(diagram.arrows), diagram.objects);
+            },
             object_position: function(object) {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-                return this.position_shifting.enter(glm.vec2(2,2), screen_frame);
+                return this.position_shifting.enter(object.position, screen_frame);
             }
         }
     });
