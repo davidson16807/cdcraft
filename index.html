@@ -63,6 +63,20 @@
             visibility: visible;
         }
 
+        .object-highlight {
+            fill: darkgrey;
+            stroke: none;
+            pointer-events: all;
+        }
+        .object-group {
+            visibility: hidden;
+        }
+        .object-group:hover {
+            visibility: visible;
+        }
+        .object-group .object {
+            visibility: visible;
+        }
         .object {
             color: black;
             text-align: center;
@@ -84,6 +98,14 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
+            <g v-for="object in inferred_objects(state.diagram)" v-bind:class="object.is_edited? '' : 'object-group'"  class="object-highlight">
+                <circle class="object-highlight" v-bind:cx="object_position(object).x" v-bind:cy="object_position(object).y" r="20"/>
+                <!-- NOTE: object position is offset along the axis by half the width of the <foreignObject> -->
+                <foreignObject class="object" v-bind:x="object_position(object).x-40" v-bind:y="object_position(object).y"
+                    width="80" height="40">
+                    <div v-katex>\( \bullet \)</div>
+                </foreignObject>
+            </g>
             <g v-for="arrow in state.diagram.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
                 <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
@@ -92,13 +114,6 @@
                 <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="13" /> -->
                 <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
                 <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
-            </g>
-            <g v-for="object in inferred_objects(state.diagram)">
-                <!-- NOTE: object position is offset along the axis by half the width of the <foreignObject> -->
-                <foreignObject v-bind:x="object_position(object).x-40" v-bind:y="object_position(object).y"  class="object"
-                    width="80" height="40">
-                    <div v-katex>\( \bullet \)</div>
-                </foreignObject>
             </g>
         </g>
     </svg>
