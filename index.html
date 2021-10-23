@@ -72,7 +72,7 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
-            <g v-for="arrow in state.modelview.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
+            <g v-for="arrow in state.modelview.diagram.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
                 <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15"/>
@@ -706,13 +706,13 @@
                         return is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
                             new Command(
                               // forward
-                              modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                              modelview_inout => modelview_inout.diagram.arrows.splice(original_length, 1),
                               // backward
-                              modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                              modelview_inout => modelview_inout.diagram.arrows.splice(original_length, 1),
                             )
                           : new Command(
                               // forward
-                              modelview_inout => modelview_inout.arrows[original_length] = new DiagramArrow(
+                              modelview_inout => modelview_inout.diagram.arrows[original_length] = new DiagramArrow(
                                     replacement_arrow.arc,
                                     !is_released,
                                     replacement_arrow.label,
@@ -722,7 +722,7 @@
                                     replacement_arrow.line_style_id,
                                 ),
                               // backward
-                              modelview_inout => modelview_inout.arrows.splice(original_length, 1),
+                              modelview_inout => modelview_inout.diagram.arrows.splice(original_length, 1),
                             )
                     }
                 };
@@ -750,13 +750,13 @@
                         is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
                             new Command(
                               // forward
-                              modelview_inout => modelview_inout.arrows.splice(arrow_id, 1),
+                              modelview_inout => modelview_inout.diagram.arrows.splice(arrow_id, 1),
                               // backward
-                              modelview_inout => modelview_inout.arrows[arrow_id] = replaced_arrow,
+                              modelview_inout => modelview_inout.diagram.arrows[arrow_id] = replaced_arrow,
                             )
                           : new Command(
                                 // forward
-                                modelview_inout => modelview_inout.arrows[arrow_id] = new DiagramArrow(
+                                modelview_inout => modelview_inout.diagram.arrows[arrow_id] = new DiagramArrow(
                                       replacement_arrow.arc,
                                       !is_released,
                                       replacement_arrow.label,
@@ -766,7 +766,7 @@
                                       replacement_arrow.line_style_id,
                                   ),
                                 // backward
-                                modelview_inout => modelview_inout.arrows[arrow_id] = replaced_arrow,
+                                modelview_inout => modelview_inout.diagram.arrows[arrow_id] = replaced_arrow,
                             )
                 };
             },
@@ -851,15 +851,28 @@
     };
 
     /*
+    `Diagram` is a data structure that represents every property of a diagram that can be depicted within the application
+    Its corresponds to the "Model" that occur within "Model/View" patterns in application development, 
+    Notably absent from `Diagram` is control state and undo/redo history, 
+    which are dealt with at the `Application*` level.
+    */
+    class Diagram {
+        constructor(arrows, objects){
+            this.arrows = arrows;
+            this.objects = objects;
+        }
+    }
+
+    /*
     `ModelView` is a data structure that contains all state relating to a diagram and its presentation.
     Its name alludes to the "Model/View" patterns that occur within application development, 
-    and its usage in the application is most heavily inspired by "Model-View-Updater" (A.K.A. "Elm" architecture).
+    and its usage in the application is most heavily inspired by "Model/View/Updater" (A.K.A. "Elm" architecture).
     Notably absent from `ModelView` is control state and undo/redo history, 
     which are dealt with at the `Application*` level.
     */
     class ModelView {
-        constructor(arrows, screen_frame_store){
-            this.arrows = arrows;
+        constructor(diagram, screen_frame_store){
+            this.diagram = diagram;
             this.screen_frame_store = screen_frame_store;
         }
     }
@@ -898,7 +911,7 @@
                 const model_focus = position_shifting.leave(screen_focus, screen_frame);
 
                 state_out.modelview.screen_frame_store = screen_frame_store;
-                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
+                state_out.modelview.diagram.arrows = [ ...state_in.modelview.diagram.arrows];
                 state_out.drag_type = state_in.drag_type;
                 state_out.drag_state = state_in.drag_type.wheel(state_in.drag_state, model_focus, scroll_count);
 
@@ -911,7 +924,7 @@
                 const model_offset = offset_shifting.leave(screen_offset, screen_frame);
 
                 state_out.modelview.screen_frame_store = screen_frame_store;
-                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
+                state_out.modelview.diagram.arrows = [ ...state_in.modelview.diagram.arrows];
                 state_out.drag_type = state_in.drag_type;
                 state_out.drag_state = state_in.drag_type.move(state_in.drag_state, model_position, model_offset);
 
@@ -926,7 +939,7 @@
                 const is_canceled = drag_type.id != DragState.released && drag_type.id != state_in.drag_type.id;
 
                 state_out.modelview.screen_frame_store = state_in.modelview.screen_frame_store;
-                state_out.modelview.arrows = [ ...state_in.modelview.arrows];
+                state_out.modelview.diagram.arrows = [ ...state_in.modelview.diagram.arrows];
 
                 if (is_released || is_canceled) { 
                     state_in.drag_type.command(state_in.drag_state, is_released, is_canceled).forward(state_out.modelview); 
@@ -945,7 +958,7 @@
     /*
     `ApplicationUpdater` is a namespace of *conceptually* pure functions that reflect how events map to state operations.
     All functions represent the transformation of state in reponse to controller events. 
-    It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
+    It resembles an "Updater" within the "Model/View/Updater" pattern (A.K.A. "Elm" architecture)
     */
     function ApplicationUpdater(
             arrow_drags,
@@ -967,7 +980,7 @@
                 const screen_frame_store = state_in.modelview.screen_frame_store;
                 const screen_frame = storage.unpack(screen_frame_store);
                 const model_position = position_shifting.leave(screen_position, screen_frame);
-                return arrow_drags.create(state_in.modelview.arrows, model_position);
+                return arrow_drags.create(state_in.modelview.diagram.arrows, model_position);
             },
         };
         return {
@@ -996,7 +1009,7 @@
 
             },
             arrowclick: function(state_in, arrow, state_out){
-                operations.transition(state_in, arrow_drags.edit(state_in.modelview.arrows, arrow), state_out);
+                operations.transition(state_in, arrow_drags.edit(state_in.modelview.diagram.arrows, arrow), state_out);
             },
         }
     }
@@ -1085,7 +1098,7 @@
 
         return {
             state: new ApplicationState(
-                new ModelView([], initial_screen_frame_store), 
+                new ModelView(new Diagram([]), initial_screen_frame_store), 
                 disengaged_drag,
                 disengaged_drag_state,
             ),
