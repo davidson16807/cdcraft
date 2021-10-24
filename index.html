@@ -98,15 +98,17 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
-            <g v-for="object in inferred_objects(state.diagram)" v-bind:class="object.is_edited? '' : 'object-group'"  class="object-highlight">
-                <circle class="object-highlight" v-bind:cx="object_position(object).x" v-bind:cy="object_position(object).y" r="20"/>
+            <g v-for="object in inferred_objects(state.diagram)" v-bind:class="object.is_edited? '' : 'object-group'"  class="object-highlight" 
+                    v-on:mousedown="!object.is_edited && objectclick(object, $event)">
+                <circle class="object-highlight" v-bind:cx="object_position(object).x" v-bind:cy="object_position(object).y" r="23" />
                 <!-- NOTE: object position is offset along the axis by half the width of the <foreignObject> -->
                 <foreignObject class="object" v-bind:x="object_position(object).x-40" v-bind:y="object_position(object).y"
                     width="80" height="40">
                     <div v-katex>\( \bullet \)</div>
                 </foreignObject>
             </g>
-            <g v-for="arrow in state.diagram.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
+            <g v-for="arrow in state.diagram.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" 
+                    v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
                 <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15"/>
@@ -126,6 +128,7 @@
     /* 
     `PositiveCellHashing` generates a namspace with a single pure function exposed, `hash()`.
     The function maps any positive whole number 2d coordinates to a unique positive integer.
+    It is bijective in principle, however its inverse is not implemented.
     */
     function PositiveCellHashing() {
         return {
@@ -136,6 +139,7 @@
     /* 
     `UnboundedCellHashing` generates a namspace with a single pure function exposed, `hash()`.
     The function maps any whole number 2d coordinates, regardless of sign, to a unique positive integer.
+    It is bijective in principle, however its inverse is not implemented.
     */
     function UnboundedCellHashing(positive_cell_hashing) {
         const abs = Math.abs;
@@ -162,6 +166,10 @@
             offset_to_offset_id: offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
             offset_id_to_offset_hash: offset_id => ((offset_id.x > offset_id.y) << 1) + (-offset_id.x > offset_id.y),
             offset_hash_to_offset_id: offset_hash => glm.normalize(glm.vec2(1,-1).mul(2*floor(offset_hash / 2)-1).add(glm.vec2(-1,-1).mul(2*(offset_hash % 2)-1))),
+            cell_pair_to_cell_pair_hash: (cell_position1, cell_position2) => 
+                cell_hashing.hash(
+                    cell_hashing.hash(round(cell_position1.x), round(cell_position1.y)), 
+                    cell_hashing.hash(round(cell_position2.x), round(cell_position2.y))),
         };
     }
 
@@ -647,10 +655,11 @@
     `DiagramObject` is a data structure that represents every property of an object that can be depicted within the application.
     */
     class DiagramObject {
-        constructor(position, depiction, annotation){
+        constructor(position, depiction, annotation, is_edited){
             this.position = position;
             this.depiction = depiction || '\\( \\bullet \\)';
             this.annotation = annotation || '';
+            this.is_edited = is_edited || false;
         }
     }
 
@@ -669,12 +678,19 @@
     */
     function DiagramObjectSetOperations(diagram_ids){
         return {
-            initialize: (object_list) => {
-                const objects = {};
+            list_to_set: (object_list) => {
+                const object_set = {};
                 for(let object of object_list){
-                    objects[diagram_ids.cell_id_to_cell_hash(object.position.x, object.position.y)] = object;
+                    object_set[diagram_ids.cell_id_to_cell_hash(object.position.x, object.position.y)] = object;
                 }
-                return objects;
+                return object_set;
+            },
+            set_to_list: (object_set) => {
+                const object_list = [];
+                for(let object of object_set){
+                    object_list.push(object);
+                }
+                return object_list;
             },
             infer: (arrows) => {
                 const objects = {};
@@ -695,6 +711,57 @@
                 return result;
             }
         };
+    }
+
+    /*
+    `DiagramArrowListsAndCellLookups` returns a namespace of pure functions that describe functions between
+    nonredundant lists of arrows and their equivalent representations as associative arrays of lists indexed by 
+    the hashes of source and target cells. (e.g. the arrow list [a→b, a→a] could be represented {a:[a→b, a→a], b:[a→b]})
+    */
+    function DiagramArrowListsAndLookups(diagram_ids) {
+        return {
+            list_to_source_lookup: (arrow_list) => {
+                const arrow_lookup = {};
+                for(let arrow of arrow_list){
+                    const outbound_arrows = arrow_lookup[diagram_ids.cell_id_to_cell_hash(arrow.arc.source)] || [];
+                    outbound_arrows.push(arrow);
+                    arrow_lookup[diagram_ids.cell_id_to_cell_hash(arrow.arc.source)] = outbound_arrows;
+                }
+                return arrow_lookup;
+            },
+            list_to_target_lookup: (arrow_list) => {
+                const arrow_lookup = {};
+                for(let arrow of arrow_list){
+                    const inbound_arrows = arrow_lookup[diagram_ids.cell_id_to_cell_hash(arrow.arc.target)] || [];
+                    inbound_arrows.push(arrow); 
+                    arrow_lookup[diagram_ids.cell_id_to_cell_hash(arrow.arc.target)] = inbound_arrows;
+                }
+                return arrow_lookup;
+            },
+            lookup_to_set: (arrow_lookup) => {
+                const arrow_set = [];
+                for(let cell_hash in arrow_lookup){
+                    for(let arrow of arrow_lookup[cell_hash]){
+                        arrow_set[diagram_ids.cell_pair_to_cell_pair_hash(arrow.arc.source, arc.arrow.target)] = arrow;
+                    }
+                }
+                return arrow_set;
+            },
+            list_to_set: (arrow_list) => {
+                const arrow_set = [];
+                for(let arrow of arrow_list){
+                    arrow_set[diagram_ids.cell_pair_to_cell_pair_hash(arrow.arc.source, arc.arrow.target)] = arrow;
+                }
+                return arrow_set;
+            },
+            set_to_list: (arrow_set) => {
+                const arrow_list = [];
+                for(let cell_hash in arrow_set){
+                    arrow_list.push(arrow_set[cell_hash]);
+                }
+                return arrow_list;
+            }
+        }
     }
 
 
@@ -738,6 +805,15 @@
         }
         static identity = new Command((model_inout, view_inout)=>{}, (model_inout, view_inout)=>{});
     }
+
+
+    const DragState = {
+        released: 'released',
+        arrow: 'arrow',
+        object: 'object',
+        zoom: 'zoom',
+        pan: 'pan',
+    };
 
     /*
     `*Drag`s are namespaces representing small categories that are functorial to themselves.
@@ -812,7 +888,7 @@
             create: function(arrows, initial_model_position) {
                 const original_length = arrows.length;
                 return {
-                    id: 'draw',
+                    id: DragState.arrow,
                     is_model_drag: true,
                     is_view_drag: false,
                     initialize: () => new DiagramArrow(
@@ -857,7 +933,7 @@
             edit: function(arrows, replaced_arrow) {
                 const arrow_id = arrows.indexOf(replaced_arrow);
                 return {
-                    id: 'draw',
+                    id: DragState.arrow,
                     is_model_drag: true,
                     is_view_drag: false,
                     initialize: () => new DiagramArrow(
@@ -871,14 +947,14 @@
                         ),
                     move: move,
                     wheel: wheel,
-                    // delete the arrow if not snapped, otherwise edit the arrow
+                    // delete the arrow if canceled or not snapped, otherwise edit the arrow
                     command: (replacement_arrow, is_released, is_canceled) => 
                         is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
                             new Command(
                               // forward
                               (model_inout, view_inout) => model_inout.arrows.splice(arrow_id, 1),
                               // backward
-                              (model_inout, view_inout) => model_inout.arrows[arrow_id] = replaced_arrow,
+                              (model_inout, view_inout) => model_inout.arrows.splice(arrow_id, 0, replaced_arrow),
                             )
                           : new Command(
                                 // forward
@@ -899,6 +975,113 @@
         };
     }
 
+    function ObjectDrags(diagram_object_set_operations, diagram_ids){
+        return {
+            move: function(initial_arrow_list, initial_object_list, initial_object) {
+                // needed to perform quick collision detection between objects
+                const object_set = diagram_object_set_operations.list_to_set(initial_object_list)
+                // needed to perform object modification and quick object lookup
+                const initial_object_hash = diagram_ids.cell_id_to_cell_hash(initial_object.position);
+                const initial_object_index = initial_object_list.indexOf(initial_object);
+
+                // needed to perform arrow modification and undo arrow deletion
+                const source_arrows = [];
+                const target_arrows = [];
+                // needed to perform arrow deletion
+                const source_arrow_ids = [];
+                const target_arrow_ids = [];
+                for (let i = 0; i<initial_arrow_list.length; i++){
+                    const arrow = initial_arrow_list[i];
+                    const source_hash = diagram_ids.cell_id_to_cell_hash(arrow.arc.source);
+                    const target_hash = diagram_ids.cell_id_to_cell_hash(arrow.arc.target);
+                    if (source_hash == initial_object_hash){
+                        source_arrows.push(arrow);
+                        source_arrow_ids.push(i);
+                    }
+                    if (target_hash == initial_object_hash){
+                        target_arrows.push(arrow);
+                        target_arrow_ids.push(i);
+                    }
+                }
+
+                return {
+                    id: DragState.object,
+                    is_model_drag: true,
+                    is_view_drag: false,
+                    initialize: () => new DiagramObject(
+                            initial_object.position,
+                            initial_object.depiction,
+                            initial_object.annotation,
+                            true,
+                        ),
+                    move: (replacement_object, model_position, model_offset) => {
+                        console.log(replacement_object.position)
+                        const object_id = diagram_ids.cell_position_to_cell_id(model_position);
+                        const object_hash = diagram_ids.cell_id_to_cell_hash(object_id);
+                        return object_set[object_hash] != null? 
+                            replacement_object 
+                          : new DiagramObject(
+                                model_position,
+                                replacement_object.depiction,
+                                replacement_object.annotation,
+                                replacement_object.is_edited,
+                            );
+                    },
+                    wheel: (replacement_object, screen_focus, scroll_count) => replacement_object,
+                    // delete the object and its arrows if canceled, otherwise move the object and its arrows
+                    command: (replacement_object, is_released, is_canceled) => {
+                        const replacement_object_id = diagram_ids.cell_position_to_cell_id(replacement_object.position);
+                        const replacement_object_hash = diagram_ids.cell_id_to_cell_hash(replacement_object_id);
+                        // TODO: consider moving logic here to a new `DiagramObjectMovement` category class 
+                        // NOTE: it would be nice to create data structures here that don't require O(N) traversal 
+                        //   through arrows or objects, but generating those data structures also requires O(N) traversal,
+                        //   and since we can't guarantee that model_inout will not change over multiple invocations,
+                        //   we would have to generate those data structures one per invocation anyways, 
+                        //   so we might as well traverse through the object and arrow lists.
+                        return is_canceled?
+                            new Command(
+                              // forward
+                              (model_inout, view_inout) => {
+                                for(let arrow of source_arrows){
+                                    const i = model_inout.arrows.indexOf(arrow);
+                                    model_inout.arrows = i>=0? model_inout.arrows.splice(i, 1) : model_inout.arrows;
+                                }
+                                model_inout.objects = model_inout.objects.splice(initial_object_index, 1);
+                              },
+                              // backward
+                              (model_inout, view_inout) => {
+                                model_inout.arrows = initial_arrow_list;
+                                model_inout.objects = model_inout.objects.splice(initial_object_index, 0, initial_object);
+                              },
+                            )
+                          : new Command(
+                              // forward
+                              (model_inout, view_inout) => {
+                                for(let i of source_arrow_ids){
+                                    model_inout.arrows[i].arc.source = replacement_object.position;
+                                }
+                                for(let i of target_arrow_ids){
+                                    model_inout.arrows[i].arc.target = replacement_object.position;
+                                }
+                                model_inout.objects[initial_object_index] = replacement_object;
+                              },
+                              // backward
+                              (model_inout, view_inout) => {
+                                for(let i of source_arrow_ids){
+                                    model_inout.arrows[i].arc.source = initial_object.position;
+                                }
+                                for(let i of target_arrow_ids){
+                                    model_inout.arrows[i].arc.target = initial_object.position;
+                                }
+                                model_inout.objects[initial_object_index] = initial_object;
+                              },
+                            )
+                    }
+                };
+            },
+        };
+    }
+
 
     function ViewDrags(screen_frame_storage, position_shifting, offset_shifting, 
             log2_cell_width_change_per_scroll, log2_cell_width_min, log2_cell_width_max){
@@ -909,7 +1092,7 @@
         return {
             pan: function(original_screen_frame_store){
                 return {
-                    id: 'pan',
+                    id: DragState.pan,
                     is_model_drag: false,
                     is_view_drag: true,
                     initialize: () => new ScreenReferenceFrameStore(
@@ -935,7 +1118,7 @@
                 const max = Math.max;
                 const min = Math.min;
                 return {
-                    id: 'released',
+                    id: DragState.released,
                     is_model_drag: false,
                     is_view_drag: false,
                     initialize: () => new ScreenReferenceFrameStore(
@@ -974,13 +1157,6 @@
         };
     }
 
-
-    const DragState = {
-        released: 'released',
-        draw: 'draw',
-        zoom: 'zoom',
-        pan: 'pan',
-    };
 
     /*
     `DiagramViewState` is a data structure that contains all state relating to the presentation of a diagram.
@@ -1089,6 +1265,7 @@
     It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
     */
     function ApplicationUpdater(
+            object_drags,
             arrow_drags,
             view_drags,
             screen_frame_storage,
@@ -1103,7 +1280,7 @@
                 const screen_frame_store = state_in.view.screen_frame_store;
                 return view_drags.pan(screen_frame_store);
             },
-            draw: function(state_in, event){
+            arrow: function(state_in, event){
                 const screen_position = glm.vec2(event.clientX, event.clientY);
                 const screen_frame_store = state_in.view.screen_frame_store;
                 const screen_frame = storage.unpack(screen_frame_store);
@@ -1116,7 +1293,7 @@
                 operations.wheel(state_in, glm.vec2(event.clientX, event.clientY), event.deltaY, state_out);
             },
             mousedown: function(state_in, event, state_out){
-                const state = [DragState.draw, DragState.pan, DragState.pan][event.button];
+                const state = [DragState.arrow, DragState.pan, DragState.pan][event.button];
                 const screen_frame_store = state_in.view.screen_frame_store;
                 operations.transition(state_in, mouse_actions[state](state_in, event), state_out);
             },
@@ -1138,6 +1315,9 @@
             },
             arrowclick: function(state_in, arrow, state_out){
                 operations.transition(state_in, arrow_drags.edit(state_in.diagram.arrows, arrow), state_out);
+            },
+            objectclick: function(state_in, object, state_out){
+                operations.transition(state_in, object_drags.move(state_in.diagram.arrows, state_in.diagram.objects, object), state_out);
             },
         }
     }
@@ -1225,6 +1405,7 @@
         const disengaged_drag = view_drags.release(initial_screen_frame_store)
         const disengaged_drag_state = disengaged_drag.initialize();
         const sampler_arc_properties = SamplerArcProperties();
+        const diagram_object_set_operations = DiagramObjectSetOperations(diagram_ids);
 
         return {
             state: new ApplicationState(
@@ -1235,6 +1416,10 @@
             ),
             queue: undefined,
             controls: ApplicationUpdater(
+                ObjectDrags(
+                    diagram_object_set_operations,
+                    diagram_ids,
+                ),
                 ArrowDrags(
                     user_arcs_and_stored_arcs,
                     1.0, // default_min_length_clockwise
@@ -1256,7 +1441,7 @@
             offset_shifting: offset_frame_shifting,
             position_shifting: position_frame_shifting,
             user_arcs_and_sampler_arcs: UserArcsAndSamplerArcs(ArcGeometry()),
-            object_sets: DiagramObjectSetOperations(diagram_ids),
+            object_sets: diagram_object_set_operations,
             ids: diagram_ids,
         };
     }
@@ -1277,6 +1462,7 @@
         });
 
     Vue.use(KatexPlugin(renderMathInElement))
+
     // Vue.directive('katex',{inserted:(el, binding) => renderMathInElement(el)});
     const vue = new Vue({
         el: '#app',
@@ -1352,12 +1538,21 @@
             },
 
             inferred_objects: function(diagram) {
-                return this.object_sets.update(this.object_sets.infer(diagram.arrows), diagram.objects);
+                return this.object_sets.update(
+                        this.object_sets.infer(diagram.arrows), 
+                        this.object_sets.list_to_set(diagram.objects)
+                    );
             },
             object_position: function(object) {
                 const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
                 return this.position_shifting.enter(object.position, screen_frame);
-            }
+            },
+            objectclick: function(object, event) {
+                event.preventDefault(); 
+                event.stopPropagation();
+                console.log('objectclick')
+                this.controls.objectclick(this.state, object, this.state);
+            },
         }
     });
 
