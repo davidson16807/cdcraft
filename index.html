@@ -1045,14 +1045,22 @@
                               (model_inout, view_inout) => {
                                 for(let arrow of source_arrows){
                                     const i = model_inout.arrows.indexOf(arrow);
-                                    model_inout.arrows = i>=0? model_inout.arrows.splice(i, 1) : model_inout.arrows;
+                                    if(i>=0) {
+                                        model_inout.arrows.splice(i, 1);
+                                    }
                                 }
-                                model_inout.objects = model_inout.objects.splice(initial_object_index, 1);
+                                for(let arrow of target_arrows){
+                                    const i = model_inout.arrows.indexOf(arrow);
+                                    if(i>=0) {
+                                        model_inout.arrows.splice(i, 1);
+                                    }
+                                }
+                                model_inout.objects.splice(initial_object_index, 1);
                               },
                               // backward
                               (model_inout, view_inout) => {
                                 model_inout.arrows = initial_arrow_list;
-                                model_inout.objects = model_inout.objects.splice(initial_object_index, 0, initial_object);
+                                model_inout.objects.splice(initial_object_index, 0, initial_object);
                               },
                             )
                           : new Command(
