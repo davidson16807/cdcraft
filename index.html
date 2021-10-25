@@ -35,7 +35,7 @@
         .arrow-highlight {
             fill: none;
             stroke: darkgrey;
-            stroke-width:30;
+            stroke-width:20;
             pointer-events: all;
         }
         .arrow-tip-highlight {
@@ -110,8 +110,8 @@
             <g v-for="arrow in state.diagram.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" 
                     v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
                 <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
-                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="15"/>
-                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="15"/>
+                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="10"/>
+                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="10"/>
                 <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="13"/> -->
                 <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="13" /> -->
                 <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
@@ -132,7 +132,7 @@
     */
     function PositiveCellHashing() {
         return {
-            hash: (x,y) => (x+1)*(x/2) + y,
+            hash: (x,y) => ((x+y)+1)*((x+y)/2) + y,
         };
     }
 
@@ -975,7 +975,7 @@
         };
     }
 
-    function ObjectDrags(diagram_object_set_operations, diagram_ids){
+    function ObjectDrags(diagram_object_set_operations, diagram_ids, max_snap_distance){
         return {
             move: function(initial_arrow_list, initial_object_list, initial_object) {
                 // needed to perform quick collision detection between objects
@@ -1030,15 +1030,16 @@
                     // delete the object and its arrows if canceled, otherwise move the object and its arrows
                     command: (replacement_object, is_released, is_canceled) => {
                         const replacement_object_id = diagram_ids.cell_position_to_cell_id(replacement_object.position);
-                        const replacement_object_hash = diagram_ids.cell_id_to_cell_hash(replacement_object_id);
-                        const replacement_position = is_released? replacement_object_id : replacement_object.position;
+                        const is_snapped = glm.length(replacement_object_id.sub(replacement_object.position)) < max_snap_distance;
+                        const replacement_position = is_snapped? replacement_object_id : replacement_object.position;
+
                         // TODO: consider moving logic here to a new `DiagramObjectMovement` category class 
                         // NOTE: it would be nice to create data structures here that don't require O(N) traversal 
                         //   through arrows or objects, but generating those data structures also requires O(N) traversal,
                         //   and since we can't guarantee that model_inout will not change over multiple invocations,
                         //   we would have to generate those data structures one per invocation anyways, 
                         //   so we might as well traverse through the object and arrow lists.
-                        return is_canceled?
+                        return is_canceled || (is_released && !is_snapped)?
                             new Command(
                               // forward
                               (model_inout, view_inout) => {
@@ -1419,6 +1420,7 @@
                 ObjectDrags(
                     diagram_object_set_operations,
                     diagram_ids,
+                    0.3 // snap distance
                 ),
                 ArrowDrags(
                     user_arcs_and_stored_arcs,
