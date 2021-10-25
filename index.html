@@ -1542,9 +1542,11 @@
                 return path;
             },
             arrowclick: function(arrow, event) {
-                event.preventDefault(); 
-                event.stopPropagation();
-                this.controls.arrowclick(this.state, arrow, this.state);
+                if (event.button == 0) {
+                    event.preventDefault(); 
+                    event.stopPropagation();
+                    this.controls.arrowclick(this.state, arrow, this.state);
+                }
             },
 
             inferred_objects: function(diagram) {
@@ -1558,9 +1560,11 @@
                 return this.position_shifting.enter(object.position, screen_frame);
             },
             objectclick: function(object, event) {
-                event.preventDefault(); 
-                event.stopPropagation();
-                this.controls.objectclick(this.state, object, this.state);
+                if (event.button == 0) {
+                    event.preventDefault(); 
+                    event.stopPropagation();
+                    this.controls.objectclick(this.state, object, this.state);
+                }
             },
         }
     });
