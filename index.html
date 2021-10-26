@@ -53,35 +53,39 @@
             stroke: none;
             pointer-events: all;
         }
-        .arrow-group {
-            visibility: hidden;
-        }
-        .arrow-group:hover {
-            visibility: visible;
-        }
-        .arrow-group .arrow {
-            visibility: visible;
-        }
 
         .object-highlight {
             fill: darkgrey;
             stroke: none;
             pointer-events: all;
         }
-        .object-group {
-            visibility: hidden;
-        }
-        .object-group:hover {
-            visibility: visible;
-        }
-        .object-group .object {
-            visibility: visible;
-        }
         .object {
             color: black;
             text-align: center;
             /*NOTE: I have found no better way to align a <foreignObject> component than through manual adjustment.*/
             transform: translate(0px, -13px); 
+        }
+
+        .highlight-on-hover {
+            visibility: hidden;
+        }
+        .highlight-on-hover:hover {
+            visibility: visible;
+        }
+        .highlight-on-hover .object {
+            visibility: visible;
+        }
+        .highlight-on-hover .arrow {
+            visibility: visible;
+        }
+        .highlight-never {
+            visibility: hidden;
+        }
+        .highlight-never .object {
+            visibility: visible;
+        }
+        .highlight-never .arrow {
+            visibility: visible;
         }
 
     </style>
@@ -98,7 +102,7 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
-            <g v-for="object in inferred_objects(state.diagram)" v-bind:class="object.is_edited? '' : 'object-group'"  class="object-highlight" 
+            <g v-for="object in inferred_objects(state.diagram)" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'"
                     v-on:mousedown="!object.is_edited && objectclick(object, $event)">
                 <circle class="object-highlight" v-bind:cx="object_position(object).x" v-bind:cy="object_position(object).y" r="23" />
                 <!-- NOTE: object position is offset along the axis by half the width of the <foreignObject> -->
@@ -107,7 +111,7 @@
                     <div v-katex>\( \bullet \)</div>
                 </foreignObject>
             </g>
-            <g v-for="arrow in state.diagram.arrows" v-bind:class="arrow.is_edited? '' : 'arrow-group'" 
+            <g v-for="arrow in state.diagram.arrows" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'" 
                     v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)">
                 <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="10"/>
@@ -1055,7 +1059,9 @@
                                         model_inout.arrows.splice(i, 1);
                                     }
                                 }
-                                model_inout.objects.splice(initial_object_index, 1);
+                                if (initial_object_index>=0) {
+                                    model_inout.objects.splice(initial_object_index, 1);
+                                }
                               },
                               // backward
                               (model_inout, view_inout) => {
@@ -1072,7 +1078,12 @@
                                 for(let i of target_arrow_ids){
                                     model_inout.arrows[i].arc.target = replacement_position;
                                 }
-                                model_inout.objects[initial_object_index] = replacement_object;
+                                model_inout.objects[initial_object_index] = new DiagramObject(
+                                        replacement_position,
+                                        replacement_object.depiction,
+                                        replacement_object.annotation,
+                                        !is_released,
+                                    );
                               },
                               // backward
                               (model_inout, view_inout) => {
