@@ -1327,6 +1327,10 @@
                     const state = [DragState.arrow, DragState.pan][event.button];
                     const screen_frame_store = state_in.view.screen_frame_store;
                     operations.transition(state_in, mouse_actions[state](state_in, event), state_out);
+                } else if (event.button == 2 && !event.shiftKey) {
+                    // rmb handles selections, cancel if nothing is selected
+                    state_out.arrow_selections = [];
+                    state_out.object_selections = [];
                 }
             },
             mousemove: function(state_in, event, state_out){
