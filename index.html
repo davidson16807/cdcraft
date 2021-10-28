@@ -102,7 +102,7 @@
                       v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
                       v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
             </g>
-            <g v-for="object in state.object_selections">
+            <g v-for="object in state.view.object_selections" v-on:mousedown="!object.is_edited && object_selection_click(object, $event)" >
                 <circle class="object-highlight" v-bind:cx="screen_position(object.position).x" v-bind:cy="screen_position(object.position).y" r="23" />
             </g>
             <g v-for="object in inferred_objects(state.diagram)" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'"
@@ -114,7 +114,7 @@
                     <div v-katex>\( \bullet \)</div>
                 </foreignObject>
             </g>
-            <g v-for="arrow in state.arrow_selections">
+            <g v-for="arrow in state.view.arrow_selections" v-on:mousedown="!arrow.is_edited && arrow_selection_click(arrow, $event)" >
                 <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="10"/>
                 <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="10"/>
@@ -1046,6 +1046,7 @@
                         const replacement_position = is_snapped? replacement_object_id : replacement_object.position;
 
                         // TODO: consider moving logic here to a new `DiagramObjectMovement` category class 
+                        // TODO: replace use of `[source/target]_arrows` with backward traversal of ids lists
                         // NOTE: it would be nice to create data structures here that don't require O(N) traversal 
                         //   through arrows or objects, but generating those data structures also requires O(N) traversal,
                         //   and since we can't guarantee that model_inout will not change over multiple invocations,
@@ -1102,6 +1103,152 @@
                                     model_inout.arrows[i].arc.target = initial_object.position;
                                 }
                                 model_inout.objects[initial_object_index] = initial_object;
+                              },
+                            )
+                    }
+                };
+            },
+        };
+    }
+
+    function SelectionDrags(diagram_ids, max_snap_distance){
+        return {
+            move: function(initial_arrow_list, arrow_selections, initial_object_list, object_selections) {
+                const explicit_object_hashes = {};
+                for (let object of initial_object_list) {
+                    explicit_object_hashes[diagram_ids.cell_id_to_cell_hash(object.position)] = object;
+                }
+                // needed to perform object modification and quick object lookup
+                const initial_object_hashes = {};
+                for (let object of object_selections) {
+                    initial_object_hashes[diagram_ids.cell_id_to_cell_hash(object.position)] = object;
+                }
+                for (let arrow of arrow_selections) {
+                    initial_object_hashes[diagram_ids.cell_id_to_cell_hash(arrow.arc.source)] = arrow;
+                    initial_object_hashes[diagram_ids.cell_id_to_cell_hash(arrow.arc.target)] = arrow;
+                }
+
+                // needed to perform arrow deletion and modification
+                const source_arrow_ids = [];
+                const target_arrow_ids = [];
+                const all_arrow_ids = [];
+                for (let i = 0; i<initial_arrow_list.length; i++){
+                    const arrow = initial_arrow_list[i];
+                    const source_hash = diagram_ids.cell_id_to_cell_hash(arrow.arc.source);
+                    const target_hash = diagram_ids.cell_id_to_cell_hash(arrow.arc.target);
+                    if (initial_object_hashes[source_hash]){
+                        source_arrow_ids.push(i);
+                    }
+                    if (initial_object_hashes[target_hash]){
+                        target_arrow_ids.push(i);
+                    }
+                    if (initial_object_hashes[target_hash] || initial_object_hashes[source_hash]){
+                        all_arrow_ids.push(i);
+                    }
+                }
+                const object_ids = [];
+                for (let i = 0; i<initial_object_list.length; i++){
+                    const object = initial_object_list[i];
+                    const object_hash = diagram_ids.cell_id_to_cell_hash(object.position);
+                    if (initial_object_hashes[object_hash]){
+                        object_ids.push(i);
+                    }
+                }
+                const implicit_object_selection_ids = [];
+                for (let i = 0; i<object_selections.length; i++){
+                    const object = object_selections[i];
+                    const object_hash = diagram_ids.cell_id_to_cell_hash(object.position);
+                    if (initial_object_hashes[object_hash] && !explicit_object_hashes[object_hash]){
+                        implicit_object_selection_ids.push(i);
+                    }
+                }
+
+                function get_representative_position(arrows, objects){
+                    const initial_representative_position = glm.vec2();
+                    for(let i of source_arrow_ids){
+                        return arrows[i].arc.source;
+                    }
+                    for(let i of object_ids){
+                        return objects[i].position
+                    }
+                }
+                const initial_representative_position = get_representative_position(initial_arrow_list, initial_object_list)
+
+                return {
+                    id: DragState.object,
+                    is_model_drag: true,
+                    is_view_drag: false,
+                    initialize: () => glm.vec2(),
+                    move: (cumulative_model_offset, model_position, model_offset) => cumulative_model_offset.add(model_offset),
+                    wheel: (cumulative_model_offset, screen_focus, scroll_count) => cumulative_model_offset,
+                    // delete the object and its arrows if canceled, otherwise move the object and its arrows
+                    command: (cumulative_model_offset, is_released, is_canceled) => {
+                        const cumulative_model_offset_id = diagram_ids.cell_position_to_cell_id(cumulative_model_offset);
+                        const is_snapped = glm.length(cumulative_model_offset_id.sub(cumulative_model_offset)) < max_snap_distance;
+                        const cumulative_model_offset_snapped = is_snapped? cumulative_model_offset_id : cumulative_model_offset;
+
+
+                        // TODO: consider moving logic here to a new `DiagramObjectMovement` category class 
+                        // NOTE: it would be nice to create data structures here that don't require O(N) traversal 
+                        //   through arrows or objects, but generating those data structures also requires O(N) traversal,
+                        //   and since we can't guarantee that model_inout will not change over multiple invocations,
+                        //   we would have to generate those data structures one per invocation anyways, 
+                        //   so we might as well traverse through the object and arrow lists.
+                        return is_canceled || (is_released && !is_snapped)?
+                            new Command(
+                              // forward
+                              (model_inout, view_inout) => {
+                                model_inout.arrows = [...model_inout.arrows];
+                                for(let i=all_arrow_ids.length-1; i>=0; i--){
+                                    model_inout.arrows.splice(i, 1);
+                                }
+                                model_inout.objects = [...model_inout.objects];
+                                for(let i=object_ids.length-1; i>=0; i--){
+                                    model_inout.objects.splice(i, 1);
+                                }
+                                view_inout.arrow_selections = [];
+                                view_inout.object_selections = [];
+                              },
+                              // backward
+                              (model_inout, view_inout) => {
+                                model_inout.arrows = initial_arrow_list;
+                                model_inout.objects = initial_object_list;
+                                view_inout.arrow_selections = arrow_selections;
+                                view_inout.object_selections = object_selections;
+                              },
+                            )
+                          : new Command(
+                              // forward
+                              (model_inout, view_inout) => {
+                                const current_offset = get_representative_position(model_inout.arrows, model_inout.objects).sub(initial_representative_position);
+                                const corrective_offset = cumulative_model_offset_snapped.sub(current_offset);
+                                for(let i of source_arrow_ids){
+                                    model_inout.arrows[i].arc.source = model_inout.arrows[i].arc.source.add(corrective_offset);
+                                }
+                                for(let i of target_arrow_ids){
+                                    model_inout.arrows[i].arc.target = model_inout.arrows[i].arc.target.add(corrective_offset);
+                                }
+                                for(let i of object_ids){
+                                    model_inout.objects[i].position = model_inout.objects[i].position.add(corrective_offset);
+                                }
+                                for(let i of implicit_object_selection_ids){
+                                    view_inout.object_selections[i].position = view_inout.object_selections[i].position.add(corrective_offset);
+                                }
+                              },
+                              // backward
+                              (model_inout, view_inout) => {
+                                for(let i of source_arrow_ids){
+                                    model_inout.arrows[i].arc.source = model_inout.arrows[i].arc.source.sub(current_offset);
+                                }
+                                for(let i of target_arrow_ids){
+                                    model_inout.arrows[i].arc.target = model_inout.arrows[i].arc.target.sub(current_offset);
+                                }
+                                for(let i of object_ids){
+                                    model_inout.objects[i].position = model_inout.objects[i].position.sub(current_offset);
+                                }
+                                for(let i of implicit_object_selection_ids){
+                                    view_inout.object_selections[i].position = view_inout.object_selections[i].position.sub(current_offset);
+                                }
                               },
                             )
                     }
@@ -1191,8 +1338,10 @@
     It serves as the "View" of a "Model-View-Updater" pattern (A.K.A. "Elm" architecture).
     */
     class DiagramViewState {
-        constructor(screen_frame_store){
+        constructor(screen_frame_store, object_selections, arrow_selections){
             this.screen_frame_store = screen_frame_store;
+            this.object_selections = object_selections || [];
+            this.arrow_selections = arrow_selections || [];
         }
     }
 
@@ -1213,13 +1362,11 @@
     It guarantees that for any combination of real numbered attribute values there is a valid application state.
     */
     class ApplicationState {
-        constructor(model, view, dragging, drag_state, object_selections, arrow_selections){
+        constructor(model, view, dragging, drag_state){
             this.diagram = model;
             this.view = view;
             this.drag_type = dragging;
             this.drag_state = drag_state;
-            this.object_selections = object_selections || [];
-            this.arrow_selections = arrow_selections || [];
         }
     }
 
@@ -1295,6 +1442,7 @@
     It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
     */
     function ApplicationUpdater(
+            selection_drags,
             object_drags,
             arrow_drags,
             view_drags,
@@ -1327,10 +1475,12 @@
                     const state = [DragState.arrow, DragState.pan][event.button];
                     const screen_frame_store = state_in.view.screen_frame_store;
                     operations.transition(state_in, mouse_actions[state](state_in, event), state_out);
+                    state_out.view.arrow_selections = [];
+                    state_out.view.object_selections = [];
                 } else if (event.button == 2 && !event.shiftKey) {
                     // rmb handles selections, cancel if nothing is selected
-                    state_out.arrow_selections = [];
-                    state_out.object_selections = [];
+                    state_out.view.arrow_selections = [];
+                    state_out.view.object_selections = [];
                 }
             },
             mousemove: function(state_in, event, state_out){
@@ -1350,16 +1500,24 @@
 
             },
             arrowclick: function(state_in, arrow, state_out){
-                operations.transition(state_in, arrow_drags.edit(state_in.diagram.arrows, arrow), state_out);
+                if (state_in.view.object_selections.length > 0 || state_in.view.arrow_selections.length > 0) {
+                    operations.transition(state_in, selection_drags.move(state_in.diagram.arrows, state_in.view.arrow_selections, state_in.diagram.objects, state_in.view.object_selections), state_out);
+                } else {
+                    operations.transition(state_in, arrow_drags.edit(state_in.diagram.arrows, arrow), state_out);
+                }
             },
             objectclick: function(state_in, object, state_out){
-                operations.transition(state_in, object_drags.move(state_in.diagram.arrows, state_in.diagram.objects, object), state_out);
+                if (state_in.view.object_selections.length > 0 || state_in.view.arrow_selections.length > 0) {
+                    operations.transition(state_in, selection_drags.move(state_in.diagram.arrows, state_in.view.arrow_selections, state_in.diagram.objects, state_in.view.object_selections), state_out);
+                } else {
+                    operations.transition(state_in, object_drags.move(state_in.diagram.arrows, state_in.diagram.objects, object), state_out);
+                }
             },
             arrowselect: function(state_in, arrow, state_out){
-                state_out.arrow_selections.push(arrow);
+                state_out.view.arrow_selections.push(arrow);
             },
             objectselect: function(state_in, object, state_out){
-                state_out.object_selections.push(object);
+                state_out.view.object_selections.push(object);
             },
         }
     }
@@ -1458,6 +1616,10 @@
             ),
             queue: undefined,
             controls: ApplicationUpdater(
+                SelectionDrags(
+                    diagram_ids,
+                    0.3 // snap distance
+                ),
                 ObjectDrags(
                     diagram_object_set_operations,
                     diagram_ids,
@@ -1611,6 +1773,21 @@
                     event.preventDefault(); 
                     event.stopPropagation();
                     this.controls.objectselect(this.state, object, this.state);
+                }
+            },
+
+            object_selection_click: function(object, event) {
+                if (event.button == 0) {
+                    event.preventDefault(); 
+                    event.stopPropagation();
+                    this.controls.objectclick(this.state, object, this.state);
+                }
+            },
+            arrow_selection_click: function(arrow, event) {
+                if (event.button == 0) {
+                    event.preventDefault(); 
+                    event.stopPropagation();
+                    this.controls.arrowclick(this.state, arrow, this.state);
                 }
             },
         }
