@@ -91,7 +91,7 @@
     </style>
 </head>
 <body>
-<div id="app">
+<div id="app" v-bind:class="state.drag_type.id == 'pan'? 'pan-cursor' : ''">
     <svg id="svg">
         <g v-bind:transform="transformation()">
             <g v-for="i in cell_count()">
@@ -1163,7 +1163,7 @@
                     }
                 }
 
-                function get_representative_position(arrows, objects){
+                function get_representative_position(arrows, objects, object_selections){
                     const initial_representative_position = glm.vec2();
                     for(let i of source_arrow_ids){
                         return arrows[i].arc.source;
@@ -1171,8 +1171,11 @@
                     for(let i of object_ids){
                         return objects[i].position
                     }
+                    for(let object of object_selections){
+                        return object.position
+                    }
                 }
-                const initial_representative_position = get_representative_position(initial_arrow_list, initial_object_list)
+                const initial_representative_position = get_representative_position(initial_arrow_list, initial_object_list, object_selections)
 
                 return {
                     id: DragState.object,
@@ -1220,7 +1223,7 @@
                           : new Command(
                               // forward
                               (model_inout, view_inout) => {
-                                const current_offset = get_representative_position(model_inout.arrows, model_inout.objects).sub(initial_representative_position);
+                                const current_offset = get_representative_position(model_inout.arrows, model_inout.objects, view_inout.object_selections).sub(initial_representative_position);
                                 const corrective_offset = cumulative_model_offset_snapped.sub(current_offset);
                                 for(let i of source_arrow_ids){
                                     model_inout.arrows[i].arc.source = model_inout.arrows[i].arc.source.add(corrective_offset);
