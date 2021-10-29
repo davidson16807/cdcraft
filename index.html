@@ -1042,130 +1042,6 @@
         };
     }
 
-    function ObjectDrags(diagram_object_set_operations, diagram_ids, max_snap_distance){
-        return {
-            move: function(initial_arrow_list, initial_object_list, initial_object) {
-                // needed to perform quick collision detection between objects
-                const object_set = diagram_object_set_operations.list_to_set(initial_object_list)
-                // needed to perform object modification and quick object lookup
-                const initial_object_hash = diagram_ids.cell_id_to_cell_hash(initial_object.position);
-                const initial_object_index = initial_object_list.indexOf(initial_object);
-
-                // needed to perform arrow modification and undo arrow deletion
-                const source_arrows = [];
-                const target_arrows = [];
-                // needed to perform arrow deletion
-                const source_arrow_ids = [];
-                const target_arrow_ids = [];
-                for (let i = 0; i<initial_arrow_list.length; i++){
-                    const arrow = initial_arrow_list[i];
-                    const source_hash = diagram_ids.cell_id_to_cell_hash(arrow.arc.source);
-                    const target_hash = diagram_ids.cell_id_to_cell_hash(arrow.arc.target);
-                    if (source_hash == initial_object_hash){
-                        source_arrows.push(arrow);
-                        source_arrow_ids.push(i);
-                    }
-                    if (target_hash == initial_object_hash){
-                        target_arrows.push(arrow);
-                        target_arrow_ids.push(i);
-                    }
-                }
-
-                return {
-                    id: DragState.object,
-                    is_model_drag: true,
-                    is_view_drag: false,
-                    initialize: () => new DiagramObject(
-                            initial_object.position,
-                            initial_object.depiction,
-                            initial_object.annotation,
-                            true,
-                        ),
-                    move: (replacement_object, model_position, model_offset) => {
-                        const object_id = diagram_ids.cell_position_to_cell_id(model_position);
-                        const object_hash = diagram_ids.cell_id_to_cell_hash(object_id);
-                        return object_set[object_hash] != null? 
-                            replacement_object 
-                          : new DiagramObject(
-                                model_position,
-                                replacement_object.depiction,
-                                replacement_object.annotation,
-                                replacement_object.is_edited,
-                            );
-                    },
-                    wheel: (replacement_object, screen_focus, scroll_count) => replacement_object,
-                    // delete the object and its arrows if canceled, otherwise move the object and its arrows
-                    command: (replacement_object, is_released, is_canceled) => {
-                        const replacement_object_id = diagram_ids.cell_position_to_cell_id(replacement_object.position);
-                        const is_snapped = glm.length(replacement_object_id.sub(replacement_object.position)) < max_snap_distance;
-                        const replacement_position = is_snapped? replacement_object_id : replacement_object.position;
-
-                        // TODO: consider moving logic here to a new `DiagramObjectMovement` category class 
-                        // TODO: replace use of `[source/target]_arrows` with backward traversal of ids lists
-                        // NOTE: it would be nice to create data structures here that don't require O(N) traversal 
-                        //   through arrows or objects, but generating those data structures also requires O(N) traversal,
-                        //   and since we can't guarantee that model_inout will not change over multiple invocations,
-                        //   we would have to generate those data structures one per invocation anyways, 
-                        //   so we might as well traverse through the object and arrow lists.
-                        return is_canceled || (is_released && !is_snapped)?
-                            new Command(
-                              // forward
-                              (model_inout, view_inout) => {
-                                for(let arrow of source_arrows){
-                                    const i = model_inout.arrows.indexOf(arrow);
-                                    if(i>=0) {
-                                        model_inout.arrows.splice(i, 1);
-                                    }
-                                }
-                                for(let arrow of target_arrows){
-                                    const i = model_inout.arrows.indexOf(arrow);
-                                    if(i>=0) {
-                                        model_inout.arrows.splice(i, 1);
-                                    }
-                                }
-                                if (initial_object_index>=0) {
-                                    model_inout.objects.splice(initial_object_index, 1);
-                                }
-                              },
-                              // backward
-                              (model_inout, view_inout) => {
-                                model_inout.arrows = initial_arrow_list;
-                                model_inout.objects.splice(initial_object_index, 0, initial_object);
-                              },
-                            )
-                          : new Command(
-                              // forward
-                              (model_inout, view_inout) => {
-                                for(let i of source_arrow_ids){
-                                    model_inout.arrows[i].arc.source = replacement_position;
-                                }
-                                for(let i of target_arrow_ids){
-                                    model_inout.arrows[i].arc.target = replacement_position;
-                                }
-                                model_inout.objects[initial_object_index] = new DiagramObject(
-                                        replacement_position,
-                                        replacement_object.depiction,
-                                        replacement_object.annotation,
-                                        !is_released,
-                                    );
-                              },
-                              // backward
-                              (model_inout, view_inout) => {
-                                for(let i of source_arrow_ids){
-                                    model_inout.arrows[i].arc.source = initial_object.position;
-                                }
-                                for(let i of target_arrow_ids){
-                                    model_inout.arrows[i].arc.target = initial_object.position;
-                                }
-                                model_inout.objects[initial_object_index] = initial_object;
-                              },
-                            )
-                    }
-                };
-            },
-        };
-    }
-
     function SelectionDrags(diagram_ids, max_snap_distance){
         return {
             move: function(initial_arrow_list, arrow_selections, initial_object_list, object_selections) {
@@ -1295,6 +1171,7 @@
                               },
                               // backward
                               (model_inout, view_inout) => {
+                                const current_offset = get_representative_position(model_inout.arrows, model_inout.objects, view_inout.object_selections).sub(initial_representative_position);
                                 for(let i=0; i<view_inout.arrow_selections.length; i++){
                                     const arrow = view_inout.arrow_selections[i].copy();
                                     arrow.position = arrow.position.sub(current_offset);
@@ -1508,7 +1385,6 @@
     */
     function ApplicationUpdater(
             selection_drags,
-            object_drags,
             arrow_drags,
             view_drags,
             screen_frame_storage,
@@ -1575,7 +1451,8 @@
                 if (state_in.view.object_selections.length > 0 || state_in.view.arrow_selections.length > 0) {
                     operations.transition(state_in, selection_drags.move(state_in.diagram.arrows, state_in.view.arrow_selections, state_in.diagram.objects, state_in.view.object_selections), state_out);
                 } else {
-                    operations.transition(state_in, object_drags.move(state_in.diagram.arrows, state_in.diagram.objects, object), state_out);
+                    state_out.view.object_selections = [object];
+                    operations.transition(state_in, selection_drags.move(state_in.diagram.arrows, [], state_in.diagram.objects, state_out.view.object_selections), state_out);
                 }
             },
             arrowselect: function(state_in, arrow, state_out){
@@ -1682,11 +1559,6 @@
             queue: undefined,
             controls: ApplicationUpdater(
                 SelectionDrags(
-                    diagram_ids,
-                    0.3 // snap distance
-                ),
-                ObjectDrags(
-                    diagram_object_set_operations,
                     diagram_ids,
                     0.3 // snap distance
                 ),
