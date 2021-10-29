@@ -196,6 +196,9 @@
             this.origin = origin;
             this.unit_length = unit_length;
         }
+        copy(){ 
+            return new DiagramReferenceFrame(this.origin, this.unit_length);
+        }
     }
 
     /*
@@ -231,6 +234,9 @@
             this.source = source;
             this.target = target;
         }
+        copy(){ 
+            return new Arrow(this.source, this.target);
+        }
     }
 
 
@@ -245,6 +251,15 @@
             this.is_large_arc = is_large_arc;
             this.is_clockwise = is_clockwise;
         }
+        copy(){
+            return new SvgArc(
+                this.source,
+                this.target,
+                this.radius,
+                this.is_large_arc,
+                this.is_clockwise,
+            );
+        }
     };
 
     /*
@@ -255,6 +270,13 @@
             this.origin = origin;
             this.source_offset = source_offset;
             this.length_clockwise = length_clockwise;
+        }
+        copy(){
+            return new SamplerArc(
+                this.origin,
+                this.source_offset,
+                this.length_clockwise,
+            );
         }
     }
 
@@ -268,6 +290,13 @@
             this.source = source;
             this.target = target;
             this.min_length_clockwise = min_length_clockwise;
+        }
+        copy(){
+            return new UserArc(
+                this.source,
+                this.target,
+                this.min_length_clockwise,
+            );
         }
     }
 
@@ -285,6 +314,15 @@
             this.min_length_clockwise = min_length_clockwise;
             this.target_offset_id = target_offset_id;
             this.is_valid = is_valid;
+        }
+        copy(){
+            return new StoredArc(
+                this.source,
+                this.target,
+                this.min_length_clockwise,
+                this.target_offset_id,
+                this.is_valid,
+            );
         }
     }
 
@@ -608,6 +646,9 @@
             this.topleft_cell_position = topleft_cell_position;
             this.log2_cell_width = log2_cell_width;
         }
+        copy(){
+            return new ScreenReferenceFrameStore(this.topleft_cell_position, this.log2_cell_width);
+        }
     }
 
     /*
@@ -661,6 +702,17 @@
             this.end_style_id = end_style_id || 0;
             this.line_style_id = line_style_id || 0;
         }
+        copy(){
+            return new DiagramArrow(
+                this.arc.copy(),
+                this.is_edited,
+                this.label,
+                this.label_offset,
+                this.source_style_id,
+                this.end_style_id,
+                this.line_style_id,
+            );
+        }
     }
 
     /*
@@ -672,6 +724,9 @@
             this.depiction = depiction || '\\( \\bullet \\)';
             this.annotation = annotation || '';
             this.is_edited = is_edited || false;
+        }
+        copy(){
+            return new DiagramObject(this.position, this.depiction, this.annotation, this.is_edited);
         }
     }
 
@@ -1154,14 +1209,6 @@
                         object_ids.push(i);
                     }
                 }
-                const implicit_object_selection_ids = [];
-                for (let i = 0; i<object_selections.length; i++){
-                    const object = object_selections[i];
-                    const object_hash = diagram_ids.cell_id_to_cell_hash(object.position);
-                    if (initial_object_hashes[object_hash] && !explicit_object_hashes[object_hash]){
-                        implicit_object_selection_ids.push(i);
-                    }
-                }
 
                 function get_representative_position(arrows, objects, object_selections){
                     const initial_representative_position = glm.vec2();
@@ -1225,6 +1272,17 @@
                               (model_inout, view_inout) => {
                                 const current_offset = get_representative_position(model_inout.arrows, model_inout.objects, view_inout.object_selections).sub(initial_representative_position);
                                 const corrective_offset = cumulative_model_offset_snapped.sub(current_offset);
+                                for(let i=0; i<view_inout.arrow_selections.length; i++){
+                                    const arrow = view_inout.arrow_selections[i].copy();
+                                    arrow.arc.source = arrow.arc.source.add(corrective_offset);
+                                    arrow.arc.target = arrow.arc.target.add(corrective_offset);
+                                    view_inout.arrow_selections[i] = arrow;
+                                }
+                                for(let i=0; i<view_inout.object_selections.length; i++){
+                                    const object = view_inout.object_selections[i].copy();
+                                    object.position = object.position.add(corrective_offset);
+                                    view_inout.object_selections[i] = object;
+                                }
                                 for(let i of source_arrow_ids){
                                     model_inout.arrows[i].arc.source = model_inout.arrows[i].arc.source.add(corrective_offset);
                                 }
@@ -1234,12 +1292,19 @@
                                 for(let i of object_ids){
                                     model_inout.objects[i].position = model_inout.objects[i].position.add(corrective_offset);
                                 }
-                                for(let i of implicit_object_selection_ids){
-                                    view_inout.object_selections[i].position = view_inout.object_selections[i].position.add(corrective_offset);
-                                }
                               },
                               // backward
                               (model_inout, view_inout) => {
+                                for(let i=0; i<view_inout.arrow_selections.length; i++){
+                                    const arrow = view_inout.arrow_selections[i].copy();
+                                    arrow.position = arrow.position.sub(current_offset);
+                                    view_inout.arrow_selections[i] = arrow;
+                                }
+                                for(let i=0; i<view_inout.object_selections.length; i++){
+                                    const object = view_inout.object_selections[i].copy();
+                                    object.position = object.position.sub(current_offset);
+                                    view_inout.object_selections[i] = object;
+                                }
                                 for(let i of source_arrow_ids){
                                     model_inout.arrows[i].arc.source = model_inout.arrows[i].arc.source.sub(current_offset);
                                 }
@@ -1248,9 +1313,6 @@
                                 }
                                 for(let i of object_ids){
                                     model_inout.objects[i].position = model_inout.objects[i].position.sub(current_offset);
-                                }
-                                for(let i of implicit_object_selection_ids){
-                                    view_inout.object_selections[i].position = view_inout.object_selections[i].position.sub(current_offset);
                                 }
                               },
                             )
