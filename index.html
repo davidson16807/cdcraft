@@ -10,6 +10,42 @@
     <script src="./libraries/glm-js.min.js"></script>
     <script src="./libraries/katex.min.js"></script>
     <script src="./libraries/auto-render.min.js"></script>
+    <script src="./scripts/DiagramIds.js"></script>
+    <script src="./scripts/CellHashing.js"></script>
+    <script src="./scripts/frames/ScreenReferenceFrameStorage.js"></script>
+    <script src="./scripts/frames/DiagramReferenceFrame.js"></script>
+    <script src="./scripts/frames/FrameShifting.js"></script>
+    <script src="./scripts/frames/ScreenReferenceFrameStore.js"></script>
+    <script src="./scripts/arcs/StoredArc.js"></script>
+    <script src="./scripts/arcs/SamplerArcRendering.js"></script>
+    <script src="./scripts/arcs/UserArcsAndSvgArcs.js"></script>
+    <script src="./scripts/arcs/UserArc.js"></script>
+    <script src="./scripts/arcs/SvgArc.js"></script>
+    <script src="./scripts/arcs/UserArcFrameShifting.js"></script>
+    <script src="./scripts/arcs/SamplerArcResizing.js"></script>
+    <script src="./scripts/arcs/SamplerArcProperties.js"></script>
+    <script src="./scripts/arcs/SamplerArc.js"></script>
+    <script src="./scripts/arcs/ArcGeometry.js"></script>
+    <script src="./scripts/arcs/UserArcsAndSamplerArcs.js"></script>
+    <script src="./scripts/arcs/SamplerArcFrameShifting.js"></script>
+    <script src="./scripts/arcs/UserArcsAndStoredArcs.js"></script>
+    <script src="./scripts/arrows/Arrow.js"></script>
+    <script src="./scripts/arrows/DiagramArrowListsAndLookups.js"></script>
+    <script src="./scripts/arrows/DiagramArrow.js"></script>
+    <script src="./scripts/objects/DiagramObject.js"></script>
+    <script src="./scripts/objects/DiagramObjectSetOperations.js"></script>
+    <script src="./scripts/Command.js"></script>
+    <script src="./scripts/dragging/ViewDrags.js"></script>
+    <script src="./scripts/dragging/SelectionDrags.js"></script>
+    <script src="./scripts/dragging/ArrowDrags.js"></script>
+    <script src="./scripts/dragging/DragState.js"></script>
+    <script src="./scripts/application/ApplicationUpdater.js"></script>
+    <script src="./scripts/application/Diagram.js"></script>
+    <script src="./scripts/application/DiagramViewState.js"></script>
+    <script src="./scripts/application/DiagramControlState.js"></script>
+    <script src="./scripts/application/ApplicationState.js"></script>
+    <script src="./scripts/application/ApplicationStateDragOperations.js"></script>
+
     <style type="text/css">
         svg {
             position: fixed;
@@ -135,1600 +171,274 @@
 
 <!-- logo -->
 <script type="text/javascript">
-    'use strict';
+'use strict';
 
-    /* 
-    `PositiveCellHashing` generates a namspace with a single pure function exposed, `hash()`.
-    The function maps any positive whole number 2d coordinates to a unique positive integer.
-    It is bijective in principle, however its inverse is not implemented.
-    */
-    function PositiveCellHashing() {
-        return {
-            hash: (x,y) => ((x+y)+1)*((x+y)/2) + y,
+
+/*
+`EventQueueSideEffectWrapper` is a object oriented class as traditionally understood.
+It encapsulates all use of the javascript event system so that the rest of the 
+application can be managed statelessly, using pure functions and categories. 
+It practices RAII in that it binds events to a `domElement` upon construction and does not let go until dispose() is called.
+Events can be retrieved using `pollWithSideEffect()`, which returns a list of all events that occurred on 
+the diagram since the last invocation.
+*/
+class EventQueueSideEffectWrapper{
+    constructor(domElement){
+        let queue = [];
+        function enqueue( event ) { 
+            queue.push(event);
         };
-    }
-
-    /* 
-    `UnboundedCellHashing` generates a namspace with a single pure function exposed, `hash()`.
-    The function maps any whole number 2d coordinates, regardless of sign, to a unique positive integer.
-    It is bijective in principle, however its inverse is not implemented.
-    */
-    function UnboundedCellHashing(positive_cell_hashing) {
-        const abs = Math.abs;
-        return {
-            // there are four quadrants on an unbounded 2d grid, 
-            // so multiply the hash for the absolute values by four and offset by a unique id for the quadrant
-            hash: (x,y) => 4*positive_cell_hashing.hash(abs(x),abs(y)) + 2*(y<0) + (x<0),
+        function enqueuePrevent( event ) { 
+            event.preventDefault(); 
+            queue.push(event);
         };
-    }
-
-    /*
-    `DiagramIds` is a namespace describing a small category of pure functions mapping between position indicators in model space
-    */
-    function DiagramIds(cell_hashing){
-        const floor = Math.floor;
-        const round = Math.round;
-        const abs = Math.abs;
-        return {
-            cell_position_to_border_id: cell_position => glm.vec2(floor(cell_position.x), floor(cell_position.y)),
-            border_id_to_cell_position: border_id => border_id.add(0.5),
-            cell_position_to_cell_id: cell_position => glm.vec2(round(cell_position.x), round(cell_position.y)),
-            cell_id_to_cell_hash: cell_id => cell_hashing.hash(cell_id.x, cell_id.y),
-            cell_position_and_cell_id_to_offset: (cell_position, cell_id) => cell_position.sub(cell_id),
-            offset_to_offset_id: offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
-            offset_id_to_offset_hash: offset_id => ((offset_id.x > offset_id.y) << 1) + (-offset_id.x > offset_id.y),
-            offset_hash_to_offset_id: offset_hash => glm.normalize(glm.vec2(1,-1).mul(2*floor(offset_hash / 2)-1).add(glm.vec2(-1,-1).mul(2*(offset_hash % 2)-1))),
-            cell_pair_to_cell_pair_hash: (cell_position1, cell_position2) => 
-                cell_hashing.hash(
-                    cell_hashing.hash(round(cell_position1.x), round(cell_position1.y)), 
-                    cell_hashing.hash(round(cell_position2.x), round(cell_position2.y))),
-        };
-    }
-
-
-    /*
-    `DiagramReferenceFrame` is a data structure that can be considered a degenerate case of an affine transform.
-    It permits scaling and translation but forbids rotation and shearing.
-    Its origin and unit length are each stored in terms of another reference frame that the user must define.
-    */
-    class DiagramReferenceFrame {
-        constructor(origin, unit_length){
-            this.origin = origin;
-            this.unit_length = unit_length;
-        }
-        copy(){ 
-            return new DiagramReferenceFrame(this.origin, this.unit_length);
-        }
-    }
-
-    /*
-    `OffsetFrameShifting` returns a namespace of pure functions that describe an isomorphism.
-    `enter` accepts a offset and reference frame, both expressed in terms of an implicit user defined reference frame,
-    and returns a offset that is defined in terms of the reference frame. `leave` is inverse to `enter`.
-    */
-    function OffsetFrameShifting(){
-        return {
-            enter: (position, frame) => position.div(frame.unit_length),
-            leave: (position, frame) => position.mul(frame.unit_length),
-        };
-    }
-
-    /*
-    `PositionFrameShifting` returns a namespace of pure functions that describe an isomorphism.
-    `enter` accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
-    and returns a position that is defined in terms of the reference frame. `leave` is inverse to `enter`.
-    */
-    function PositionFrameShifting(){
-        return {
-            enter: (position, frame) => position.sub(frame.origin).div(frame.unit_length),
-            leave: (position, frame) => position.mul(frame.unit_length).add(frame.origin),
-        };
-    }
-
-    /*
-    `Arrow` is a data structure that represents only the attributes within the mathematical definition of an arrow
-    `source` and `target` are ivec2s indicating source and target in cell coordinates.
-    */
-    class Arrow {
-        constructor(source, target){
-            this.source = source;
-            this.target = target;
-        }
-        copy(){ 
-            return new Arrow(this.source, this.target);
-        }
-    }
-
-
-    /*
-    `SvgArc` is a data structure that represents a directed arc using the same method as an svg path
-    */
-    class SvgArc{
-        constructor(source, target, radius, is_large_arc, is_clockwise){
-            this.source = source;
-            this.target = target;
-            this.radius = radius;
-            this.is_large_arc = is_large_arc;
-            this.is_clockwise = is_clockwise;
-        }
-        copy(){
-            return new SvgArc(
-                this.source,
-                this.target,
-                this.radius,
-                this.is_large_arc,
-                this.is_clockwise,
-            );
-        }
-    };
-
-    /*
-    `SamplerArc` is a data structure that represents a directed arc in a way that allows finding properties along the arc for use in rendering.
-    */
-    class SamplerArc {
-        constructor(origin, source_offset, length_clockwise){
-            this.origin = origin;
-            this.source_offset = source_offset;
-            this.length_clockwise = length_clockwise;
-        }
-        copy(){
-            return new SamplerArc(
-                this.origin,
-                this.source_offset,
-                this.length_clockwise,
-            );
-        }
-    }
-
-    /*
-    `UserArc` is a data structure that represents a directed arc in a way that can be easily manipulated by user input.
-    `source` and `target` are vec2 indicating source and target in either cell or screen coordinates.
-    `min_length_clockwise` is the minimum length of an arc, where sign inidicates arc chirality (positive values are clockwise).
-    */
-    class UserArc {
-        constructor(source, target, min_length_clockwise){
-            this.source = source;
-            this.target = target;
-            this.min_length_clockwise = min_length_clockwise;
-        }
-        copy(){
-            return new UserArc(
-                this.source,
-                this.target,
-                this.min_length_clockwise,
-            );
-        }
-    }
-
-    /*
-    `StoredArc` is a data structure that represents a directed arc in a way that allows easy storage and manipulation by the application.
-    `source` and `target` are vec2s indicating source and target in cell coordinates. Their components are integers if `is_valid == true`.
-    `min_length_clockwise` is the minimum length of an arc, where sign inidicates arc chirality (positive values are clockwise).
-    `target_offset_id` is an ivec2 that represents the direction of an offset applied to the target position to indicate the direction of loops.
-    `is_valid` is a boolean indicating whether the arc has been associated with a definite source and target cell and should be included in the diagram.
-    */
-    class StoredArc {
-        constructor(source, target, min_length_clockwise, target_offset_id, is_valid){
-            this.source = source;
-            this.target = target;
-            this.min_length_clockwise = min_length_clockwise;
-            this.target_offset_id = target_offset_id;
-            this.is_valid = is_valid;
-        }
-        copy(){
-            return new StoredArc(
-                this.source,
-                this.target,
-                this.min_length_clockwise,
-                this.target_offset_id,
-                this.is_valid,
-            );
-        }
-    }
-
-    /*
-    `ArcGeometry` returns a namespace of pure functions describing useful analytic geometry of arcs
-    */
-    function ArcGeometry(){
-        const pi = Math.PI;
-        const pow = Math.pow;
-        const acos = Math.acos;
-        const cos = Math.cos;
-        const sin = Math.sin;
-        const min = Math.min;
-        const max = Math.max;
-        const sign = Math.sign;
-        const abs = Math.abs;
-        const epsilon = 1e-6;
-        return {
-            origin: function(source, target, min_length_clockwise, radius){
-                const chord = target.sub(source);
-                const chord_length = glm.length(chord);
-                const chord_direction = glm.normalize(chord);
-                const min_radius = abs(min_length_clockwise) / pi;
-                const v = chord_direction.mul(radius);
-                const theta = acos(chord_length/(2*radius)) * (chord_length < 2*min_radius? 1:-1) * -sign(min_length_clockwise);
-                return glm.vec2(
-                    v.x * cos(theta) - v.y * sin(theta),
-                    v.x * sin(theta) + v.y * cos(theta),
-                ).add(source);
-            },
-            radius: function(source, target, min_length_clockwise){
-                /*
-                NOTE: 
-                Given the source position, target position, and length of an arc, we want to find the radius of the circle that is traced by the arc.
-                We find the problem reduces to finding the radius ("r") of a semicircle given half the chord length ("x") and half the arc length ("A").
-                We draw a right triangle on the semicircle with a hypoteneuse of r, a leg of x opposite to the origin, and angle of θ such that:
-                  x/r = sin(θ)
-                The angle subtended by the arc ("ϕ") takes up the rest of the semicircle, so if we use radians then:
-                  ϕ = π-θ = A/r
-                We have a lot of unknowns to work with (r, θ, and ϕ), so we first try to remove some from consideration.
-                Using the equations above we find that:
-                  x/(A/ϕ) = sin(π-ϕ)
-                which simplifies to:
-                  x/A = sin(ϕ)/ϕ
-                So we can solve the problem by approximating the inverse of sin(ϕ)/ϕ
-                We source our approximation by noticing that it resembles 2acos(ϕ) for our range of interest, [0,π]:
-                  https://www.desmos.com/calculator/unllvphdq0
-                It's slightly off towards the middle of the range, but all we have to do is find an expression for a factor that we can "nudge" it by.
-                We model this "nudge" factor as 1-axᵇ, and by fitting the function manually, we get adequate results using a = 0.147 and b = 0.65.
-                In summary, our approximation is:
-                  ϕ = A/r ≈ 2 (1-a(x/A)ᵇ) acos(x/A)
-                And our solution is:
-                  r ≈ A / (2 (1-a(x/A)ᵇ) acos(x/A))
-                */
-                const arc_length = abs(min_length_clockwise);
-                const a = 0.147;
-                const b = 0.650;
-                const x = glm.distance(source, target) / 2.0;
-                const A = max(x, arc_length/2 );
-                const xA = min(x/A, 1-epsilon);
-                const r = A / (2.0 * (1.0 - a*pow(xA, b)) * acos(xA));
-                return r;
-            },
-        }
-    }
-
-    /*
-    `UserArcsAndSamplerArcs` returns a namespace of pure functions that describe maps between `SamplerArc`s and `UserArc`s
-    */
-    function UserArcsAndSamplerArcs(arc_geometry) {
-        const sign = Math.sign;
-        const abs = Math.abs;
-        const max = Math.max;
-        return {
-            user_arc_to_sampler_arc: function(user_arc) {
-                const radius = arc_geometry.radius(user_arc.source, user_arc.target, user_arc.min_length_clockwise);
-                const origin = arc_geometry.origin(user_arc.source, user_arc.target, user_arc.min_length_clockwise, radius);
-                const clockwise_sign = sign(user_arc.min_length_clockwise);
-                const min_length = abs(user_arc.min_length_clockwise);
-                const length = max(abs(user_arc.min_length_clockwise), glm.distance(user_arc.source, user_arc.target));
-                const length_clockwise = clockwise_sign * length;
-                return new SamplerArc(origin, user_arc.source.sub(origin), length_clockwise);
-            },
-        };
-    }
-
-    /*
-    `SamplerArcProperties` returns a namespace of pure functions describing properties for any point along a `SamplerArc`
-    */
-    function SamplerArcProperties(){
-        const pi = Math.PI;
-        const cos = Math.cos;
-        const sin = Math.sin;
-        const sign = Math.sign;
-        return {
-            normal: function (sampler_arc, distance) {
-                const v = glm.normalize(sampler_arc.source_offset);
-                const radius = glm.length(sampler_arc.source_offset);
-                const theta = distance / radius;
-                return glm.vec2(
-                    v.x * cos(theta) - v.y * sin(theta),
-                    v.x * sin(theta) + v.y * cos(theta),
-                );
-            },
-            tangent: function (sampler_arc, distance) {
-                const v = glm.normalize(sampler_arc.source_offset);
-                const radius = glm.length(sampler_arc.source_offset);
-                const theta = (distance / radius + pi/2.0* sign(sampler_arc.length_clockwise)) ;
-                return glm.vec2(
-                    v.x * cos(theta) - v.y * sin(theta),
-                    v.x * sin(theta) + v.y * cos(theta),
-                );
-            },
-            position: function (sampler_arc, distance){
-                const v = sampler_arc.source_offset;
-                const radius = glm.length(sampler_arc.source_offset);
-                const theta = distance / radius;
-                return radius == 0? 
-                      sampler_arc.origin 
-                    : glm.vec2(
-                        v.x * cos(theta) - v.y * sin(theta),
-                        v.x * sin(theta) + v.y * cos(theta),
-                    ).add(sampler_arc.origin);
-            },
-        }
-    }
-
-    /*
-    `SamplerArcTruncation` returns a namespace of pure functions that shift the start and end position of a `SamplerArc`
-    */
-    function SamplerArcResizing(sampler_arc_properties){
-        const sign = Math.sign;
-        return {
-            resize: function (sampler_arc, source_offset, target_offset){
-                const clockwise_sign = sign(sampler_arc.length_clockwise);
-                source_offset *= clockwise_sign;
-                target_offset *= clockwise_sign;
-                return new SamplerArc(
-                    sampler_arc.origin, 
-                    sampler_arc_properties.position(sampler_arc, source_offset).sub(sampler_arc.origin), 
-                    sampler_arc.length_clockwise - source_offset + target_offset
-                );
-            },
-        }
-    }
-
-    /*
-    `SamplerArcFrameShifting` returns a namespace of pure functions that describe isomorphisms to and from a reference frame.
-    `enter` accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
-    and returns a position that is defined in terms of the reference frame. `leave` is inverse to `enter`.
-    */
-    function SamplerArcFrameShifting(offset_frame_shifting, position_frame_shifting){
-        return {
-            enter: (user_arrow, frame) => 
-                new SamplerArc(
-                    position_frame_shifting.enter(user_arrow.origin, frame),
-                    offset_frame_shifting.enter(user_arrow.source_offset, frame),
-                    user_arrow.length_clockwise / frame.unit_length,
-                ),
-            leave: (user_arrow, frame) =>
-                new SamplerArc(
-                    position_frame_shifting.leave(user_arrow.origin, frame),
-                    offset_frame_shifting.leave(user_arrow.source_offset, frame),
-                    user_arrow.length_clockwise * frame.unit_length,
-                ),
-        };
-    }
-
-    /*
-    `UserArcRendering` returns a namespace of pure functions describing a small category mapping arcs to svg depictions
-    */
-    function UserArcRendering(arc_geometry){
-        const pi = Math.PI;
-        const sqrt = Math.sqrt;
-        const max = Math.max;
-        const abs = Math.abs;
-
-        return {
-            sampler_arc_to_svg_arc: function(arc){
-                const min_length = abs(arc.min_length_clockwise);
-                const length = max(min_length, glm.distance(arc.source, arc.target));
-                const radius = arc_geometry.radius(arc.source, arc.target, arc.min_length_clockwise);
-                return new SvgArc(arc.source, arc.target, 
-                    radius, abs(arc.min_length_clockwise)/radius > pi, !arc.is_clockwise);
-            },
-            svg_arc_to_path: function(arc){
-                return `M ${arc.source.x} ${arc.source.y} A ${arc.radius} ${arc.radius} 0 ${arc.is_large_arc?1:0} ${arc.is_clockwise?0:1} ${arc.target.x} ${arc.target.y}` ;
-            },
-        }
-    }
-
-    /*
-    `SamplerArcRendering` returns a namespace of pure functions describing a small category mapping arcs to svg depictions
-    */
-    function SamplerArcRendering(sampler_arc_properties){
-        const pi = Math.PI;
-        const sqrt = Math.sqrt;
-        const max = Math.max;
-        const abs = Math.abs;
-        const cos = Math.cos;
-        const sign = Math.sign;
-        // A `SvgQuadraticBezier` is a representation for a quadratic Bezier that can be used by svg
-        class SvgQuadraticBezier{
-            constructor(points){
-                this.points = points;
-            }
+        function enqueuePreventStop( event ) { 
+            event.preventDefault(); 
+            event.stopPropagation();
+            queue.push(event);
         };
 
-        return {
-            sampler_arc_to_svg_bezier: function(sampler_arc, sample_point_count){
-                const inscribed_radius = glm.length(sampler_arc.source_offset);
-                const inscribed_circumference = 2.0*pi*inscribed_radius;
-                const c = 1 / cos(pi * sampler_arc.length_clockwise / (inscribed_circumference*sample_point_count) );
-
-                const inscribed_arc = sampler_arc;
-                const circumscribed_arc = new SamplerArc(sampler_arc.origin, sampler_arc.source_offset.mul(c), sampler_arc.length_clockwise*c);
-
-                const points = [ sampler_arc_properties.position(inscribed_arc, 0.0) ];
-                for (let i = 1; i <= sample_point_count; i++) {
-                    points.push(sampler_arc_properties.position(circumscribed_arc, circumscribed_arc.length_clockwise * (i-0.5)/sample_point_count));
-                    points.push(sampler_arc_properties.position(inscribed_arc, inscribed_arc.length_clockwise * i/sample_point_count));
-                }
-
-                return new SvgQuadraticBezier(points);
-            },
-            svg_bezier_to_path: function(bezier){
-                const points = bezier.points;
-                const source = points[0];
-                let output = `M ${source.x} ${source.y}`;
-                for (let i = 1; i+1 < points.length; i+=2) {
-                    const control = points[i];
-                    const sample = points[i+1];
-                    output += ` Q ${control.x} ${control.y} ${sample.x} ${sample.y}`;
-                }
-                return output;
-            },
+        domElement.addEventListener('contextmenu',    enqueuePrevent,     false);
+        domElement.addEventListener('mousedown',      enqueuePrevent,     false);
+        domElement.addEventListener('mousemove',      enqueuePrevent,     false);
+        domElement.addEventListener('mouseup',        enqueue,            false);
+        domElement.addEventListener('wheel',          enqueue,            false);
+        domElement.addEventListener('touchsource',    enqueue,            false);
+        domElement.addEventListener('touchmove',      enqueuePreventStop, false);
+        domElement.addEventListener('touchend',       enqueue,            false);
+        this.dispose = function(){
+            domElement.removeEventListener('contextmenu',    enqueuePrevent,     false);
+            domElement.removeEventListener('mousedown',      enqueuePrevent,     false);
+            domElement.removeEventListener('mousemove',      enqueuePrevent,     false);
+            domElement.removeEventListener('mouseup',        enqueue,            false);
+            domElement.removeEventListener('wheel',          enqueue,            false);
+            domElement.removeEventListener('touchsource',    enqueue,            false);
+            domElement.removeEventListener('touchmove',      enqueuePreventStop, false);
+            domElement.removeEventListener('touchend',       enqueue,            false);
+        }
+        this.pollWithSideEffect = function(){
+            let events = queue;
+            queue = [];
+            return events;
         }
     }
+}
 
-    /*
-    `UserArcFrameShifting` returns a namespace of pure functions that describe isomorphisms to and from a reference frame.
-    `enter` accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
-    and returns a position that is defined in terms of the reference frame. `leave` is inverse to `enter`.
-    */
-    function UserArcFrameShifting(position_frame_shifting){
-        const shifting = position_frame_shifting;
-        return {
-            enter: (user_arrow, frame) => 
-                new UserArc(
-                    shifting.enter(user_arrow.source, frame),
-                    shifting.enter(user_arrow.target, frame),
-                    user_arrow.min_length_clockwise / frame.unit_length,
-                ),
-            leave: (user_arrow, frame) =>
-                new UserArc(
-                    shifting.leave(user_arrow.source, frame),
-                    shifting.leave(user_arrow.target, frame),
-                    user_arrow.min_length_clockwise * frame.unit_length,
-                ),
-        };
-    }
+function initial_vue_data() {
+    const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
+    const user_arcs_and_stored_arcs =
+        UserArcsAndStoredArcs(
+            diagram_ids, 
+            0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
+            0.01, // cell to target distance
+        );
 
+    const screen_frame_storage = ScreenReferenceFrameStorage();
+    const offset_frame_shifting = OffsetFrameShifting();
+    const position_frame_shifting = PositionFrameShifting();
+    const view_drags = 
+        ViewDrags(
+            screen_frame_storage,
+            position_frame_shifting,
+            offset_frame_shifting,
+            -0.001, // log2_cell_width_change_per_scroll
+            Math.log2(50), // log2_cell_width_min
+            Math.log2(500) // log2_cell_width_max
+        );
 
-    /*
-    `UserArcsAndStoredArcs` returns a namespace of pure functions that describe maps between `UserArc`s and `StoredArc`s
-    */
-    function UserArcsAndStoredArcs(
-        diagram_ids, 
-        min_loop_chord_length, 
-        max_loop_chord_length, 
-        max_loop_snap_distance, 
-        max_nonloop_snap_distance,
-        cell_to_target_distance
-    ) {
-        const ids = diagram_ids;
-        return {
-            user_arc_to_stored_arc: function(arc) {
-                const source_cell = ids.cell_position_to_cell_id(arc.source);
-                const target_cell = ids.cell_position_to_cell_id(arc.target);
-
-                const is_loop = glm.distance(arc.source, arc.target) < max_loop_chord_length;
-                const is_snapped = glm.distance(arc.target, target_cell) < (is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
-                const is_canceled = glm.distance(arc.target, source_cell) < min_loop_chord_length;
-                const is_valid = is_snapped && !is_canceled;
-
-                const target = 
-                      is_canceled?       source_cell
-                    : is_snapped? target_cell
-                    :                    arc.target;
-
-                const target_offset_id = 
-                      !is_valid?  glm.vec2()
-                    : is_loop?      ids.offset_to_offset_id(ids.cell_position_and_cell_id_to_offset(arc.target, target_cell)) 
-                    :               glm.vec2();
-
-                return new StoredArc(
-                    source_cell, 
-                    target, 
-                    arc.min_length_clockwise, 
-                    target_offset_id,
-                    is_valid
-                );
-            },
-            stored_arc_to_user_arc: function(arc){
-                return new UserArc(
-                    arc.source, 
-                    arc.target_offset_id.mul(cell_to_target_distance).add(arc.target),
-                    arc.min_length_clockwise
-                );
-            }
-        };
-    }
-
-    /*
-    `ScreenReferenceFrame` is a data structure that expresses a DiagramReferenceFrame 
-    in a way that can be easily manipulated by the application while guaranteeing correctness 
-    for all real valued attributes.
-    */
-    class ScreenReferenceFrameStore {
-        constructor(topleft_cell_position, log2_cell_width){
-            this.topleft_cell_position = topleft_cell_position;
-            this.log2_cell_width = log2_cell_width;
-        }
-        copy(){
-            return new ScreenReferenceFrameStore(this.topleft_cell_position, this.log2_cell_width);
-        }
-    }
-
-    /*
-    `ScreenReferenceFrameStorage` returns a namespace of pure functions that describe the isomorphism 
-    between a ScreenReferenceFrame and a DiagramReferenceFrame expressed in terms of "model space"
-    where each cell is of unit length.
-    */
-    function ScreenReferenceFrameStorage(){
-        const pow = Math.pow;
-        const log2 = Math.log2;
-        return {
-            pack: (frame) => new ScreenReferenceFrameStore(frame.origin, log2(1/frame.unit_length)),
-            unpack: (store) => new DiagramReferenceFrame(store.topleft_cell_position, 1/pow(2, store.log2_cell_width)),
-        };
-    }
-
-    /*
-    `ReferenceFrameShifting` returns a namespace of pure functions that describe an isomorphism
-    `enter` accepts two reference frames, both expressed in terms of an implicit user defined reference frame,
-    and returns a new reference frame that is the first defined in terms of the second. `leave` is inverse to `enter`.
-    */
-    function ReferenceFrameShifting(position_frame_shifting){
-        const shifting = position_frame_shifting;
-        return {
-            enter: (frame1, frame2) => 
-                new DiagramReferenceFrame(
-                    shifting.enter(frame1.origin, frame2),
-                    frame1.unit_length / frame2.unit_length,
-                ),
-            leave: (frame1, frame2) =>
-                new DiagramReferenceFrame(
-                    shifting.leave(frame1.origin, frame2),
-                    frame1.unit_length * frame2.unit_length,
-                ),
-        };
-    }
-
-    /*
-    `DiagramArrow` is a data structure that represents every property of an arrow that can be depicted within the application
-    */
-    class DiagramArrow {
-        constructor(
-            arc, is_edited, label, label_offset, 
-            source_style_id, end_style_id, line_style_id, 
-        ){
-            this.arc = arc;
-            this.is_edited = is_edited || false;
-            this.label = label || "";
-            this.label_offset = label_offset || 1;
-            this.source_style_id = source_style_id || 0;
-            this.end_style_id = end_style_id || 0;
-            this.line_style_id = line_style_id || 0;
-        }
-        copy(){
-            return new DiagramArrow(
-                this.arc.copy(),
-                this.is_edited,
-                this.label,
-                this.label_offset,
-                this.source_style_id,
-                this.end_style_id,
-                this.line_style_id,
-            );
-        }
-    }
-
-    /*
-    `DiagramObject` is a data structure that represents every property of an object that can be depicted within the application.
-    */
-    class DiagramObject {
-        constructor(position, depiction, annotation, is_edited){
-            this.position = position;
-            this.depiction = depiction || '\\( \\bullet \\)';
-            this.annotation = annotation || '';
-            this.is_edited = is_edited || false;
-        }
-        copy(){
-            return new DiagramObject(this.position, this.depiction, this.annotation, this.is_edited);
-        }
-    }
-
-    /*
-    `DiagramObjectInference` returns a namespace of pure functions operating on sets of objects.
-    Object sets are represented using associative arrays for the sake of simplicity,
-    where objects are stored using a cell hash from the given `diagram_ids` namespace. 
-    The two functions within `DiagramObjectSetOperations` so far are:
-
-    * `initialize`: list→set a function that, given a list of `DiagramObject`s, 
-      returns the set of all objects represented within the list according to the cell hash.
-    * `infer`: arrows→objects: a function that, given a list of `DiagramArrow`s, 
-      returns a set of all objects that are implied by the existance of those arrows within a category
-    * `update`: objects×objects→objects: a function that returns the union of two sets of objects,
-      using references from the second set when objects from the two sets share the same hash.
-    */
-    function DiagramObjectSetOperations(diagram_ids){
-        return {
-            list_to_set: (object_list) => {
-                const object_set = {};
-                for(let object of object_list){
-                    object_set[diagram_ids.cell_id_to_cell_hash(object.position.x, object.position.y)] = object;
-                }
-                return object_set;
-            },
-            set_to_list: (object_set) => {
-                const object_list = [];
-                for(let object of object_set){
-                    object_list.push(object);
-                }
-                return object_list;
-            },
-            infer: (arrows) => {
-                const objects = {};
-                for(let arrow of arrows){
-                    objects[diagram_ids.cell_id_to_cell_hash(arrow.arc.source)] = new DiagramObject(arrow.arc.source);
-                    objects[diagram_ids.cell_id_to_cell_hash(arrow.arc.target)] = new DiagramObject(arrow.arc.target);
-                }
-                return objects;
-            },
-            update: (updated, updates) => {
-                const result = {};
-                for(let hash in updated){
-                    result[hash] = updated[hash];
-                }
-                for(let hash in updates){
-                    result[hash] = updates[hash];
-                }
-                return result;
-            }
-        };
-    }
-
-    /*
-    `DiagramArrowListsAndCellLookups` returns a namespace of pure functions that describe functions between
-    nonredundant lists of arrows and their equivalent representations as associative arrays of lists indexed by 
-    the hashes of source and target cells. (e.g. the arrow list [a→b, a→a] could be represented {a:[a→b, a→a], b:[a→b]})
-    */
-    function DiagramArrowListsAndLookups(diagram_ids) {
-        return {
-            list_to_source_lookup: (arrow_list) => {
-                const arrow_lookup = {};
-                for(let arrow of arrow_list){
-                    const outbound_arrows = arrow_lookup[diagram_ids.cell_id_to_cell_hash(arrow.arc.source)] || [];
-                    outbound_arrows.push(arrow);
-                    arrow_lookup[diagram_ids.cell_id_to_cell_hash(arrow.arc.source)] = outbound_arrows;
-                }
-                return arrow_lookup;
-            },
-            list_to_target_lookup: (arrow_list) => {
-                const arrow_lookup = {};
-                for(let arrow of arrow_list){
-                    const inbound_arrows = arrow_lookup[diagram_ids.cell_id_to_cell_hash(arrow.arc.target)] || [];
-                    inbound_arrows.push(arrow); 
-                    arrow_lookup[diagram_ids.cell_id_to_cell_hash(arrow.arc.target)] = inbound_arrows;
-                }
-                return arrow_lookup;
-            },
-            lookup_to_set: (arrow_lookup) => {
-                const arrow_set = [];
-                for(let cell_hash in arrow_lookup){
-                    for(let arrow of arrow_lookup[cell_hash]){
-                        arrow_set[diagram_ids.cell_pair_to_cell_pair_hash(arrow.arc.source, arc.arrow.target)] = arrow;
-                    }
-                }
-                return arrow_set;
-            },
-            list_to_set: (arrow_list) => {
-                const arrow_set = [];
-                for(let arrow of arrow_list){
-                    arrow_set[diagram_ids.cell_pair_to_cell_pair_hash(arrow.arc.source, arc.arrow.target)] = arrow;
-                }
-                return arrow_set;
-            },
-            set_to_list: (arrow_set) => {
-                const arrow_list = [];
-                for(let cell_hash in arrow_set){
-                    arrow_list.push(arrow_set[cell_hash]);
-                }
-                return arrow_list;
-            }
-        }
-    }
-
-
-    /*
-    `Diagram` is a data structure that represents every property of a diagram that can be depicted within the application.
-    It serves as the "Model" of a "Model-View-Updater" pattern (A.K.A. "Elm" architecture).
-    */
-    class Diagram {
-        constructor(arrows, objects){
-            this.arrows = arrows;
-            this.objects = objects;
-        }
-    }
-
-
-    /*
-    `Command` is an isomorphism implemented as a tuple of functions. It is used here to implement undo/redo history. 
-    Its name alludes to the "Command" pattern of object oriented programming.
-    The two functions within a `Command` are:
-
-    * `forward:state→state`, a function that maps the state of a modelview to another state. 
-      It represents a change in state issued by the user. The modelview is modified in-place for performance reasons.
-    * `backward:state→state`, a function that is inverse to `forward(state)`
-
-    All changes to state within a Diagram are made using the `forward()` and `backward()` functions, 
-    even when not using undo/redo functionality. This is done to reduce the number of cases that must be considered within code.
-
-    We have chosen to implement undo/redo using `Command` since this approach corresponds to a categorial interpretation
-    that allows flexibility while preserving essential behavior. 
-    State objects do not need to be stored if the user wants to reduce memory consumption, 
-    but can be returned by `backward()` functions if doing so is easier or the alternative is not possible.
-    Custom `*Command` can also be implemented if the size of the `forward` and `backward` functions are also of concern.
-    */
-    class Command{
-        constructor(forward, backward){
-            this.forward = forward;
-            this.backward = backward;
-        }
-        copy(){
-            return new Command(this.forward, this.backward);
-        }
-        static identity = new Command((model_inout, view_inout)=>{}, (model_inout, view_inout)=>{});
-    }
-
-
-    const DragState = {
-        released: 'released',
-        arrow: 'arrow',
-        object: 'object',
-        zoom: 'zoom',
-        pan: 'pan',
-    };
-
-    /*
-    `*Drag`s are namespaces representing small categories that are functorial to themselves.
-    They each describe dragging operations performed by mice or touchpads.
-    When the drag starts, the application initializes an instance of the category and a state object within it.
-    When the drag is in progress, the application applies operations to the state object returning a new state object.
-    These operations reflect user actions that occur mid-drag, and are so far limited to movement or scrolling.
-
-    A state object can be used at any point to return a command object.
-    The command objects are small categories of idempotent isomorphic functions that return application state 
-    from any point during the drag to the points immediately before or after.
-
-    The functions within a `Drag` category can be considered the successively curried versions of pure functions.
-    The currying allows the functions to be able to compose and form small categories 
-    where the output of one is the input of another. 
-    The curried parameters are treated as private constants within the category,
-    and are analogous to private attributes within object oriented programming (OOP), 
-    except unlike typical OOP we actually bother to practice encapsulation 
-    and not merely pretend to using getters and setters.
-    */
-    function ArrowDrags(user_arcs_and_stored_arcs, default_min_length_clockwise, min_length_clockwise_change_per_scroll){
-
-        function move(arrow_in, model_position, model_offset) {
-            const arc_in = arrow_in.arc;
-            const arrow_out = new DiagramArrow(
-                user_arcs_and_stored_arcs.user_arc_to_stored_arc(
-                    new UserArc(
-                        arc_in.source,
-                        model_position,
-                        arc_in.min_length_clockwise,
-                    )
-                ),
-                arrow_in.is_edited,
-                arrow_in.label,
-                arrow_in.label_offset,
-                arrow_in.source_style_id,
-                arrow_in.end_style_id,
-                arrow_in.line_style_id,
-            );
-            return arrow_out;
-        };
-
-        const sign = Math.sign;
-        const abs = Math.abs;
-        const max = Math.max;
-        function wheel(arrow_in, screen_focus, scroll_count) {
-            const arc_in = arrow_in.arc;
-
-            const min_length_clockwise_change = min_length_clockwise_change_per_scroll * scroll_count;
-            const chord_length = glm.distance(arc_in.source, arc_in.target);
-            const arc_length1 = 0.7;
-            const arc_length2 = max(arc_length1, chord_length);
-            const min_arc_length = abs(arc_in.min_length_clockwise);
-            const clockwise_sign = sign(arc_in.min_length_clockwise);
-            const excess_in = clockwise_sign * max(min_arc_length - arc_length2, 0);
-            const excess_out = excess_in + min_length_clockwise_change;
-            const is_different_sign = sign(excess_in) * sign(excess_out) < 0;
-            const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
-
-            return new DiagramArrow(
-                new StoredArc(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_valid),
-                arrow_in.is_edited,
-                arrow_in.label,
-                arrow_in.label_offset,
-                arrow_in.source_style_id,
-                arrow_in.end_style_id,
-                arrow_in.line_style_id,
-            );
-        };
-
-        return {
-            create: function(arrows, initial_model_position) {
-                const original_length = arrows.length;
-                return {
-                    id: DragState.arrow,
-                    is_model_drag: true,
-                    is_view_drag: false,
-                    initialize: () => new DiagramArrow(
-                            user_arcs_and_stored_arcs.user_arc_to_stored_arc(
-                                new UserArc(
-                                    initial_model_position, 
-                                    initial_model_position,
-                                    default_min_length_clockwise,
-                                )
-                            ),
-                            true,
-                        ),
-                    move: move,
-                    wheel: wheel,
-                    // do nothing if not snapped, otherwise add the arrow
-                    command: (replacement_arrow, is_released, is_canceled) => {
-                        return is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
-                            new Command(
-                              // forward
-                              (model_inout, view_inout) => model_inout.arrows.splice(original_length, 1),
-                              // backward
-                              (model_inout, view_inout) => model_inout.arrows.splice(original_length, 1),
-                            )
-                          : new Command(
-                              // forward
-                              (model_inout, view_inout) => model_inout.arrows[original_length] = new DiagramArrow(
-                                    replacement_arrow.arc,
-                                    !is_released,
-                                    replacement_arrow.label,
-                                    replacement_arrow.label_offset,
-                                    replacement_arrow.source_style_id,
-                                    replacement_arrow.end_style_id,
-                                    replacement_arrow.line_style_id,
-                                ),
-                              // backward
-                              (model_inout, view_inout) => model_inout.arrows.splice(original_length, 1),
-                            )
-                    }
-                };
-            },
-
-            edit: function(arrows, replaced_arrow) {
-                const arrow_id = arrows.indexOf(replaced_arrow);
-                return {
-                    id: DragState.arrow,
-                    is_model_drag: true,
-                    is_view_drag: false,
-                    initialize: () => new DiagramArrow(
-                            replaced_arrow.arc,
-                            true,
-                            replaced_arrow.label,
-                            replaced_arrow.label_offset,
-                            replaced_arrow.source_style_id,
-                            replaced_arrow.end_style_id,
-                            replaced_arrow.line_style_id,
-                        ),
-                    move: move,
-                    wheel: wheel,
-                    // delete the arrow if canceled or not snapped, otherwise edit the arrow
-                    command: (replacement_arrow, is_released, is_canceled) => 
-                        is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
-                            new Command(
-                              // forward
-                              (model_inout, view_inout) => model_inout.arrows.splice(arrow_id, 1),
-                              // backward
-                              (model_inout, view_inout) => model_inout.arrows.splice(arrow_id, 0, replaced_arrow),
-                            )
-                          : new Command(
-                                // forward
-                                (model_inout, view_inout) => model_inout.arrows[arrow_id] = new DiagramArrow(
-                                      replacement_arrow.arc,
-                                      !is_released,
-                                      replacement_arrow.label,
-                                      replacement_arrow.label_offset,
-                                      replacement_arrow.source_style_id,
-                                      replacement_arrow.end_style_id,
-                                      replacement_arrow.line_style_id,
-                                  ),
-                                // backward
-                                (model_inout, view_inout) => model_inout.arrows[arrow_id] = replaced_arrow,
-                            )
-                };
-            },
-        };
-    }
-
-    function SelectionDrags(diagram_ids, max_snap_distance){
-        return {
-            move: function(initial_arrow_list, arrow_selections, initial_object_list, object_selections) {
-                const explicit_object_hashes = {};
-                for (let object of initial_object_list) {
-                    explicit_object_hashes[diagram_ids.cell_id_to_cell_hash(object.position)] = object;
-                }
-                // needed to perform object modification and quick object lookup
-                const initial_object_hashes = {};
-                for (let object of object_selections) {
-                    initial_object_hashes[diagram_ids.cell_id_to_cell_hash(object.position)] = object;
-                }
-                for (let arrow of arrow_selections) {
-                    initial_object_hashes[diagram_ids.cell_id_to_cell_hash(arrow.arc.source)] = arrow;
-                    initial_object_hashes[diagram_ids.cell_id_to_cell_hash(arrow.arc.target)] = arrow;
-                }
-
-                // needed to perform arrow deletion and modification
-                const source_arrow_ids = [];
-                const target_arrow_ids = [];
-                const all_arrow_ids = [];
-                for (let i = 0; i<initial_arrow_list.length; i++){
-                    const arrow = initial_arrow_list[i];
-                    const source_hash = diagram_ids.cell_id_to_cell_hash(arrow.arc.source);
-                    const target_hash = diagram_ids.cell_id_to_cell_hash(arrow.arc.target);
-                    if (initial_object_hashes[source_hash]){
-                        source_arrow_ids.push(i);
-                    }
-                    if (initial_object_hashes[target_hash]){
-                        target_arrow_ids.push(i);
-                    }
-                    if (initial_object_hashes[target_hash] || initial_object_hashes[source_hash]){
-                        all_arrow_ids.push(i);
-                    }
-                }
-                const object_ids = [];
-                for (let i = 0; i<initial_object_list.length; i++){
-                    const object = initial_object_list[i];
-                    const object_hash = diagram_ids.cell_id_to_cell_hash(object.position);
-                    if (initial_object_hashes[object_hash]){
-                        object_ids.push(i);
-                    }
-                }
-
-                function get_representative_position(arrows, objects, object_selections){
-                    const initial_representative_position = glm.vec2();
-                    for(let i of source_arrow_ids){
-                        return arrows[i].arc.source;
-                    }
-                    for(let i of object_ids){
-                        return objects[i].position
-                    }
-                    for(let object of object_selections){
-                        return object.position
-                    }
-                }
-                const initial_representative_position = get_representative_position(initial_arrow_list, initial_object_list, object_selections)
-
-                return {
-                    id: DragState.object,
-                    is_model_drag: true,
-                    is_view_drag: false,
-                    initialize: () => glm.vec2(),
-                    move: (cumulative_model_offset, model_position, model_offset) => cumulative_model_offset.add(model_offset),
-                    wheel: (cumulative_model_offset, screen_focus, scroll_count) => cumulative_model_offset,
-                    // delete the object and its arrows if canceled, otherwise move the object and its arrows
-                    command: (cumulative_model_offset, is_released, is_canceled) => {
-                        const cumulative_model_offset_id = diagram_ids.cell_position_to_cell_id(cumulative_model_offset);
-                        const is_snapped = glm.length(cumulative_model_offset_id.sub(cumulative_model_offset)) < max_snap_distance;
-                        const cumulative_model_offset_snapped = is_snapped? cumulative_model_offset_id : cumulative_model_offset;
-
-
-                        // TODO: consider moving logic here to a new `DiagramObjectMovement` category class 
-                        // NOTE: it would be nice to create data structures here that don't require O(N) traversal 
-                        //   through arrows or objects, but generating those data structures also requires O(N) traversal,
-                        //   and since we can't guarantee that model_inout will not change over multiple invocations,
-                        //   we would have to generate those data structures one per invocation anyways, 
-                        //   so we might as well traverse through the object and arrow lists.
-                        return is_canceled || (is_released && !is_snapped)?
-                            new Command(
-                              // forward
-                              (model_inout, view_inout) => {
-                                model_inout.arrows = [...model_inout.arrows];
-                                for(let i=all_arrow_ids.length-1; i>=0; i--){
-                                    model_inout.arrows.splice(i, 1);
-                                }
-                                model_inout.objects = [...model_inout.objects];
-                                for(let i=object_ids.length-1; i>=0; i--){
-                                    model_inout.objects.splice(i, 1);
-                                }
-                                view_inout.arrow_selections = [];
-                                view_inout.object_selections = [];
-                              },
-                              // backward
-                              (model_inout, view_inout) => {
-                                model_inout.arrows = initial_arrow_list;
-                                model_inout.objects = initial_object_list;
-                                view_inout.arrow_selections = arrow_selections;
-                                view_inout.object_selections = object_selections;
-                              },
-                            )
-                          : new Command(
-                              // forward
-                              (model_inout, view_inout) => {
-                                const current_offset = get_representative_position(model_inout.arrows, model_inout.objects, view_inout.object_selections).sub(initial_representative_position);
-                                const corrective_offset = cumulative_model_offset_snapped.sub(current_offset);
-                                for(let i=0; i<view_inout.arrow_selections.length; i++){
-                                    const arrow = view_inout.arrow_selections[i].copy();
-                                    arrow.arc.source = arrow.arc.source.add(corrective_offset);
-                                    arrow.arc.target = arrow.arc.target.add(corrective_offset);
-                                    view_inout.arrow_selections[i] = arrow;
-                                }
-                                for(let i=0; i<view_inout.object_selections.length; i++){
-                                    const object = view_inout.object_selections[i].copy();
-                                    object.position = object.position.add(corrective_offset);
-                                    view_inout.object_selections[i] = object;
-                                }
-                                for(let i of source_arrow_ids){
-                                    model_inout.arrows[i].arc.source = model_inout.arrows[i].arc.source.add(corrective_offset);
-                                }
-                                for(let i of target_arrow_ids){
-                                    model_inout.arrows[i].arc.target = model_inout.arrows[i].arc.target.add(corrective_offset);
-                                }
-                                for(let i of object_ids){
-                                    model_inout.objects[i].position = model_inout.objects[i].position.add(corrective_offset);
-                                }
-                              },
-                              // backward
-                              (model_inout, view_inout) => {
-                                const current_offset = get_representative_position(model_inout.arrows, model_inout.objects, view_inout.object_selections).sub(initial_representative_position);
-                                for(let i=0; i<view_inout.arrow_selections.length; i++){
-                                    const arrow = view_inout.arrow_selections[i].copy();
-                                    arrow.position = arrow.position.sub(current_offset);
-                                    view_inout.arrow_selections[i] = arrow;
-                                }
-                                for(let i=0; i<view_inout.object_selections.length; i++){
-                                    const object = view_inout.object_selections[i].copy();
-                                    object.position = object.position.sub(current_offset);
-                                    view_inout.object_selections[i] = object;
-                                }
-                                for(let i of source_arrow_ids){
-                                    model_inout.arrows[i].arc.source = model_inout.arrows[i].arc.source.sub(current_offset);
-                                }
-                                for(let i of target_arrow_ids){
-                                    model_inout.arrows[i].arc.target = model_inout.arrows[i].arc.target.sub(current_offset);
-                                }
-                                for(let i of object_ids){
-                                    model_inout.objects[i].position = model_inout.objects[i].position.sub(current_offset);
-                                }
-                              },
-                            )
-                    }
-                };
-            },
-        };
-    }
-
-
-    function ViewDrags(screen_frame_storage, position_shifting, offset_shifting, 
-            log2_cell_width_change_per_scroll, log2_cell_width_min, log2_cell_width_max){
-        const storage = screen_frame_storage;
-        const max = Math.max;
-        const min = Math.min;
-        const clamp = (x, lo, hi) => min(max(x, lo), hi);
-        return {
-            pan: function(original_screen_frame_store){
-                return {
-                    id: DragState.pan,
-                    is_model_drag: false,
-                    is_view_drag: true,
-                    initialize: () => new ScreenReferenceFrameStore(
-                            original_screen_frame_store.topleft_cell_position, 
-                            original_screen_frame_store.log2_cell_width
-                        ),
-                    move: function(screen_frame_store, model_position, model_offset) {
-                        return new ScreenReferenceFrameStore(
-                                screen_frame_store.topleft_cell_position.sub(model_offset), 
-                                screen_frame_store.log2_cell_width
-                            );
-                    },
-                    wheel: (screen_frame_store, screen_focus, scroll_count) => screen_frame_store,
-                    command: (screen_frame_store, is_released, is_canceled) => new Command(
-                            // forward
-                            (model_inout, view_inout) => { view_inout.screen_frame_store = screen_frame_store },
-                            // backward
-                            (model_inout, view_inout) => { view_inout.screen_frame_store = original_screen_frame_store },
-                        )
-                };
-            },
-            release: function(original_screen_frame_store){
-                const max = Math.max;
-                const min = Math.min;
-                return {
-                    id: DragState.released,
-                    is_model_drag: false,
-                    is_view_drag: false,
-                    initialize: () => new ScreenReferenceFrameStore(
-                            original_screen_frame_store.topleft_cell_position, 
-                            original_screen_frame_store.log2_cell_width
-                        ),
-                    move: (screen_frame_store, model_position, model_offset) => screen_frame_store,
-                    wheel: function(screen_frame_store, model_focus, scroll_count) {
-                        const log2_cell_width_change = log2_cell_width_change_per_scroll * scroll_count;
-                        const screen_frame = storage.unpack(screen_frame_store);
-                        const updated_log2_cell_width = clamp(
-                                screen_frame_store.log2_cell_width + log2_cell_width_change, 
-                                log2_cell_width_min, 
-                                log2_cell_width_max
-                            );
-                        const topleft_zoom_frame_store = 
-                            new ScreenReferenceFrameStore(
-                                screen_frame_store.topleft_cell_position, updated_log2_cell_width
-                            );
-                        const topleft_zoom_frame = storage.unpack(topleft_zoom_frame_store);
-                        const screen_focus = position_shifting.enter(model_focus, screen_frame);
-                        const screen_zoom_offset = position_shifting.enter(model_focus, topleft_zoom_frame).sub(screen_focus);
-                        const model_zoom_offset = offset_shifting.leave(screen_zoom_offset, screen_frame);
-                        return new ScreenReferenceFrameStore(
-                                screen_frame_store.topleft_cell_position.add(model_zoom_offset), updated_log2_cell_width
-                            );
-                    },
-                    command: (screen_frame_store, is_released, is_canceled) => new Command(
-                            // forward
-                            (model_inout, view_inout) => { view_inout.screen_frame_store = screen_frame_store },
-                            // backward
-                            (model_inout, view_inout) => { view_inout.screen_frame_store = original_screen_frame_store },
-                        )
-                };
-            }
-        };
-    }
-
-
-    /*
-    `DiagramViewState` is a data structure that contains all state relating to the presentation of a diagram.
-    It serves as the "View" of a "Model-View-Updater" pattern (A.K.A. "Elm" architecture).
-    */
-    class DiagramViewState {
-        constructor(screen_frame_store, object_selections, arrow_selections){
-            this.screen_frame_store = screen_frame_store;
-            this.object_selections = object_selections || [];
-            this.arrow_selections = arrow_selections || [];
-        }
-    }
-
-    /*
-    `DiagramControlState` is a data structure that contains all state relating to the presentation of a diagram.
-    It expresses control state such as the kind of drag applied, and the undo/redo history that can be traversed.
-    */
-    class DiagramControlState {
-        constructor(drag_type, drag_state, command_history){
-            this.drag_type = drag_type;
-            this.drag_state = drag_state;
-            this.command_history = command_history;
-        }
-    }
-
-    /*
-    `ApplicationState` is a data structure that contains all state within the application. 
-    It guarantees that for any combination of real numbered attribute values there is a valid application state.
-    */
-    class ApplicationState {
-        constructor(model, view, dragging, drag_state){
-            this.diagram = model;
-            this.view = view;
-            this.drag_type = dragging;
-            this.drag_state = drag_state;
-        }
-    }
-
-
-    /*
-    `ApplicationStateDragOperations` returns a namespace of *conceptually* pure functions 
-    that describe how ApplicationState changes in response to drag operations: 
-    its modifications to the ModelView, its transitions in drag state, and its update to the undo/redo history
-    as drags are initialized, transformed, and released.
-    */
-    function ApplicationStateDragOperations(
-            screen_frame_storage,  
+    const drag_state_operations = 
+        ApplicationStateDragOperations(
+            screen_frame_storage,
             offset_frame_shifting, 
             position_frame_shifting, 
-        ) {
-        const storage = screen_frame_storage;
-        const offset_shifting = offset_frame_shifting;
-        const position_shifting = position_frame_shifting;
-        return {
-            wheel: function(state_in, screen_focus, scroll_count, state_out) {
-                const screen_frame_store = state_in.view.screen_frame_store;
-                const screen_frame = storage.unpack(screen_frame_store);
-                const model_focus = position_shifting.leave(screen_focus, screen_frame);
+        );
 
-                state_out.view.screen_frame_store = screen_frame_store;
-                state_out.diagram.arrows = [ ...state_in.diagram.arrows];
-                state_out.drag_type = state_in.drag_type;
-                state_out.drag_state = state_in.drag_type.wheel(state_in.drag_state, model_focus, scroll_count);
+    const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(150));
+    const disengaged_drag = view_drags.release(initial_screen_frame_store)
+    const disengaged_drag_state = disengaged_drag.initialize();
+    const sampler_arc_properties = SamplerArcProperties();
+    const diagram_object_set_operations = DiagramObjectSetOperations(diagram_ids);
 
-                state_in.drag_type.command(state_out.drag_state, false, false).forward(state_out.diagram, state_out.view);
-            },
-            move: function (state_in, screen_position, screen_offset, state_out) {
-                const screen_frame_store = state_in.view.screen_frame_store;
-                const screen_frame = storage.unpack(screen_frame_store);
-                const model_position = position_shifting.leave(screen_position, screen_frame);
-                const model_offset = offset_shifting.leave(screen_offset, screen_frame);
-
-                state_out.view.screen_frame_store = screen_frame_store;
-                state_out.diagram.arrows = [ ...state_in.diagram.arrows];
-                state_out.drag_type = state_in.drag_type;
-                state_out.drag_state = state_in.drag_type.move(state_in.drag_state, model_position, model_offset);
-
-                state_in.drag_type.command(state_in.drag_state, false, false).forward(state_out.diagram, state_out.view);
-            },
-            transition: function(state_in, drag_type, state_out) {
-                const screen_frame_store = state_in.view.screen_frame_store;
-
-                const drag_arrow = drag_type.initialize();
-
-                const is_released = drag_type.id == DragState.released;
-                const is_canceled = drag_type.id != DragState.released && drag_type.id != state_in.drag_type.id;
-
-                state_out.view.screen_frame_store = state_in.view.screen_frame_store;
-                state_out.diagram.arrows = [ ...state_in.diagram.arrows];
-
-                if (is_released || is_canceled) { 
-                    state_in.drag_type.command(state_in.drag_state, is_released, is_canceled).forward(state_out.diagram, state_out.view); 
-                }
-
-                state_out.drag_type = drag_type;
-                state_out.drag_state = drag_arrow;
-
-                if (!(is_released || is_canceled)) {
-                    state_in.drag_type.command(state_out.drag_state, is_released, is_canceled).forward(state_out.diagram, state_out.view);
-                }
-            }
-        };
-    }
-
-    /*
-    `ApplicationUpdater` returns a namespace of *conceptually* pure functions that reflect how events map to state operations.
-    All functions represent the transformation of state in reponse to controller events. 
-    It resembles an "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
-    */
-    function ApplicationUpdater(
-            selection_drags,
-            arrow_drags,
+    return {
+        state: new ApplicationState(
+            new Diagram([], []), 
+            new DiagramViewState(initial_screen_frame_store), 
+            disengaged_drag,
+            disengaged_drag_state,
+        ),
+        queue: undefined,
+        controls: ApplicationUpdater(
+            SelectionDrags(
+                diagram_ids,
+                0.3 // snap distance
+            ),
+            ArrowDrags(
+                user_arcs_and_stored_arcs,
+                1.0, // default_min_length_clockwise
+                0.001 // min_length_clockwise_change_per_scroll
+            ),
             view_drags,
             screen_frame_storage,
-            position_shifting,
+            position_frame_shifting,
             drag_state_operations
-        ){
-        const operations = drag_state_operations;
-        const storage = screen_frame_storage;
-        const mouse_actions = {
-            pan: function(state_in, event){
-                const screen_offset = glm.vec2(event.movementX, event.movementY);
-                const screen_frame_store = state_in.view.screen_frame_store;
-                return view_drags.pan(screen_frame_store);
-            },
-            arrow: function(state_in, event){
-                const screen_position = glm.vec2(event.clientX, event.clientY);
-                const screen_frame_store = state_in.view.screen_frame_store;
-                const screen_frame = storage.unpack(screen_frame_store);
-                const model_position = position_shifting.leave(screen_position, screen_frame);
-                return arrow_drags.create(state_in.diagram.arrows, model_position);
-            },
-        };
-        return {
-            wheel: function(state_in, event, state_out){
-                operations.wheel(state_in, glm.vec2(event.clientX, event.clientY), event.deltaY, state_out);
-            },
-            mousedown: function(state_in, event, state_out){
-                if (event.button < 2) {
-                    const state = [DragState.arrow, DragState.pan][event.button];
-                    const screen_frame_store = state_in.view.screen_frame_store;
-                    operations.transition(state_in, mouse_actions[state](state_in, event), state_out);
-                    state_out.view.arrow_selections = [];
-                    state_out.view.object_selections = [];
-                } else if (event.button == 2 && !event.shiftKey) {
-                    // rmb handles selections, cancel if nothing is selected
-                    state_out.view.arrow_selections = [];
-                    state_out.view.object_selections = [];
-                }
-            },
-            mousemove: function(state_in, event, state_out){
-                // mouse motion is a degenerate case of touchscreen motion where the number of touchpoints is one
-                operations.move(state_in, glm.vec2(event.clientX, event.clientY), glm.vec2(event.movementX, event.movementY), state_out);
-            },
-            mouseup: function(state_in, event, state_out){
-                operations.transition(state_in, view_drags.release(state_in.view.screen_frame_store), state_out);
-            },
-            touchsource: function(state_in, event, state_out){
-
-            },
-            touchend: function(state_in, event, state_out){
-
-            },
-            touchmove: function(state_in, event, state_out){
-
-            },
-            arrowclick: function(state_in, arrow, state_out){
-                if (state_in.view.object_selections.length > 0 || state_in.view.arrow_selections.length > 0) {
-                    operations.transition(state_in, selection_drags.move(state_in.diagram.arrows, state_in.view.arrow_selections, state_in.diagram.objects, state_in.view.object_selections), state_out);
-                } else {
-                    operations.transition(state_in, arrow_drags.edit(state_in.diagram.arrows, arrow), state_out);
-                }
-            },
-            objectclick: function(state_in, object, state_out){
-                if (state_in.view.object_selections.length > 0 || state_in.view.arrow_selections.length > 0) {
-                    operations.transition(state_in, selection_drags.move(state_in.diagram.arrows, state_in.view.arrow_selections, state_in.diagram.objects, state_in.view.object_selections), state_out);
-                } else {
-                    state_out.view.object_selections = [object];
-                    operations.transition(state_in, selection_drags.move(state_in.diagram.arrows, [], state_in.diagram.objects, state_out.view.object_selections), state_out);
-                }
-            },
-            arrowselect: function(state_in, arrow, state_out){
-                state_out.view.arrow_selections.push(arrow);
-            },
-            objectselect: function(state_in, object, state_out){
-                state_out.view.object_selections.push(object);
-            },
-        }
-    }
-
-    /*
-    `EventQueueSideEffectWrapper` is a object oriented class as traditionally understood.
-    It encapsulates all use of the javascript event system so that the rest of the 
-    application can be managed statelessly, using pure functions and categories. 
-    It practices RAII in that it binds events to a `domElement` upon construction and does not let go until dispose() is called.
-    Events can be retrieved using `pollWithSideEffect()`, which returns a list of all events that occurred on 
-    the diagram since the last invocation.
-    */
-    class EventQueueSideEffectWrapper{
-        constructor(domElement){
-            let queue = [];
-            function enqueue( event ) { 
-                queue.push(event);
-            };
-            function enqueuePrevent( event ) { 
-                event.preventDefault(); 
-                queue.push(event);
-            };
-            function enqueuePreventStop( event ) { 
-                event.preventDefault(); 
-                event.stopPropagation();
-                queue.push(event);
-            };
-
-            domElement.addEventListener('contextmenu',    enqueuePrevent,     false);
-            domElement.addEventListener('mousedown',      enqueuePrevent,     false);
-            domElement.addEventListener('mousemove',      enqueuePrevent,     false);
-            domElement.addEventListener('mouseup',        enqueue,            false);
-            domElement.addEventListener('wheel',          enqueue,            false);
-            domElement.addEventListener('touchsource',    enqueue,            false);
-            domElement.addEventListener('touchmove',      enqueuePreventStop, false);
-            domElement.addEventListener('touchend',       enqueue,            false);
-            this.dispose = function(){
-                domElement.removeEventListener('contextmenu',    enqueuePrevent,     false);
-                domElement.removeEventListener('mousedown',      enqueuePrevent,     false);
-                domElement.removeEventListener('mousemove',      enqueuePrevent,     false);
-                domElement.removeEventListener('mouseup',        enqueue,            false);
-                domElement.removeEventListener('wheel',          enqueue,            false);
-                domElement.removeEventListener('touchsource',    enqueue,            false);
-                domElement.removeEventListener('touchmove',      enqueuePreventStop, false);
-                domElement.removeEventListener('touchend',       enqueue,            false);
-            }
-            this.pollWithSideEffect = function(){
-                let events = queue;
-                queue = [];
-                return events;
-            }
-        }
-    }
-
-    function initial_vue_data() {
-        const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
-        const user_arcs_and_stored_arcs =
-            UserArcsAndStoredArcs(
-                diagram_ids, 
-                0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
-                0.01, // cell to target distance
-            );
-
-        const screen_frame_storage = ScreenReferenceFrameStorage();
-        const offset_frame_shifting = OffsetFrameShifting();
-        const position_frame_shifting = PositionFrameShifting();
-        const view_drags = 
-            ViewDrags(
-                screen_frame_storage,
-                position_frame_shifting,
-                offset_frame_shifting,
-                -0.001, // log2_cell_width_change_per_scroll
-                Math.log2(50), // log2_cell_width_min
-                Math.log2(500) // log2_cell_width_max
-            );
-
-        const drag_state_operations = 
-            ApplicationStateDragOperations(
-                screen_frame_storage,
-                offset_frame_shifting, 
-                position_frame_shifting, 
-            );
-
-        const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(150));
-        const disengaged_drag = view_drags.release(initial_screen_frame_store)
-        const disengaged_drag_state = disengaged_drag.initialize();
-        const sampler_arc_properties = SamplerArcProperties();
-        const diagram_object_set_operations = DiagramObjectSetOperations(diagram_ids);
-
-        return {
-            state: new ApplicationState(
-                new Diagram([], []), 
-                new DiagramViewState(initial_screen_frame_store), 
-                disengaged_drag,
-                disengaged_drag_state,
-            ),
-            queue: undefined,
-            controls: ApplicationUpdater(
-                SelectionDrags(
-                    diagram_ids,
-                    0.3 // snap distance
-                ),
-                ArrowDrags(
-                    user_arcs_and_stored_arcs,
-                    1.0, // default_min_length_clockwise
-                    0.001 // min_length_clockwise_change_per_scroll
-                ),
-                view_drags,
-                screen_frame_storage,
-                position_frame_shifting,
-                drag_state_operations
-            ),
-            arrow_trimming_length: 0.12,
-            user_arcs_and_stored_arcs: user_arcs_and_stored_arcs,
-            user_arc_shifting: UserArcFrameShifting(position_frame_shifting),
-            sampler_arc_shifting: SamplerArcFrameShifting(offset_frame_shifting, position_frame_shifting),
-            sampler_arc_properties: sampler_arc_properties,
-            sampler_arc_resizing: SamplerArcResizing(sampler_arc_properties),
-            sampler_arc_rendering: SamplerArcRendering(sampler_arc_properties),
-            screen_frame_storage: screen_frame_storage, 
-            offset_shifting: offset_frame_shifting,
-            position_shifting: position_frame_shifting,
-            user_arcs_and_sampler_arcs: UserArcsAndSamplerArcs(ArcGeometry()),
-            object_sets: diagram_object_set_operations,
-            ids: diagram_ids,
-        };
-    }
+        ),
+        arrow_trimming_length: 0.12,
+        user_arcs_and_stored_arcs: user_arcs_and_stored_arcs,
+        user_arc_shifting: UserArcFrameShifting(position_frame_shifting),
+        sampler_arc_shifting: SamplerArcFrameShifting(offset_frame_shifting, position_frame_shifting),
+        sampler_arc_properties: sampler_arc_properties,
+        sampler_arc_resizing: SamplerArcResizing(sampler_arc_properties),
+        sampler_arc_rendering: SamplerArcRendering(sampler_arc_properties),
+        screen_frame_storage: screen_frame_storage, 
+        offset_shifting: offset_frame_shifting,
+        position_shifting: position_frame_shifting,
+        user_arcs_and_sampler_arcs: UserArcsAndSamplerArcs(ArcGeometry()),
+        object_sets: diagram_object_set_operations,
+        ids: diagram_ids,
+    };
+}
 
 
-    const KatexDirective = (renderMathInElement) => ({
-          name: 'katex',
-          directive: function(el, binding) {
-            renderMathInElement(el);
-          },
-        });
+const KatexDirective = (renderMathInElement) => ({
+      name: 'katex',
+      directive: function(el, binding) {
+        renderMathInElement(el);
+      },
+    });
 
-    const KatexPlugin = (renderMathInElement) => ({
-          install: (vue, options) => {
-            const katex_directive = KatexDirective(renderMathInElement);
-            vue.directive(katex_directive.name, katex_directive.directive);
-          },
-        });
+const KatexPlugin = (renderMathInElement) => ({
+      install: (vue, options) => {
+        const katex_directive = KatexDirective(renderMathInElement);
+        vue.directive(katex_directive.name, katex_directive.directive);
+      },
+    });
 
-    Vue.use(KatexPlugin(renderMathInElement))
+Vue.use(KatexPlugin(renderMathInElement))
 
-    // Vue.directive('katex',{inserted:(el, binding) => renderMathInElement(el)});
-    const vue = new Vue({
-        el: '#app',
-        data: initial_vue_data(),
-        created: function() {
-            // Register event manager in setTimeout to prevent vue from inapproprately touching event listeners
-            setTimeout(() => {this.queue = new EventQueueSideEffectWrapper(document.getElementById('svg'));}, 1000/60);
-            setInterval(() => {
-                if (this.queue) {
-                    let events = this.queue.pollWithSideEffect();
-                    for(event of events){
-                        if (event.type in this.controls){
-                            this.controls[event.type](this.state, event, this.state);
-                        }
+// Vue.directive('katex',{inserted:(el, binding) => renderMathInElement(el)});
+const vue = new Vue({
+    el: '#app',
+    data: initial_vue_data(),
+    created: function() {
+        // Register event manager in setTimeout to prevent vue from inapproprately touching event listeners
+        setTimeout(() => {this.queue = new EventQueueSideEffectWrapper(document.getElementById('svg'));}, 1000/60);
+        setInterval(() => {
+            if (this.queue) {
+                let events = this.queue.pollWithSideEffect();
+                for(event of events){
+                    if (event.type in this.controls){
+                        this.controls[event.type](this.state, event, this.state);
                     }
                 }
-            }, 1000/60);
+            }
+        }, 1000/60);
+    },
+    methods: {
+        transformation: function() {
+            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
+            return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
         },
-        methods: {
-            transformation: function() {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-                return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
-            },
-            cell_count: function() {
-                return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.view.screen_frame_store.log2_cell_width))+1;
-            },
-            cell_width: function() {
-                return Math.pow(2.0, this.state.view.screen_frame_store.log2_cell_width);
-            },
-            cell_border_position: function(x, y) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-                const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(screen_frame.origin).add(glm.ivec2(x-1,y-1)) );
-                return this.position_shifting.enter(model_border_position, screen_frame);
-            },
+        cell_count: function() {
+            return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.view.screen_frame_store.log2_cell_width))+1;
+        },
+        cell_width: function() {
+            return Math.pow(2.0, this.state.view.screen_frame_store.log2_cell_width);
+        },
+        cell_border_position: function(x, y) {
+            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
+            const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(screen_frame.origin).add(glm.ivec2(x-1,y-1)) );
+            return this.position_shifting.enter(model_border_position, screen_frame);
+        },
 
-            arrowsample: function(stored_arc, fraction) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-                const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-                const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
-                const screen_arc = this.sampler_arc_shifting.enter(resized_arc, screen_frame);
-                return this.sampler_arc_properties.position(screen_arc, fraction*screen_arc.length_clockwise);
-            },
-            arrowpath: function(stored_arc) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-                const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-                const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
-                const screen_arc = this.sampler_arc_shifting.enter(resized_arc, screen_frame);
+        arrowsample: function(stored_arc, fraction) {
+            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
+            const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
+            const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
+            const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
+            const screen_arc = this.sampler_arc_shifting.enter(resized_arc, screen_frame);
+            return this.sampler_arc_properties.position(screen_arc, fraction*screen_arc.length_clockwise);
+        },
+        arrowpath: function(stored_arc) {
+            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
+            const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
+            const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
+            const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
+            const screen_arc = this.sampler_arc_shifting.enter(resized_arc, screen_frame);
 
-                const svg_bezier = this.sampler_arc_rendering.sampler_arc_to_svg_bezier(screen_arc, 10);
-                const svg_path = this.sampler_arc_rendering.svg_bezier_to_path(svg_bezier);
-                return svg_path;
-            },
-            arrowhead: function(stored_arc) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-                const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-                const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-                const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
-                const arrowhead_basis_x = this.offset_shifting.enter(this.sampler_arc_properties.normal(resized_arc, resized_arc.length_clockwise), screen_frame);
-                const arrowhead_basis_y = this.offset_shifting.enter(this.sampler_arc_properties.tangent(resized_arc, resized_arc.length_clockwise), screen_frame);
-                const arrowhead_origin = this.position_shifting.enter(this.sampler_arc_properties.position(resized_arc, resized_arc.length_clockwise), screen_frame);
+            const svg_bezier = this.sampler_arc_rendering.sampler_arc_to_svg_bezier(screen_arc, 10);
+            const svg_path = this.sampler_arc_rendering.svg_bezier_to_path(svg_bezier);
+            return svg_path;
+        },
+        arrowhead: function(stored_arc) {
+            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
+            const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
+            const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
+            const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
+            const arrowhead_basis_x = this.offset_shifting.enter(this.sampler_arc_properties.normal(resized_arc, resized_arc.length_clockwise), screen_frame);
+            const arrowhead_basis_y = this.offset_shifting.enter(this.sampler_arc_properties.tangent(resized_arc, resized_arc.length_clockwise), screen_frame);
+            const arrowhead_origin = this.position_shifting.enter(this.sampler_arc_properties.position(resized_arc, resized_arc.length_clockwise), screen_frame);
 
-                const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
-                const screen_points = cell_points.map(point => arrowhead_basis_x.mul(point.x).add(arrowhead_basis_y.mul(point.y)).add(arrowhead_origin));
-                const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
-                return path;
-            },
-            arrowclick: function(arrow, event) {
-                if (event.button == 0) {
-                    event.preventDefault(); 
-                    event.stopPropagation();
-                    this.controls.arrowclick(this.state, arrow, this.state);
-                }
-            },
-            arrowselect: function(arrow, event){
-                if (event.buttons == 2) {
-                    event.preventDefault(); 
-                    event.stopPropagation();
-                    this.controls.arrowselect(this.state, arrow, this.state);
-                }
-            },
+            const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
+            const screen_points = cell_points.map(point => arrowhead_basis_x.mul(point.x).add(arrowhead_basis_y.mul(point.y)).add(arrowhead_origin));
+            const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
+            return path;
+        },
+        arrowclick: function(arrow, event) {
+            if (event.button == 0) {
+                event.preventDefault(); 
+                event.stopPropagation();
+                this.controls.arrowclick(this.state, arrow, this.state);
+            }
+        },
+        arrowselect: function(arrow, event){
+            if (event.buttons == 2) {
+                event.preventDefault(); 
+                event.stopPropagation();
+                this.controls.arrowselect(this.state, arrow, this.state);
+            }
+        },
 
-            inferred_objects: function(diagram) {
-                return this.object_sets.update(
-                        this.object_sets.infer(diagram.arrows), 
-                        this.object_sets.list_to_set(diagram.objects)
-                    );
-            },
-            screen_position: function(position) {
-                const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-                return this.position_shifting.enter(position, screen_frame);
-            },
-            objectclick: function(object, event) {
-                if (event.button == 0) {
-                    event.preventDefault(); 
-                    event.stopPropagation();
-                    this.controls.objectclick(this.state, object, this.state);
-                }
-            },
-            objectselect: function(object, event){
-                if (event.buttons == 2) {
-                    event.preventDefault(); 
-                    event.stopPropagation();
-                    this.controls.objectselect(this.state, object, this.state);
-                }
-            },
+        inferred_objects: function(diagram) {
+            return this.object_sets.update(
+                    this.object_sets.infer(diagram.arrows), 
+                    this.object_sets.list_to_set(diagram.objects)
+                );
+        },
+        screen_position: function(position) {
+            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
+            return this.position_shifting.enter(position, screen_frame);
+        },
+        objectclick: function(object, event) {
+            if (event.button == 0) {
+                event.preventDefault(); 
+                event.stopPropagation();
+                this.controls.objectclick(this.state, object, this.state);
+            }
+        },
+        objectselect: function(object, event){
+            if (event.buttons == 2) {
+                event.preventDefault(); 
+                event.stopPropagation();
+                this.controls.objectselect(this.state, object, this.state);
+            }
+        },
 
-            object_selection_click: function(object, event) {
-                if (event.button == 0) {
-                    event.preventDefault(); 
-                    event.stopPropagation();
-                    this.controls.objectclick(this.state, object, this.state);
-                }
-            },
-            arrow_selection_click: function(arrow, event) {
-                if (event.button == 0) {
-                    event.preventDefault(); 
-                    event.stopPropagation();
-                    this.controls.arrowclick(this.state, arrow, this.state);
-                }
-            },
-        }
-    });
+        object_selection_click: function(object, event) {
+            if (event.button == 0) {
+                event.preventDefault(); 
+                event.stopPropagation();
+                this.controls.objectclick(this.state, object, this.state);
+            }
+        },
+        arrow_selection_click: function(arrow, event) {
+            if (event.button == 0) {
+                event.preventDefault(); 
+                event.stopPropagation();
+                this.controls.arrowclick(this.state, arrow, this.state);
+            }
+        },
+    }
+});
 
 </script>
 </body>
