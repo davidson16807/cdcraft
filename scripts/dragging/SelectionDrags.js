@@ -84,12 +84,13 @@ function SelectionDrags(diagram_ids, max_snap_distance){
                           // forward
                           (model_inout, view_inout) => {
                             model_inout.arrows = [...model_inout.arrows];
+                            console.log(all_arrow_ids)
                             for(let i=all_arrow_ids.length-1; i>=0; i--){
-                                model_inout.arrows.splice(i, 1);
+                                model_inout.arrows.splice(all_arrow_ids[i], 1);
                             }
                             model_inout.objects = [...model_inout.objects];
                             for(let i=object_ids.length-1; i>=0; i--){
-                                model_inout.objects.splice(i, 1);
+                                model_inout.objects.splice(object_ids[i], 1);
                             }
                             view_inout.arrow_selections = [];
                             view_inout.object_selections = [];
