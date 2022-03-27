@@ -29,22 +29,26 @@
     <script src="./scripts/arcs/UserArcsAndSamplerArcs.js"></script>
     <script src="./scripts/arcs/SamplerArcFrameShifting.js"></script>
     <script src="./scripts/arcs/UserArcsAndStoredArcs.js"></script>
-    <script src="./scripts/arrows/Arrow.js"></script>
-    <script src="./scripts/arrows/DiagramArrowListsAndLookups.js"></script>
-    <script src="./scripts/arrows/DiagramArrow.js"></script>
-    <script src="./scripts/objects/DiagramObject.js"></script>
-    <script src="./scripts/objects/DiagramObjectSetOperations.js"></script>
+    <script src="./scripts/diagram/Arrow.js"></script>
+    <script src="./scripts/diagram/DiagramArrowListsAndLookups.js"></script>
+    <script src="./scripts/diagram/DiagramArrow.js"></script>
+    <script src="./scripts/diagram/DiagramObject.js"></script>
+    <script src="./scripts/diagram/DiagramObjectSetOperations.js"></script>
+    <script src="./scripts/diagram/Diagram.js"></script>
     <script src="./scripts/Command.js"></script>
     <script src="./scripts/dragging/ViewDrags.js"></script>
     <script src="./scripts/dragging/SelectionDrags.js"></script>
     <script src="./scripts/dragging/ArrowDrags.js"></script>
     <script src="./scripts/dragging/DragState.js"></script>
+    <script src="./scripts/views/DiagramView.js"></script>
     <script src="./scripts/application/ApplicationUpdater.js"></script>
-    <script src="./scripts/application/Diagram.js"></script>
     <script src="./scripts/application/DiagramViewState.js"></script>
     <script src="./scripts/application/DiagramControlState.js"></script>
     <script src="./scripts/application/ApplicationState.js"></script>
     <script src="./scripts/application/ApplicationStateDragOperations.js"></script>
+    <script src="./scripts/resources/ArrowPositionsResource.js"></script>
+    <script src="./scripts/resources/ObjectPositionResource.js"></script>
+    <script src="./scripts/resources/PositionMapOperations.js"></script>
 
     <style type="text/css">
         svg {
@@ -56,7 +60,13 @@
             user-select: none;
         }
 
-        .cell-border {
+        .vertical-cell-border {
+            stroke:grey;
+            stroke-width:0.5;
+            stroke-dasharray: 10,10;
+        }
+
+        .horizontal-cell-border {
             stroke:grey;
             stroke-width:0.5;
             stroke-dasharray: 10,10;
@@ -127,44 +137,9 @@
     </style>
 </head>
 <body>
-<div id="app" v-bind:class="state.drag_type.id == 'pan'? 'pan-cursor' : ''">
+<div id="app">
     <svg id="svg">
-        <g v-bind:transform="transformation()">
-            <g v-for="i in cell_count()">
-                <line class="cell-border"
-                      v-bind:x1="cell_border_position(i,0).x" v-bind:y1="cell_border_position(0,-cell_count()).y" 
-                      v-bind:x2="cell_border_position(i,0).x" v-bind:y2="cell_border_position(0,cell_count()).y"/>
-                <line class="cell-border"
-                      v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
-                      v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
-            </g>
-            <g v-for="object in state.view.object_selections" v-on:mousedown="!object.is_edited && object_selection_click(object, $event)" >
-                <circle class="object-highlight" v-bind:cx="screen_position(object.position).x" v-bind:cy="screen_position(object.position).y" r="23" />
-            </g>
-            <g v-for="object in inferred_objects(state.diagram)" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'"
-                    v-on:mousedown="!object.is_edited && objectclick(object, $event)" v-on:mouseenter="objectselect(object, $event)">
-                <circle class="object-highlight" v-bind:cx="screen_position(object.position).x" v-bind:cy="screen_position(object.position).y" r="23" />
-                <!-- NOTE: object position is offset along the axis by half the width of the <foreignObject> -->
-                <foreignObject class="object" v-bind:x="screen_position(object.position).x-40" v-bind:y="screen_position(object.position).y"
-                    width="80" height="40">
-                    <div v-katex>\( \bullet \)</div>
-                </foreignObject>
-            </g>
-            <g v-for="arrow in state.view.arrow_selections" v-on:mousedown="!arrow.is_edited && arrow_selection_click(arrow, $event)" >
-                <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
-                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="10"/>
-                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="10"/>
-            </g>
-            <g v-for="arrow in state.diagram.arrows" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'" 
-                    v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)" v-on:mouseenter="arrowselect(arrow, $event)">
-                <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
-                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="10"/>
-                <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="10"/>
-                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="13"/> -->
-                <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="13" /> -->
-                <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
-                <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
-            </g>
+        <g id="transformation">
         </g>
     </svg>
 </div>
@@ -269,8 +244,9 @@ function initial_vue_data() {
         queue: undefined,
         controls: ApplicationUpdater(
             SelectionDrags(
-                diagram_ids,
-                0.3 // snap distance
+                ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, false),
+                ObjectPositionResource(diagram_ids, false),
+                PositionMapOperations(diagram_ids)
             ),
             ArrowDrags(
                 user_arcs_and_stored_arcs,
@@ -313,8 +289,31 @@ const KatexPlugin = (renderMathInElement) => ({
       },
     });
 
-Vue.use(KatexPlugin(renderMathInElement))
+Vue.use(KatexPlugin(renderMathInElement));
 
+const app = initial_vue_data();
+const view = SvgGridView(
+    Svg(),
+    app.screen_frame_storage,
+    app.ids,
+    app.position_shifting,
+    app.object_sets,
+    new DOMParser(),
+);
+
+
+function frame_transform_attribute(screen_frame_store) {
+    const screen_frame = app.screen_frame_storage.unpack(screen_frame_store);
+    return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
+};
+document.getElementById('transformation').setAttribute(
+    'transform', frame_transform_attribute(app.state.view.screen_frame_store)
+);
+document.getElementById('transformation').appendChild(
+    view.initialize(app.state.view.screen_frame_store)
+);
+
+/*
 // Vue.directive('katex',{inserted:(el, binding) => renderMathInElement(el)});
 const vue = new Vue({
     el: '#app',
@@ -394,7 +393,7 @@ const vue = new Vue({
             if (event.buttons == 2) {
                 event.preventDefault(); 
                 event.stopPropagation();
-                this.controls.arrowselect(this.state, arrow, this.state);
+                this.controls.arrowselect(this.state, arrow.get(), this.state);
             }
         },
 
@@ -439,7 +438,7 @@ const vue = new Vue({
         },
     }
 });
-
+*/
 </script>
 </body>
 </html>
