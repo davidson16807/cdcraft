@@ -24,8 +24,8 @@ function DiagramObjectSetOperations(diagram_ids){
         },
         set_to_list: (object_set) => {
             const object_list = [];
-            for(let object of object_set){
-                object_list.push(object);
+            for(let cell_hash in object_set){
+                object_list.push(object_set[cell_hash]);
             }
             return object_list;
         },

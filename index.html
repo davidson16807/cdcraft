@@ -137,143 +137,10 @@
     </style>
 </head>
 <body>
-<div id="app">
-    <svg id="svg">
-        <g id="transformation">
-        </g>
-    </svg>
-</div>
 
 <!-- logo -->
 <script type="text/javascript">
 'use strict';
-
-
-/*
-`EventQueueSideEffectWrapper` is a object oriented class as traditionally understood.
-It encapsulates all use of the javascript event system so that the rest of the 
-application can be managed statelessly, using pure functions and categories. 
-It practices RAII in that it binds events to a `domElement` upon construction and does not let go until dispose() is called.
-Events can be retrieved using `pollWithSideEffect()`, which returns a list of all events that occurred on 
-the diagram since the last invocation.
-*/
-class EventQueueSideEffectWrapper{
-    constructor(domElement){
-        let queue = [];
-        function enqueue( event ) { 
-            queue.push(event);
-        };
-        function enqueuePrevent( event ) { 
-            event.preventDefault(); 
-            queue.push(event);
-        };
-        function enqueuePreventStop( event ) { 
-            event.preventDefault(); 
-            event.stopPropagation();
-            queue.push(event);
-        };
-
-        domElement.addEventListener('contextmenu',    enqueuePrevent,     false);
-        domElement.addEventListener('mousedown',      enqueuePrevent,     false);
-        domElement.addEventListener('mousemove',      enqueuePrevent,     false);
-        domElement.addEventListener('mouseup',        enqueue,            false);
-        domElement.addEventListener('wheel',          enqueue,            false);
-        domElement.addEventListener('touchsource',    enqueue,            false);
-        domElement.addEventListener('touchmove',      enqueuePreventStop, false);
-        domElement.addEventListener('touchend',       enqueue,            false);
-        this.dispose = function(){
-            domElement.removeEventListener('contextmenu',    enqueuePrevent,     false);
-            domElement.removeEventListener('mousedown',      enqueuePrevent,     false);
-            domElement.removeEventListener('mousemove',      enqueuePrevent,     false);
-            domElement.removeEventListener('mouseup',        enqueue,            false);
-            domElement.removeEventListener('wheel',          enqueue,            false);
-            domElement.removeEventListener('touchsource',    enqueue,            false);
-            domElement.removeEventListener('touchmove',      enqueuePreventStop, false);
-            domElement.removeEventListener('touchend',       enqueue,            false);
-        }
-        this.pollWithSideEffect = function(){
-            let events = queue;
-            queue = [];
-            return events;
-        }
-    }
-}
-
-function initial_vue_data() {
-    const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
-    const user_arcs_and_stored_arcs =
-        UserArcsAndStoredArcs(
-            diagram_ids, 
-            0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
-            0.01, // cell to target distance
-        );
-
-    const screen_frame_storage = ScreenReferenceFrameStorage();
-    const offset_frame_shifting = OffsetFrameShifting();
-    const position_frame_shifting = PositionFrameShifting();
-    const view_drags = 
-        ViewDrags(
-            screen_frame_storage,
-            position_frame_shifting,
-            offset_frame_shifting,
-            -0.001, // log2_cell_width_change_per_scroll
-            Math.log2(50), // log2_cell_width_min
-            Math.log2(500) // log2_cell_width_max
-        );
-
-    const drag_state_operations = 
-        ApplicationStateDragOperations(
-            screen_frame_storage,
-            offset_frame_shifting, 
-            position_frame_shifting, 
-        );
-
-    const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(150));
-    const disengaged_drag = view_drags.release(initial_screen_frame_store)
-    const disengaged_drag_state = disengaged_drag.initialize();
-    const sampler_arc_properties = SamplerArcProperties();
-    const diagram_object_set_operations = DiagramObjectSetOperations(diagram_ids);
-
-    return {
-        state: new ApplicationState(
-            new Diagram([], []), 
-            new DiagramViewState(initial_screen_frame_store), 
-            disengaged_drag,
-            disengaged_drag_state,
-        ),
-        queue: undefined,
-        controls: ApplicationUpdater(
-            SelectionDrags(
-                ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, false),
-                ObjectPositionResource(diagram_ids, false),
-                PositionMapOperations(diagram_ids)
-            ),
-            ArrowDrags(
-                user_arcs_and_stored_arcs,
-                1.0, // default_min_length_clockwise
-                0.001 // min_length_clockwise_change_per_scroll
-            ),
-            view_drags,
-            screen_frame_storage,
-            position_frame_shifting,
-            drag_state_operations
-        ),
-        arrow_trimming_length: 0.12,
-        user_arcs_and_stored_arcs: user_arcs_and_stored_arcs,
-        user_arc_shifting: UserArcFrameShifting(position_frame_shifting),
-        sampler_arc_shifting: SamplerArcFrameShifting(offset_frame_shifting, position_frame_shifting),
-        sampler_arc_properties: sampler_arc_properties,
-        sampler_arc_resizing: SamplerArcResizing(sampler_arc_properties),
-        sampler_arc_rendering: SamplerArcRendering(sampler_arc_properties),
-        screen_frame_storage: screen_frame_storage, 
-        offset_shifting: offset_frame_shifting,
-        position_shifting: position_frame_shifting,
-        user_arcs_and_sampler_arcs: UserArcsAndSamplerArcs(ArcGeometry()),
-        object_sets: diagram_object_set_operations,
-        ids: diagram_ids,
-    };
-}
-
 
 const KatexDirective = (renderMathInElement) => ({
       name: 'katex',
@@ -289,156 +156,162 @@ const KatexPlugin = (renderMathInElement) => ({
       },
     });
 
-Vue.use(KatexPlugin(renderMathInElement));
+// Vue.use(KatexPlugin(renderMathInElement));
 
-const app = initial_vue_data();
-const view = SvgGridView(
-    Svg(),
-    app.screen_frame_storage,
-    app.ids,
-    app.position_shifting,
-    app.object_sets,
-    new DOMParser(),
+
+
+
+const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
+
+const user_arcs_and_stored_arcs =
+    UserArcsAndStoredArcs(
+        diagram_ids, 
+        0.07, 0.5, 0.25, 0.3, // min loop, max loop, loop snap, nonloop snap
+        0.01, // cell to target distance
+    );
+const user_arcs_and_sampler_arcs = UserArcsAndSamplerArcs(ArcGeometry());
+
+const offset_shifting = OffsetFrameShifting();
+const position_shifting = PositionFrameShifting();
+
+const sampler_arc_properties = SamplerArcProperties();
+const sampler_arc_resizing = SamplerArcResizing(sampler_arc_properties);
+const sampler_arc_rendering = SamplerArcRendering(sampler_arc_properties);
+const sampler_arc_shifting = SamplerArcFrameShifting(offset_shifting, position_shifting);
+
+const screen_frame_storage = ScreenReferenceFrameStorage();
+
+
+const diagram_object_set_operations = DiagramObjectSetOperations(diagram_ids);
+
+const svg  = Svg();
+const html = Html();
+const view_event_deferal = ViewEventDeferal;
+
+const grid_view = 
+    SvgGridView({
+        svg                        : svg,
+        screen_frame_storage       : screen_frame_storage,
+        diagram_ids                : diagram_ids,
+        position_shifting          : position_shifting,
+        view_event_deferal         : view_event_deferal,
+    });
+
+const arrow_view = 
+    SvgArrowView({
+        screen_frame_storage       : screen_frame_storage,
+        user_arcs_and_stored_arcs  : user_arcs_and_stored_arcs,
+        user_arcs_and_sampler_arcs : user_arcs_and_sampler_arcs,
+        sampler_arc_resizing       : sampler_arc_resizing,
+        sampler_arc_shifting       : sampler_arc_shifting,
+        sampler_arc_properties     : sampler_arc_properties,
+        sampler_arc_rendering      : sampler_arc_rendering,
+        position_shifting          : position_shifting,
+        offset_shifting            : offset_shifting,
+        view_event_deferal         : view_event_deferal,
+    }, 
+    { 
+        arrow_trimming_length: 0.12,
+    });
+
+const object_view = 
+    SvgObjectView({
+        svg                        : svg,
+        html                       : html,
+        screen_frame_storage       : screen_frame_storage,
+        diagram_ids                : diagram_ids,
+        position_shifting          : position_shifting,
+        view_event_deferal         : view_event_deferal,
+    });
+
+const arrow_selection_view = 
+    SvgArrowSelectionView(
+    {
+        svg                        : svg,
+        screen_frame_storage       : screen_frame_storage,
+        diagram_ids                : diagram_ids,
+        position_shifting          : position_shifting,
+        view_event_deferal         : view_event_deferal,
+    });
+
+const object_selection_view = 
+    SvgObjectSelectionView({
+        svg                        : svg,
+        screen_frame_storage       : screen_frame_storage,
+        diagram_ids                : diagram_ids,
+        position_shifting          : position_shifting,
+        view_event_deferal         : view_event_deferal,
+    });
+
+
+const selection_drags = 
+    SelectionDrags(
+        ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, false),
+        ObjectPositionResource(diagram_ids, false),
+        PositionMapOperations(diagram_ids),
+    );
+
+const arrow_drags = 
+    ArrowDrags(
+        user_arcs_and_stored_arcs,
+        1.0, // default_min_length_clockwise
+        0.001 // min_length_clockwise_change_per_scroll
+    );
+
+const view_drags = 
+    ViewDrags(
+        screen_frame_storage,
+        position_shifting,
+        offset_shifting,
+        -0.001, // log2_cell_width_change_per_scroll
+    Math.log2(50), // log2_cell_width_min
+    Math.log2(500) // log2_cell_width_max
 );
 
+const drag_state_operations = 
+    ApplicationStateDragOperations(
+        screen_frame_storage,
+        offset_shifting, 
+        position_shifting, 
+    );
 
-function frame_transform_attribute(screen_frame_store) {
-    const screen_frame = app.screen_frame_storage.unpack(screen_frame_store);
-    return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
-};
-document.getElementById('transformation').setAttribute(
-    'transform', frame_transform_attribute(app.state.view.screen_frame_store)
-);
-document.getElementById('transformation').appendChild(
-    view.initialize(app.state.view.screen_frame_store)
-);
+const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(150));
+const disengaged_drag = view_drags.release(initial_screen_frame_store)
+const disengaged_drag_state = disengaged_drag.initialize();
+const app_state = new ApplicationState(
+        new Diagram([], []), 
+        new DiagramViewState(initial_screen_frame_store), 
+        disengaged_drag,
+        disengaged_drag_state,
+    );
 
-/*
-// Vue.directive('katex',{inserted:(el, binding) => renderMathInElement(el)});
-const vue = new Vue({
-    el: '#app',
-    data: initial_vue_data(),
-    created: function() {
-        // Register event manager in setTimeout to prevent vue from inapproprately touching event listeners
-        setTimeout(() => {this.queue = new EventQueueSideEffectWrapper(document.getElementById('svg'));}, 1000/60);
-        setInterval(() => {
-            if (this.queue) {
-                let events = this.queue.pollWithSideEffect();
-                for(event of events){
-                    if (event.type in this.controls){
-                        this.controls[event.type](this.state, event, this.state);
-                    }
-                }
-            }
-        }, 1000/60);
-    },
-    methods: {
-        transformation: function() {
-            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-            return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
-        },
-        cell_count: function() {
-            return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, this.state.view.screen_frame_store.log2_cell_width))+1;
-        },
-        cell_width: function() {
-            return Math.pow(2.0, this.state.view.screen_frame_store.log2_cell_width);
-        },
-        cell_border_position: function(x, y) {
-            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-            const model_border_position = this.ids.border_id_to_cell_position( this.ids.cell_position_to_border_id(screen_frame.origin).add(glm.ivec2(x-1,y-1)) );
-            return this.position_shifting.enter(model_border_position, screen_frame);
-        },
 
-        arrowsample: function(stored_arc, fraction) {
-            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-            const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-            const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-            const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
-            const screen_arc = this.sampler_arc_shifting.enter(resized_arc, screen_frame);
-            return this.sampler_arc_properties.position(screen_arc, fraction*screen_arc.length_clockwise);
-        },
-        arrowpath: function(stored_arc) {
-            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-            const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-            const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-            const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
-            const screen_arc = this.sampler_arc_shifting.enter(resized_arc, screen_frame);
+const app_updater = 
+    ApplicationUpdater(
+        selection_drags,
+        arrow_drags,
+        view_drags,
+        screen_frame_storage,
+        position_shifting,
+        drag_state_operations
+    );
 
-            const svg_bezier = this.sampler_arc_rendering.sampler_arc_to_svg_bezier(screen_arc, 10);
-            const svg_path = this.sampler_arc_rendering.svg_bezier_to_path(svg_bezier);
-            return svg_path;
-        },
-        arrowhead: function(stored_arc) {
-            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-            const user_arc = this.user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-            const sampler_arc = this.user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-            const resized_arc = this.sampler_arc_resizing.resize(sampler_arc, this.arrow_trimming_length, -this.arrow_trimming_length);
-            const arrowhead_basis_x = this.offset_shifting.enter(this.sampler_arc_properties.normal(resized_arc, resized_arc.length_clockwise), screen_frame);
-            const arrowhead_basis_y = this.offset_shifting.enter(this.sampler_arc_properties.tangent(resized_arc, resized_arc.length_clockwise), screen_frame);
-            const arrowhead_origin = this.position_shifting.enter(this.sampler_arc_properties.position(resized_arc, resized_arc.length_clockwise), screen_frame);
+const app_view = 
+    SvgAppView({
+        screen_frame_storage         : screen_frame_storage,
+        diagram_object_set_operations: diagram_object_set_operations,
+        svg_grid_view                : grid_view,
+        svg_object_view              : object_view,
+        svg_arrow_view               : arrow_view,
+        svg_object_selection_view    : object_selection_view,
+        svg_arrow_selection_view     : arrow_selection_view,
+        view_event_deferal           : view_event_deferal,
+    }, app_updater);
 
-            const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
-            const screen_points = cell_points.map(point => arrowhead_basis_x.mul(point.x).add(arrowhead_basis_y.mul(point.y)).add(arrowhead_origin));
-            const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
-            return path;
-        },
-        arrowclick: function(arrow, event) {
-            if (event.button == 0) {
-                event.preventDefault(); 
-                event.stopPropagation();
-                this.controls.arrowclick(this.state, arrow, this.state);
-            }
-        },
-        arrowselect: function(arrow, event){
-            if (event.buttons == 2) {
-                event.preventDefault(); 
-                event.stopPropagation();
-                this.controls.arrowselect(this.state, arrow.get(), this.state);
-            }
-        },
+document.body.appendChild(app_view.create(app_state));
 
-        inferred_objects: function(diagram) {
-            return this.object_sets.update(
-                    this.object_sets.infer(diagram.arrows), 
-                    this.object_sets.list_to_set(diagram.objects)
-                );
-        },
-        screen_position: function(position) {
-            const screen_frame = this.screen_frame_storage.unpack(this.state.view.screen_frame_store);
-            return this.position_shifting.enter(position, screen_frame);
-        },
-        objectclick: function(object, event) {
-            if (event.button == 0) {
-                event.preventDefault(); 
-                event.stopPropagation();
-                this.controls.objectclick(this.state, object, this.state);
-            }
-        },
-        objectselect: function(object, event){
-            if (event.buttons == 2) {
-                event.preventDefault(); 
-                event.stopPropagation();
-                this.controls.objectselect(this.state, object, this.state);
-            }
-        },
 
-        object_selection_click: function(object, event) {
-            if (event.button == 0) {
-                event.preventDefault(); 
-                event.stopPropagation();
-                this.controls.objectclick(this.state, object, this.state);
-            }
-        },
-        arrow_selection_click: function(arrow, event) {
-            if (event.button == 0) {
-                event.preventDefault(); 
-                event.stopPropagation();
-                this.controls.arrowclick(this.state, arrow, this.state);
-            }
-        },
-    }
-});
-*/
+
 </script>
 </body>
 </html>

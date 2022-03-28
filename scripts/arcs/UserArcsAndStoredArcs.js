@@ -19,18 +19,18 @@ function UserArcsAndStoredArcs(
 
             const is_loop = glm.distance(arc.source, arc.target) < max_loop_chord_length;
             const is_snapped = glm.distance(arc.target, target_cell) < (is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
-            const is_canceled = glm.distance(arc.target, source_cell) < min_loop_chord_length;
-            const is_valid = is_snapped && !is_canceled;
+            const is_hidden = glm.distance(arc.target, source_cell) < min_loop_chord_length;
+            const is_valid = is_snapped && !is_hidden;
 
             const target = 
-                  is_canceled?       source_cell
+                  is_hidden?  source_cell
                 : is_snapped? target_cell
-                :                    arc.target;
+                :             arc.target;
 
             const target_offset_id = 
-                  !is_valid?  glm.vec2()
-                : is_loop?      ids.offset_to_offset_id(ids.cell_position_and_cell_id_to_offset(arc.target, target_cell)) 
-                :               glm.vec2();
+                 !is_valid?  glm.vec2()
+                : is_loop?   ids.offset_to_offset_id(ids.cell_position_and_cell_id_to_offset(arc.target, target_cell)) 
+                :            glm.vec2();
 
             return new StoredArc(
                 source_cell, 
