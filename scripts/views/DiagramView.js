@@ -11,17 +11,20 @@ to callbacks provided by higher levels of object composition outside the `*View`
 function ViewEventDeferal(view, model) {
     return {
         callback: onevent => event => { 
+            console.log(event.type);
             onevent(view, model, event);
         },
 
         callbackPrevent: onevent => event => { 
             event.preventDefault(); 
+            console.log(event.type);
             onevent(view, model, event);
         },
 
         callbackPreventStop: onevent => event => { 
             event.preventDefault(); 
             event.stopPropagation();
+            console.log(event.type);
             onevent(view, model, event);
         },
     }
@@ -204,8 +207,8 @@ function SvgObjectView(dependencies) {
         return svg.g(
             {
                 class: (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
-                mousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(view,object,event),
-                mouseenter: event => (!object.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(view,object,event),
+                onmousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(view,object,event),
+                onmouseenter: event => (!object.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(view,object,event),
             }
             [
                 svg.circle(
@@ -303,8 +306,8 @@ function SvgArrowView(dependencies, settings) {
         return svg.g(
             {
                 class: drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
-                mousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(view,arrow,event),
-                mouseenter: event => (!arrow.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(view,arrow,event),
+                onmousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(view,arrow,event),
+                onmouseenter: event => (!arrow.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(view,arrow,event),
             },
             [
                 svg.path({class:"arrow-highlight", d:arrowpath(screen_frame_store, arrow.arc)}),
@@ -342,7 +345,7 @@ function SvgArrowSelectionView(dependencies) {
         const deferal = view_event_deferal(view, arrow);
         return svg.g(
             {
-                mousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(view,arrow,event),
+                onmousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(view,arrow,event),
             },
             [
                 svg.path({class:"arrow-highlight", d:arrowpath(screen_frame_store, arrow.arc)}),
@@ -385,7 +388,7 @@ function SvgObjectSelectionView(dependencies) {
         const deferal = view_event_deferal(view, object);
         return svg.g(
             {
-                mousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(view,object,event),
+                onmousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(view,object,event),
             },
             [
                 svg.circle({class:"object-highlight", r:23}, screen_position(screen_frame_store, object.position)),
@@ -480,14 +483,14 @@ function SvgAppView(dependencies, onevents) {
 
         const svg_node = svg.svg(
             {
-                contextmenu  : deferal.callbackPrevent     (onevents.contextmenu ),
-                mousedown    : deferal.callbackPrevent     (onevents.mousedown   ),
-                mousemove    : deferal.callbackPrevent     (onevents.mousemove   ),
-                mouseup      : deferal.callback            (onevents.mouseup     ),
-                wheel        : deferal.callback            (onevents.wheel       ),
-                touchsource  : deferal.callback            (onevents.touchsource ),
-                touchmove    : deferal.callbackPreventStop (onevents.touchmove   ),
-                touchend     : deferal.callback            (onevents.touchend    ),
+                oncontextmenu  : deferal.callbackPrevent     (onevents.contextmenu ),
+                onmousedown    : deferal.callbackPrevent     (onevents.mousedown   ),
+                onmousemove    : deferal.callbackPrevent     (onevents.mousemove   ),
+                onmouseup      : deferal.callback            (onevents.mouseup     ),
+                onwheel        : deferal.callback            (onevents.wheel       ),
+                ontouchsource  : deferal.callback            (onevents.touchsource ),
+                ontouchmove    : deferal.callbackPreventStop (onevents.touchmove   ),
+                ontouchend     : deferal.callback            (onevents.touchend    ),
             }, [g]);
 
         const app_node = html.div({
