@@ -43,7 +43,7 @@ function Svg(){
 
     function node(tag, attributes, children){
         children = children || [];
-        const result = document.createElementNS('http://www.w3.org/2000/svg',tag);
+        const result = document.createElementNS('http://www.w3.org/2000/svg', tag);
         for (let name in attributes){
             if (name.startsWith('on')) {
                 result.addEventListener(name.substring(2), attributes[name]);
@@ -56,6 +56,7 @@ function Svg(){
         }
         return result;
     };
+
 
     const namespace = {
 
@@ -77,11 +78,13 @@ function Svg(){
                 []);
         },
 
-        foreignObject: function(attributes, children, position){
+        foreignObject: function(attributes, children, position, size){
             return node('foreignObject', 
                 Object.assign(attributes, 
-                    {x: (attributes.x || position.x), 
-                     y: (attributes.y || position.y)}), 
+                    {x:      (attributes.x      || position.x), 
+                     y:      (attributes.y      || position.y),
+                     width:  (attributes.width  || size.x), 
+                     height: (attributes.height || size.y)}), 
                 children);
         },
 
@@ -116,7 +119,7 @@ function Html(){
         return result;
     };
 
-    const tags = ['div'];
+    const tags = ['body','div'];
     const namespace = {node:node};
     for(let tag of tags){
         namespace[tag] = (attributes, children, textContent) => node(tag, attributes, children, textContent)
@@ -172,57 +175,6 @@ function SvgGridView(dependencies) {
     }
 }
 
-
-function SvgObjectView(dependencies) {
-
-    const svg                        = dependencies.svg;
-    const html                       = dependencies.html;
-    const screen_frame_storage       = dependencies.screen_frame_storage;
-    const diagram_ids                = dependencies.diagram_ids;
-    const position_shifting          = dependencies.position_shifting;
-    const view_event_deferal         = dependencies.view_event_deferal;
-
-    function screen_position (screen_frame_store, position) {
-        const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        return position_shifting.enter(position, screen_frame);
-    };
-
-
-    `
-    <g id="objects" v-for="object in inferred_objects(state.diagram)" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'"
-            v-on:mousedown="!object.is_edited && objectclick(object, $event)" v-on:mouseenter="objectselect(object, $event)">
-        <circle class="object-highlight" v-bind:cx="screen_position(object.position).x" v-bind:cy="screen_position(object.position).y" r="23" />
-        <!-- NOTE: object position is offset along the axis by half the width of the <foreignObject> -->
-        <foreignObject class="object" v-bind:x="screen_position(object.position).x-40" v-bind:y="screen_position(object.position).y"
-            width="80" height="40">
-            <div v-katex>\( \bullet \)</div>
-        </foreignObject>
-    </g>
-    `
-    const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onselect) {
-        const object_screen_position = screen_position(screen_frame_store, object.position);
-        const text_width = 80;
-        const g = svg.g(
-            {
-                class: (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
-            }
-            [
-                svg.circle(
-                    {class:"object-highlight", r:23}, 
-                    object_screen_position),
-                svg.foreignObject(
-                    {class:"object", width:text_width, height:40}, 
-                    [html.div({},[],'∙')], 
-                    object_screen_position.sub(glm.vec2(text_width/2,0)))
-            ]);
-        const deferal = view_event_deferal(drawing, object, dom);
-        g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
-        g.addEventListener('mouseenter', event => (!object.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(event));
-        return g;
-    }
-    return drawing;
-}
 
 function SvgArrowAttributes(dependencies, settings) {
     const screen_frame_storage       = dependencies.screen_frame_storage;
@@ -363,6 +315,57 @@ function SvgArrowSelectionView(svg, svg_arrow_attributes, view_event_deferal) {
 }
 
 
+function SvgObjectView(dependencies) {
+
+    const svg                        = dependencies.svg;
+    const html                       = dependencies.html;
+    const screen_frame_storage       = dependencies.screen_frame_storage;
+    const diagram_ids                = dependencies.diagram_ids;
+    const position_shifting          = dependencies.position_shifting;
+    const view_event_deferal         = dependencies.view_event_deferal;
+
+    function screen_position (screen_frame_store, position) {
+        const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+        return position_shifting.enter(position, screen_frame);
+    };
+
+
+    `
+    <g id="objects" v-for="object in inferred_objects(state.diagram)" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'"
+            v-on:mousedown="!object.is_edited && objectclick(object, $event)" v-on:mouseenter="objectselect(object, $event)">
+        <circle class="object-highlight" v-bind:cx="screen_position(object.position).x" v-bind:cy="screen_position(object.position).y" r="23" />
+        <!-- NOTE: object position is offset along the axis by half the width of the <foreignObject> -->
+        <foreignObject class="object" v-bind:x="screen_position(object.position).x-40" v-bind:y="screen_position(object.position).y"
+            width="80" height="40">
+            <div v-katex>\( \bullet \)</div>
+        </foreignObject>
+    </g>
+    `
+    const drawing = {};
+    drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onselect) {
+        const object_screen_position = screen_position(screen_frame_store, object.position);
+        const text_width = 80;
+        const g = svg.g(
+            {
+                class: (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
+            },
+            [
+                svg.circle(
+                    {class:"object-highlight", r:23}, 
+                    object_screen_position),
+                svg.foreignObject(
+                    {class:"object", width:text_width, height:40}, 
+                    [html.div({},[],'∙')], 
+                    object_screen_position.sub(glm.vec2(text_width/2, 0)))
+            ]);
+        const deferal = view_event_deferal(drawing, object, dom);
+        g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        g.addEventListener('mouseenter', event => (!object.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(event));
+        return g;
+    }
+    return drawing;
+}
+
 function SvgObjectSelectionView(dependencies) {
 
     const svg                        = dependencies.svg;
@@ -423,11 +426,12 @@ function SvgAppView(dependencies, onevents) {
     };
 
     function inferred_objects (diagram) {
-        return object_set_ops.set_to_list(
+        const inferred = object_set_ops.set_to_list(
                 object_set_ops.update(
                     object_set_ops.infer(diagram.arrows), 
                     object_set_ops.list_to_set(diagram.objects)
                 ));
+        return inferred;
     };
 
     `
@@ -457,11 +461,11 @@ function SvgAppView(dependencies, onevents) {
                                 (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, app, dom)))),
                 svg.g({id:"object-selections"}, 
                     app.view.object_selections
-                        .map(arrow => 
+                        .map(object => 
                             svg_object_selection_view.draw(
                                 dom,
                                 app.view.screen_frame_store, 
-                                arrow, 
+                                object, 
                                 app.drag_type, 
                                 (event, arrow_drawing, object, dom2) => onevents.objectclick(event, drawing, object, app, dom)))),
                 svg.g({id:"arrows"}, 

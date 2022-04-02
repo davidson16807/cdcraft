@@ -6,7 +6,8 @@
 class DiagramObject {
     constructor(position, depiction, annotation, is_edited, is_valid){
         this.position = position;
-        this.depiction = depiction || '\\( \\bullet \\)';
+        this.depiction = depiction || '∙';
+        // this.depiction = depiction || '\\( \\bullet \\)';
         this.annotation = annotation || '';
         this.is_edited = is_edited || false;
         this.is_valid = is_valid || true;
