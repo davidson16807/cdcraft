@@ -4,10 +4,7 @@
 A `ObjectPositionResource` implements a REST-like interface
 on source and target positions within a list of arrows.
 */
-function ObjectPositionResource(
-    diagram_ids, 
-    show_invalid
-){
+function ObjectPositionResource(diagram_ids){
     return {
 
         get: function(objects){
@@ -19,14 +16,14 @@ function ObjectPositionResource(
             return position_map;
         },
 
-        put: function(objects, position_map) {
+        put: function(objects, position_map, show_invalid) {
             const updated = [];
             for(let object of objects){
                 const position_hash = diagram_ids.cell_id_to_cell_hash(object.position);
                 const updated_position = position_map[position_hash];
                 const updated_cell = diagram_ids.cell_position_to_cell_id(updated_position);
                 const is_snapped = (glm.distance(updated_position, updated_cell) < 0.25);  //(is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
-                if(updated_position || show_invalid)
+                if(is_snapped || show_invalid)
                 {
                     updated.push(new DiagramObject(
                         is_snapped? updated_cell : updated_position,

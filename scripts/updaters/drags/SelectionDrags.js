@@ -23,38 +23,37 @@ function SelectionDrags(
                 wheel: (cell_positions, screen_focus, scroll_count) => cell_positions,
                 // delete the object and its arrows if canceled, otherwise move the object and its arrows
                 command: (cell_positions, is_released, is_canceled) => {
-                    console.log(is_canceled)
                     return is_canceled?
                         new Command(
                           // forward
-                          (model_inout, view_inout) => {
-                            model_inout.arrows = arrow_positions_resource.delete(initial_arrows, cell_positions);
-                            model_inout.objects = object_position_resource.delete(initial_objects, cell_positions);
-                            view_inout.arrow_selections = [];
-                            view_inout.object_selections = [];
+                          (model_io, view_io) => {
+                            model_io.arrows = arrow_positions_resource.delete(initial_arrows, cell_positions);
+                            model_io.objects = object_position_resource.delete(initial_objects, cell_positions);
+                            view_io.arrow_selections = [];
+                            view_io.object_selections = [];
                           },
                           // backward
-                          (model_inout, view_inout) => {
-                            model_inout.arrows = initial_arrows;
-                            model_inout.objects = initial_objects;
-                            view_inout.arrow_selections = arrow_selections;
-                            view_inout.object_selections = object_selections;
+                          (model_io, view_io) => {
+                            model_io.arrows = initial_arrows;
+                            model_io.objects = initial_objects;
+                            view_io.arrow_selections = arrow_selections;
+                            view_io.object_selections = object_selections;
                           },
                         )
                       : new Command(
                           // forward
-                          (model_inout, view_inout) => {
-                            model_inout.arrows = arrow_positions_resource.put(initial_arrows, cell_positions);
-                            model_inout.objects = object_position_resource.put(initial_objects, cell_positions);
-                            view_inout.arrow_selections = arrow_positions_resource.put(arrow_selections, cell_positions);
-                            view_inout.object_selections = object_position_resource.put(object_selections, cell_positions);
+                          (model_io, view_io) => {
+                            model_io.arrows = arrow_positions_resource.put(initial_arrows, cell_positions, !(is_released));
+                            model_io.objects = object_position_resource.put(initial_objects, cell_positions, !(is_released));
+                            view_io.arrow_selections = arrow_positions_resource.put(arrow_selections, cell_positions, !(is_released));
+                            view_io.object_selections = object_position_resource.put(object_selections, cell_positions, !(is_released));
                           },
                           // backward
-                          (model_inout, view_inout) => {
-                            model_inout.arrows = initial_arrows;
-                            model_inout.objects = initial_objects;
-                            view_inout.arrow_selections = arrow_selections;
-                            view_inout.object_selections = object_selections;
+                          (model_io, view_io) => {
+                            model_io.arrows = initial_arrows;
+                            model_io.objects = initial_objects;
+                            view_io.arrow_selections = arrow_selections;
+                            view_io.object_selections = object_selections;
                           },
                         )
                 }

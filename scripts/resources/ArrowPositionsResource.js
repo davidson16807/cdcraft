@@ -4,11 +4,7 @@
 A `ArrowPositionsResource` implements a REST-like interface
 on source and target positions within a list of arrows.
 */
-function ArrowPositionsResource(
-    diagram_ids, 
-    user_arcs_and_stored_arcs,
-    show_invalid
-){
+function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
     return {
 
         get: function(arrows){
@@ -23,7 +19,7 @@ function ArrowPositionsResource(
             return position_map;
         },
 
-        put: function(arrows, position_map) {
+        put: function(arrows, position_map, show_invalid) {
             const updated = [];
             for(let arrow of arrows){
                 const arc = arrow.arc;
