@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="./styles/katex.min.css">
     <link rel="stylesheet" href="./styles/bootstrap.min.css">
-    <script src="./libraries/vue.js"></script>
     <script src="./libraries/glm-js.min.js"></script>
     <script src="./libraries/katex.min.js"></script>
     <script src="./libraries/auto-render.min.js"></script>
@@ -36,16 +35,16 @@
     <script src="./scripts/diagram/DiagramObjectSetOperations.js"></script>
     <script src="./scripts/diagram/Diagram.js"></script>
     <script src="./scripts/Command.js"></script>
-    <script src="./scripts/dragging/ViewDrags.js"></script>
-    <script src="./scripts/dragging/SelectionDrags.js"></script>
-    <script src="./scripts/dragging/ArrowDrags.js"></script>
-    <script src="./scripts/dragging/DragState.js"></script>
     <script src="./scripts/views/DiagramView.js"></script>
-    <script src="./scripts/application/ApplicationUpdater.js"></script>
     <script src="./scripts/application/DiagramViewState.js"></script>
     <script src="./scripts/application/DiagramControlState.js"></script>
     <script src="./scripts/application/ApplicationState.js"></script>
-    <script src="./scripts/application/ApplicationStateDragOperations.js"></script>
+    <script src="./scripts/updaters/drags/ViewDrags.js"></script>
+    <script src="./scripts/updaters/drags/SelectionDrags.js"></script>
+    <script src="./scripts/updaters/drags/ArrowDrags.js"></script>
+    <script src="./scripts/updaters/drags/DragState.js"></script>
+    <script src="./scripts/updaters/ApplicationDragOperations.js"></script>
+    <script src="./scripts/updaters/ApplicationUpdater.js"></script>
     <script src="./scripts/resources/ArrowPositionsResource.js"></script>
     <script src="./scripts/resources/ObjectPositionResource.js"></script>
     <script src="./scripts/resources/PositionMapOperations.js"></script>
@@ -182,7 +181,7 @@ const sampler_arc_shifting = SamplerArcFrameShifting(offset_shifting, position_s
 const screen_frame_storage = ScreenReferenceFrameStorage();
 
 
-const diagram_object_set_operations = DiagramObjectSetOperations(diagram_ids);
+const diagram_object_set_ops = DiagramObjectSetOperations(diagram_ids);
 
 const svg  = Svg();
 const html = Html();
@@ -194,7 +193,6 @@ const grid_view =
         screen_frame_storage       : screen_frame_storage,
         diagram_ids                : diagram_ids,
         position_shifting          : position_shifting,
-        view_event_deferal         : view_event_deferal,
     });
 
 const arrow_view = 
@@ -268,38 +266,31 @@ const view_drags =
     Math.log2(500) // log2_cell_width_max
 );
 
-const drag_state_operations = 
-    ApplicationStateDragOperations(
+
+const drag_state_ops = 
+    ApplicationDragOperations(
         screen_frame_storage,
         offset_shifting, 
         position_shifting, 
     );
-
-const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(150));
-const disengaged_drag = view_drags.release(initial_screen_frame_store)
-const disengaged_drag_state = disengaged_drag.initialize();
-const app_state = new ApplicationState(
-        new Diagram([], []), 
-        new DiagramViewState(initial_screen_frame_store), 
-        disengaged_drag,
-        disengaged_drag_state,
-    );
-
 
 const app_updater = 
     ApplicationUpdater(
         selection_drags,
         arrow_drags,
         view_drags,
+
         screen_frame_storage,
         position_shifting,
-        drag_state_operations
+
+        drag_state_ops,
+
     );
 
-const app_view = 
+const diagram_dom = 
     SvgAppView({
         screen_frame_storage         : screen_frame_storage,
-        diagram_object_set_operations: diagram_object_set_operations,
+        diagram_object_set_ops       : diagram_object_set_ops,
         svg_grid_view                : grid_view,
         svg_object_view              : object_view,
         svg_arrow_view               : arrow_view,
@@ -308,7 +299,18 @@ const app_view =
         view_event_deferal           : view_event_deferal,
     }, app_updater);
 
-document.body.appendChild(app_view.create(app_state));
+const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(150));
+const disengaged_drag = view_drags.release(initial_screen_frame_store)
+const disengaged_drag_state = disengaged_drag.initialize();
+const app = new ApplicationState(
+        new Diagram([], []), 
+        new DiagramViewState(initial_screen_frame_store), 
+        disengaged_drag,
+        disengaged_drag_state,
+    );
+
+
+document.body.appendChild(diagram_dom.draw(document, app));
 
 
 

@@ -1,8 +1,9 @@
 'use strict';
 
 /*
-`DiagramControlState` is a data structure that contains all state relating to the presentation of a diagram.
-It expresses control state such as the kind of drag applied, and the undo/redo history that can be traversed.
+`DiagramControlState` is a data structure that contains all control state within the application.
+It tracks all state that is not modified using `Command` objects.
+This includes the state of mouse drags, and the undo/redo history itself.
 */
 class DiagramControlState {
     constructor(drag_type, drag_state, command_history){

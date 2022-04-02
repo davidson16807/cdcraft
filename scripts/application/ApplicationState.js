@@ -10,6 +10,8 @@ class ApplicationState {
         this.view = view;
         this.drag_type = dragging;
         this.drag_state = drag_state;
+        // this.undo_history = undo_history;
+        // this.redo_history = redo_history;
     }
 }
 
