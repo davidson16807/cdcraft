@@ -195,8 +195,8 @@ const grid_view =
         position_shifting          : position_shifting,
     });
 
-const arrow_view = 
-    SvgArrowView({
+const svg_arrow_attributes = 
+    SvgArrowAttributes({
         screen_frame_storage       : screen_frame_storage,
         user_arcs_and_stored_arcs  : user_arcs_and_stored_arcs,
         user_arcs_and_sampler_arcs : user_arcs_and_sampler_arcs,
@@ -206,26 +206,18 @@ const arrow_view =
         sampler_arc_rendering      : sampler_arc_rendering,
         position_shifting          : position_shifting,
         offset_shifting            : offset_shifting,
-        view_event_deferal         : view_event_deferal,
     }, 
     { 
         arrow_trimming_length: 0.12,
     });
 
+const arrow_view = SvgArrowView(svg, svg_arrow_attributes, view_event_deferal);
+const arrow_selection_view = SvgArrowSelectionView(svg, svg_arrow_attributes, view_event_deferal);
+
 const object_view = 
     SvgObjectView({
         svg                        : svg,
         html                       : html,
-        screen_frame_storage       : screen_frame_storage,
-        diagram_ids                : diagram_ids,
-        position_shifting          : position_shifting,
-        view_event_deferal         : view_event_deferal,
-    });
-
-const arrow_selection_view = 
-    SvgArrowSelectionView(
-    {
-        svg                        : svg,
         screen_frame_storage       : screen_frame_storage,
         diagram_ids                : diagram_ids,
         position_shifting          : position_shifting,

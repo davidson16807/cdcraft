@@ -224,8 +224,7 @@ function SvgObjectView(dependencies) {
     return drawing;
 }
 
-function SvgArrowView(dependencies, settings) {
-
+function SvgArrowAttributes(dependencies, settings) {
     const screen_frame_storage       = dependencies.screen_frame_storage;
     const user_arcs_and_stored_arcs  = dependencies.user_arcs_and_stored_arcs;
     const user_arcs_and_sampler_arcs = dependencies.user_arcs_and_sampler_arcs;
@@ -235,7 +234,6 @@ function SvgArrowView(dependencies, settings) {
     const sampler_arc_rendering      = dependencies.sampler_arc_rendering;
     const position_shifting          = dependencies.position_shifting;
     const offset_shifting            = dependencies.offset_shifting;
-    const view_event_deferal         = dependencies.view_event_deferal;
 
     const arrow_trimming_length = settings.arrow_trimming_length;
 
@@ -249,43 +247,51 @@ function SvgArrowView(dependencies, settings) {
             output += ` Q ${control.x} ${control.y} ${sample.x} ${sample.y}`;
         }
         return output;
+    }
+
+    return {
+
+        sample: function (screen_frame_store, stored_arc, fraction) {
+            const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+            const user_arc = user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
+            const sampler_arc = user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
+            const resized_arc = sampler_arc_resizing.resize(sampler_arc, arrow_trimming_length, -arrow_trimming_length);
+            const screen_arc = sampler_arc_shifting.enter(resized_arc, screen_frame);
+            return sampler_arc_properties.position(screen_arc, fraction*screen_arc.length_clockwise);
+        },
+
+        path: function (screen_frame_store, stored_arc) {
+            const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+            const user_arc = user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
+            const sampler_arc = user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
+            const resized_arc = sampler_arc_resizing.resize(sampler_arc, arrow_trimming_length, -arrow_trimming_length);
+            const screen_arc = sampler_arc_shifting.enter(resized_arc, screen_frame);
+
+            const svg_bezier = sampler_arc_rendering.sampler_arc_to_svg_bezier(screen_arc, 10);
+            const svg_path = svg_bezier_path_attribute(svg_bezier);
+            return svg_path;
+        },
+
+        head: function (screen_frame_store, stored_arc) {
+            const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+            const user_arc = user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
+            const sampler_arc = user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
+            const resized_arc = sampler_arc_resizing.resize(sampler_arc, arrow_trimming_length, -arrow_trimming_length);
+            const arrowhead_basis_x = offset_shifting.enter(sampler_arc_properties.normal(resized_arc, resized_arc.length_clockwise), screen_frame);
+            const arrowhead_basis_y = offset_shifting.enter(sampler_arc_properties.tangent(resized_arc, resized_arc.length_clockwise), screen_frame);
+            const arrowhead_origin = position_shifting.enter(sampler_arc_properties.position(resized_arc, resized_arc.length_clockwise), screen_frame);
+
+            const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
+            const screen_points = cell_points.map(point => arrowhead_basis_x.mul(point.x).add(arrowhead_basis_y.mul(point.y)).add(arrowhead_origin));
+            const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
+            return path;
+        },
+
     };
+}
 
-    function arrowsample (screen_frame_store, stored_arc, fraction) {
-        const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const user_arc = user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-        const sampler_arc = user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-        const resized_arc = sampler_arc_resizing.resize(sampler_arc, arrow_trimming_length, -arrow_trimming_length);
-        const screen_arc = sampler_arc_shifting.enter(resized_arc, screen_frame);
-        return sampler_arc_properties.position(screen_arc, fraction*screen_arc.length_clockwise);
-    };
-
-    function arrowpath (screen_frame_store, stored_arc) {
-        const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const user_arc = user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-        const sampler_arc = user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-        const resized_arc = sampler_arc_resizing.resize(sampler_arc, arrow_trimming_length, -arrow_trimming_length);
-        const screen_arc = sampler_arc_shifting.enter(resized_arc, screen_frame);
-
-        const svg_bezier = sampler_arc_rendering.sampler_arc_to_svg_bezier(screen_arc, 10);
-        const svg_path = svg_bezier_path_attribute(svg_bezier);
-        return svg_path;
-    };
-
-    function arrowhead (screen_frame_store, stored_arc) {
-        const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const user_arc = user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-        const sampler_arc = user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
-        const resized_arc = sampler_arc_resizing.resize(sampler_arc, arrow_trimming_length, -arrow_trimming_length);
-        const arrowhead_basis_x = offset_shifting.enter(sampler_arc_properties.normal(resized_arc, resized_arc.length_clockwise), screen_frame);
-        const arrowhead_basis_y = offset_shifting.enter(sampler_arc_properties.tangent(resized_arc, resized_arc.length_clockwise), screen_frame);
-        const arrowhead_origin = position_shifting.enter(sampler_arc_properties.position(resized_arc, resized_arc.length_clockwise), screen_frame);
-
-        const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
-        const screen_points = cell_points.map(point => arrowhead_basis_x.mul(point.x).add(arrowhead_basis_y.mul(point.y)).add(arrowhead_origin));
-        const path = 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
-        return path;
-    };
+function SvgArrowView(svg, svg_arrow_attributes, view_event_deferal) {
+    const arrows = svg_arrow_attributes;
 
     `
     <g v-for="arrow in state.diagram.arrows" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'" 
@@ -308,13 +314,13 @@ function SvgArrowView(dependencies, settings) {
                 class: 'arrow-group ' + (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
             },
             [
-                svg.path({class:"arrow-highlight", d:arrowpath(screen_frame_store, arrow.arc)}),
-                svg.circle({class:"arrow-tip-highlight", r:10}, arrowsample(screen_frame_store, arrow.arc,0)),
-                svg.circle({class:"arrow-tip-highlight", r:10}, arrowsample(screen_frame_store, arrow.arc,1)),
-                // svg.circle({class:"arrow-handle", r:13} arrowsample(arrow.arc,0)),
-                // svg.circle({class:"arrow-handle", r:13} arrowsample(arrow.arc,1)),
-                svg.path({class:"arrow", d:arrowhead(screen_frame_store, arrow.arc)}),
-                svg.path({class:"arrow", d:arrowpath(screen_frame_store, arrow.arc)}),
+                svg.path({class:"arrow-highlight", d: arrows.path(screen_frame_store, arrow.arc)}),
+                svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(screen_frame_store, arrow.arc,0)),
+                svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(screen_frame_store, arrow.arc,1)),
+                // svg.circle({class:"arrow-handle", r:13} arrows.sample(arrow.arc,0)),
+                // svg.circle({class:"arrow-handle", r:13} arrows.sample(arrow.arc,1)),
+                svg.path({class:"arrow", d: arrows.head(screen_frame_store, arrow.arc)}),
+                svg.path({class:"arrow", d: arrows.path(screen_frame_store, arrow.arc)}),
             ]);
         const deferal = view_event_deferal(drawing, dom, arrow);
         g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
@@ -326,13 +332,8 @@ function SvgArrowView(dependencies, settings) {
 
 
 
-function SvgArrowSelectionView(dependencies) {
-
-    const svg                        = dependencies.svg;
-    const screen_frame_storage       = dependencies.screen_frame_storage;
-    const diagram_ids                = dependencies.diagram_ids;
-    const position_shifting          = dependencies.position_shifting;
-    const view_event_deferal         = dependencies.view_event_deferal;
+function SvgArrowSelectionView(svg, svg_arrow_attributes, view_event_deferal) {
+    const arrows = svg_arrow_attributes;
 
     function arrow_selection_click (arrow, event) {
         if (!arrow.is_edited && event.button == 0) {
@@ -350,9 +351,9 @@ function SvgArrowSelectionView(dependencies) {
                 onmousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(event),
             },
             [
-                svg.path({class:"arrow-highlight", d:arrowpath(screen_frame_store, arrow.arc)}),
-                svg.circle({class:"arrow-tip-highlight", r:10}, arrowsample(arrow.arc,0)),
-                svg.circle({class:"arrow-tip-highlight", r:10}, arrowsample(arrow.arc,1)),
+                svg.path({class:"arrow-highlight", d: arrows.path(screen_frame_store, arrow.arc)}),
+                svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(arrow.arc,0)),
+                svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(arrow.arc,1)),
             ]);
         const deferal = view_event_deferal(drawing, dom, object);
         g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));

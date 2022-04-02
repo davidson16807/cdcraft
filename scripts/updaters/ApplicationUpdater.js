@@ -136,6 +136,9 @@ function ApplicationUpdater(
     };
     return {
 
+        contextmenu: function(event, drawing, app_io, dom_io){
+        },
+
         wheel: function(event, drawing, app_io, dom_io){
             drag_ops.wheel( glm.vec2(event.clientX, event.clientY), event.deltaY, app_io);
             drawing.redraw(app_io, dom_io);
@@ -196,13 +199,13 @@ function ApplicationUpdater(
 
         arrowselect: function(event, drawing, arrow_io, app_io, dom_io){
             app_io.view.arrow_selections.push(arrow_io);
-            arrow_selection_drawing.create(app_io, dom_io);
+            drawing.redraw(app_io, dom_io);
             
         },
 
         objectselect: function(event, drawing, object_io, app_io, dom_io){
             app_io.view.object_selections.push(object_io);
-            arrow_selection_drawing.create(app_io, dom_io);
+            drawing.redraw(app_io, dom_io);
         },
 
     }
