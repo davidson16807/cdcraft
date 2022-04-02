@@ -23,14 +23,15 @@ function ObjectPositionResource(
             const updated = [];
             for(let object of objects){
                 const position_hash = diagram_ids.cell_id_to_cell_hash(object.position);
-                if(updated_arc.is_valid || show_invalid)
+                const updated_position = position_map[position_hash];
+                if(updated_position || show_invalid)
                 {
                     updated.push(new DiagramObject(
-                        value,
+                        updated_position,
                         object.depiction,
                         object.annotation,
                         object.is_edited,
-                        is_snapped
+                        true // is_snapped
                     ));
                 }
             }

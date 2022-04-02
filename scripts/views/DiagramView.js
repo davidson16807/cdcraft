@@ -450,15 +450,6 @@ function SvgAppView(dependencies, onevents) {
         g_io.setAttribute('transformation', frame_transform(app.view.screen_frame_store));
         g_io.replaceChildren(...[
                 svg_grid_view.draw(app.view.screen_frame_store),
-                svg.g({id:"arrow-selections"}, 
-                    app.view.arrow_selections
-                        .map(arrow => 
-                            svg_arrow_selection_view.draw(
-                                dom,
-                                app.view.screen_frame_store, 
-                                arrow, 
-                                app.drag_type, 
-                                (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, app, dom)))),
                 svg.g({id:"object-selections"}, 
                     app.view.object_selections
                         .map(object => 
@@ -468,16 +459,15 @@ function SvgAppView(dependencies, onevents) {
                                 object, 
                                 app.drag_type, 
                                 (event, arrow_drawing, object, dom2) => onevents.objectclick(event, drawing, object, app, dom)))),
-                svg.g({id:"arrows"}, 
-                    app.diagram.arrows
+                svg.g({id:"arrow-selections"}, 
+                    app.view.arrow_selections
                         .map(arrow => 
-                            svg_arrow_view.draw(
+                            svg_arrow_selection_view.draw(
                                 dom,
                                 app.view.screen_frame_store, 
                                 arrow, 
                                 app.drag_type, 
-                                (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, app, dom),
-                                (event, arrow_drawing, arrow, dom2) => onevents.arrowselect(event, drawing, arrow, app, dom)))),
+                                (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, app, dom)))),
                 svg.g({id:"objects"},
                     inferred_objects(app.diagram)
                         .map(object => 
@@ -488,6 +478,16 @@ function SvgAppView(dependencies, onevents) {
                                 app.drag_type, 
                                 (event, arrow_drawing, object, dom2) => onevents.objectclick(event, drawing, object, app, dom),
                                 (event, arrow_drawing, object, dom2) => onevents.objectselect(event, drawing, object, app, dom)))),
+                svg.g({id:"arrows"}, 
+                    app.diagram.arrows
+                        .map(arrow => 
+                            svg_arrow_view.draw(
+                                dom,
+                                app.view.screen_frame_store, 
+                                arrow, 
+                                app.drag_type, 
+                                (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, app, dom),
+                                (event, arrow_drawing, arrow, dom2) => onevents.arrowselect(event, drawing, arrow, app, dom)))),
             ]);
     }
 

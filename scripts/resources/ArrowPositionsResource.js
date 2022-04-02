@@ -39,6 +39,7 @@ function ArrowPositionsResource(
                     );
                 if(updated_arc.is_valid || show_invalid){
                     updated.push(new DiagramArrow(
+                            updated_arc,
                             arrow.is_edited,
                             arrow.label,
                             arrow.label_offset,

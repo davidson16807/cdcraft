@@ -16,6 +16,7 @@ function SelectionDrags(
                             arrow_positions_resource.get(arrow_selections),
                             object_position_resource.get(object_selections),
                         );
+                    return cell_positions;
                 },
                 move: (cell_positions, model_position, model_offset) => 
                     position_map_operations.offset(cell_positions, model_offset),
@@ -44,8 +45,8 @@ function SelectionDrags(
                           (model_inout, view_inout) => {
                             model_inout.arrows = arrow_positions_resource.put(initial_arrows, cell_positions);
                             model_inout.objects = object_position_resource.put(initial_objects, cell_positions);
-                            view_inout.arrow_selections = arrow_positions_resource.put(view_inout.arrows_selections, cell_positions);
-                            view_inout.object_selections = object_position_resource.put(view_inout.objects_selections, cell_positions);
+                            view_inout.arrow_selections = arrow_positions_resource.put(view_inout.arrow_selections, cell_positions);
+                            view_inout.object_selections = object_position_resource.put(view_inout.object_selections, cell_positions);
                           },
                           // backward
                           (model_inout, view_inout) => {
