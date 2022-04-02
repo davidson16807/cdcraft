@@ -23,6 +23,7 @@ function SelectionDrags(
                 wheel: (cell_positions, screen_focus, scroll_count) => cell_positions,
                 // delete the object and its arrows if canceled, otherwise move the object and its arrows
                 command: (cell_positions, is_released, is_canceled) => {
+                    console.log(is_canceled)
                     return is_canceled?
                         new Command(
                           // forward
@@ -45,8 +46,8 @@ function SelectionDrags(
                           (model_inout, view_inout) => {
                             model_inout.arrows = arrow_positions_resource.put(initial_arrows, cell_positions);
                             model_inout.objects = object_position_resource.put(initial_objects, cell_positions);
-                            view_inout.arrow_selections = arrow_positions_resource.put(view_inout.arrow_selections, cell_positions);
-                            view_inout.object_selections = object_position_resource.put(view_inout.object_selections, cell_positions);
+                            view_inout.arrow_selections = arrow_positions_resource.put(arrow_selections, cell_positions);
+                            view_inout.object_selections = object_position_resource.put(object_selections, cell_positions);
                           },
                           // backward
                           (model_inout, view_inout) => {

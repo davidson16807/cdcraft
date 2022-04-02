@@ -24,14 +24,16 @@ function ObjectPositionResource(
             for(let object of objects){
                 const position_hash = diagram_ids.cell_id_to_cell_hash(object.position);
                 const updated_position = position_map[position_hash];
+                const updated_cell = diagram_ids.cell_position_to_cell_id(updated_position);
+                const is_snapped = (glm.distance(updated_position, updated_cell) < 0.25);  //(is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
                 if(updated_position || show_invalid)
                 {
                     updated.push(new DiagramObject(
-                        updated_position,
+                        is_snapped? updated_cell : updated_position,
                         object.depiction,
                         object.annotation,
                         object.is_edited,
-                        true // is_snapped
+                        is_snapped
                     ));
                 }
             }

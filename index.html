@@ -236,8 +236,8 @@ const object_selection_view =
 
 const selection_drags = 
     SelectionDrags(
-        ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, false),
-        ObjectPositionResource(diagram_ids, false),
+        ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, true),
+        ObjectPositionResource(diagram_ids, true),
         PositionMapOperations(diagram_ids),
     );
 
