@@ -322,7 +322,7 @@ function SvgArrowView(svg, svg_arrow_attributes, view_event_deferal) {
                 svg.path({class:"arrow", d: arrows.head(screen_frame_store, arrow.arc)}),
                 svg.path({class:"arrow", d: arrows.path(screen_frame_store, arrow.arc)}),
             ]);
-        const deferal = view_event_deferal(drawing, dom, arrow);
+        const deferal = view_event_deferal(drawing, arrow, dom);
         g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
         g.addEventListener('mouseenter', event => (!arrow.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(event));
         return g;
@@ -352,10 +352,10 @@ function SvgArrowSelectionView(svg, svg_arrow_attributes, view_event_deferal) {
             },
             [
                 svg.path({class:"arrow-highlight", d: arrows.path(screen_frame_store, arrow.arc)}),
-                svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(arrow.arc,0)),
-                svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(arrow.arc,1)),
+                svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(screen_frame_store, arrow.arc,0)),
+                svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(screen_frame_store, arrow.arc,1)),
             ]);
-        const deferal = view_event_deferal(drawing, dom, object);
+        const deferal = view_event_deferal(drawing, arrow, dom);
         g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
         return g;
     }
@@ -396,7 +396,7 @@ function SvgObjectSelectionView(dependencies) {
             [
                 svg.circle({class:"object-highlight", r:23}, screen_position(screen_frame_store, object.position)),
             ]);
-        const deferal = view_event_deferal(drawing, dom, object);
+        const deferal = view_event_deferal(drawing, object, dom);
         g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
         return g;
     }
@@ -446,6 +446,24 @@ function SvgAppView(dependencies, onevents) {
         g_io.setAttribute('transformation', frame_transform(app.view.screen_frame_store));
         g_io.replaceChildren(...[
                 svg_grid_view.draw(app.view.screen_frame_store),
+                svg.g({id:"arrow-selections"}, 
+                    app.view.arrow_selections
+                        .map(arrow => 
+                            svg_arrow_selection_view.draw(
+                                dom,
+                                app.view.screen_frame_store, 
+                                arrow, 
+                                app.drag_type, 
+                                (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, app, dom)))),
+                svg.g({id:"object-selections"}, 
+                    app.view.object_selections
+                        .map(arrow => 
+                            svg_object_selection_view.draw(
+                                dom,
+                                app.view.screen_frame_store, 
+                                arrow, 
+                                app.drag_type, 
+                                (event, arrow_drawing, object, dom2) => onevents.objectclick(event, drawing, object, app, dom)))),
                 svg.g({id:"arrows"}, 
                     app.diagram.arrows
                         .map(arrow => 
@@ -466,24 +484,6 @@ function SvgAppView(dependencies, onevents) {
                                 app.drag_type, 
                                 (event, arrow_drawing, object, dom2) => onevents.objectclick(event, drawing, object, app, dom),
                                 (event, arrow_drawing, object, dom2) => onevents.objectselect(event, drawing, object, app, dom)))),
-                svg.g({id:"arrow-selections"}, 
-                    app.view.arrow_selections
-                        .map(arrow => 
-                            svg_arrow_selection_view.draw(
-                                dom,
-                                app.view.screen_frame_store, 
-                                arrow, 
-                                app.drag_type, 
-                                (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, app, dom)))),
-                svg.g({id:"object-selections"}, 
-                    app.view.object_selections
-                        .map(arrow => 
-                            svg_object_selection_view.draw(
-                                dom,
-                                app.view.screen_frame_store, 
-                                arrow, 
-                                app.drag_type, 
-                                (event, arrow_drawing, object, dom2) => onevents.objectclick(event, drawing, object, app, dom)))),
             ]);
     }
 
