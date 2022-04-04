@@ -9,7 +9,7 @@ function UserArcsAndStoredArcs(
     max_loop_chord_length, 
     max_loop_snap_distance, 
     max_nonloop_snap_distance,
-    cell_to_target_distance
+    target_offset_distance
 ) {
     const ids = diagram_ids;
     return {
@@ -51,7 +51,7 @@ function UserArcsAndStoredArcs(
         stored_arc_to_user_arc: function(arc){
             return new UserArc(
                 arc.source, 
-                arc.target_offset_id.mul(cell_to_target_distance).add(arc.target),
+                arc.target_offset_id.mul(target_offset_distance).add(arc.target),
                 arc.min_length_clockwise
             );
         }
