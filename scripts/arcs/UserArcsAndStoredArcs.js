@@ -13,15 +13,23 @@ function UserArcsAndStoredArcs(
 ) {
     const ids = diagram_ids;
     return {
-        user_arc_to_stored_arc: function(arc) {
+        user_arc_to_stored_arc: function(arc, is_transposed) {
             const source_cell = ids.cell_position_to_cell_id(arc.source);
             const target_cell = ids.cell_position_to_cell_id(arc.target);
 
             const is_loop = glm.distance(arc.source, arc.target) < max_loop_chord_length;
-            const is_snapped = glm.distance(arc.target, target_cell) < (is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
+            const max_snap_distance = (is_loop? max_loop_snap_distance : max_nonloop_snap_distance)
+            const is_snapped = (
+                glm.distance(arc.source, source_cell) < max_snap_distance && 
+                glm.distance(arc.target, target_cell) < max_snap_distance);
             const is_hidden = glm.distance(arc.target, source_cell) < min_loop_chord_length;
             const is_valid = is_snapped && !is_hidden;
 
+            const source = 
+                  is_hidden?     source_cell
+                : is_snapped?    source_cell
+                : is_transposed? arc.source 
+                :                source_cell;
             const target = 
                   is_hidden?  source_cell
                 : is_snapped? target_cell
@@ -33,7 +41,7 @@ function UserArcsAndStoredArcs(
                 :            glm.vec2();
 
             return new StoredArc(
-                source_cell, 
+                source, 
                 target, 
                 arc.min_length_clockwise, 
                 target_offset_id,
