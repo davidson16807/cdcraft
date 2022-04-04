@@ -22,14 +22,14 @@ function UserArcsAndStoredArcs(
             const is_snapped = (
                 glm.distance(arc.source, source_cell) < max_snap_distance && 
                 glm.distance(arc.target, target_cell) < max_snap_distance);
-            const is_hidden = glm.distance(arc.target, source_cell) < min_loop_chord_length;
+            const effective_source = is_transposed? arc.source : source_cell; // TODO: maybe snap arc.source to nearest cell before calling this method during arrow drags?
+            const is_hidden = glm.distance(arc.target, arc.source) < min_loop_chord_length;
             const is_valid = is_snapped && !is_hidden;
 
             const source = 
                   is_hidden?     source_cell
                 : is_snapped?    source_cell
-                : is_transposed? arc.source 
-                :                source_cell;
+                :                effective_source;
             const target = 
                   is_hidden?  source_cell
                 : is_snapped? target_cell
