@@ -23,6 +23,7 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
             const updated = [];
             for(let arrow of arrows){
                 const arc = arrow.arc;
+                // TODO: move this logic to a category, possibly something resembling UserArcsAndStoredArcs
                 const source_hash = diagram_ids.cell_id_to_cell_hash(arc.source);
                 const target_hash = diagram_ids.cell_id_to_cell_hash(arc.target);
                 const updated_source = position_map[source_hash] || arc.source;
@@ -32,17 +33,19 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
                 const is_snapped = (
                     glm.distance(updated_source, source_cell) < 0.25 && 
                     glm.distance(updated_target, target_cell) < 0.25);  //(is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
-                const is_hidden = glm.distance(updated_target, source_cell) < 0.07;//min_loop_chord_length;
-                const is_valid = is_snapped;// && !is_hidden;
+                const is_hidden = (
+                    (position_map[source_hash] && glm.distance(updated_source, source_cell) < 0.01) && 
+                    (position_map[target_hash] && glm.distance(updated_target, target_cell) < 0.01));//min_loop_chord_length;
+                const is_valid = is_snapped && (!is_hidden);
 
                 const updated_arc = new StoredArc(
                     is_snapped? source_cell : updated_source, 
                     is_snapped? target_cell : updated_target, 
                     arc.min_length_clockwise, 
                     arc.target_offset_id,
-                    is_snapped
+                    is_valid
                 );
-                if(updated_arc.is_valid || show_invalid){
+                if(is_valid || show_invalid){
                     updated.push(new DiagramArrow(
                             updated_arc,
                             arrow.is_edited,

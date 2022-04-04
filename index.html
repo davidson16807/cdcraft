@@ -266,17 +266,19 @@ const drag_state_ops =
         position_shifting, 
     );
 
+
 const app_updater = 
     ApplicationUpdater(
-        selection_drags,
-        arrow_drags,
-        view_drags,
-
-        screen_frame_storage,
-        position_shifting,
-
-        drag_state_ops,
-
+        {
+            selection_drags           : selection_drags,
+            arrow_drags               : arrow_drags,
+            view_drags                : view_drags,
+            screen_frame_storage      : screen_frame_storage,
+            position_shifting         : position_shifting,
+            object_position_resources : ObjectPositionResource(diagram_ids, true),                        
+            diagram_ids               : diagram_ids,
+            drag_state_ops            : drag_state_ops,
+        }
     );
 
 const diagram_dom = 

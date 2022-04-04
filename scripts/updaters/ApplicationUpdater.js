@@ -112,14 +112,17 @@ All functions represent the transformation of state in reponse to controller eve
 Its name is in reference to the "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
 */
 function ApplicationUpdater(
-        selection_drags,
-        arrow_drags,
-        view_drags,
-        screen_frame_storage,
-        position_shifting,
-
-        drag_ops
+        dependencies
     ){
+    const selection_drags = dependencies.selection_drags;
+    const arrow_drags = dependencies.arrow_drags;
+    const view_drags = dependencies.view_drags;
+    const screen_frame_storage = dependencies.screen_frame_storage;
+    const position_shifting = dependencies.position_shifting;
+    const object_position_resources = dependencies.object_position_resources;
+    const diagram_ids = dependencies.diagram_ids;
+    const drag_ops = dependencies.drag_state_ops;
+
     const mouse_actions = {
         pan: function(app, event){
             const screen_offset = glm.vec2(event.movementX, event.movementY);
@@ -188,7 +191,9 @@ function ApplicationUpdater(
         },
 
         objectclick: function(event, drawing, object_io, app_io, dom_io){
-            if (app_io.view.object_selections.length > 0 || app_io.view.arrow_selections.length > 0) {
+            const position_map = object_position_resources.get(app_io.view.object_selections);
+            const position_hash = diagram_ids.cell_id_to_cell_hash(object_io.position);
+            if (position_map[position_hash] != null) {
                 drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.view.arrow_selections, app_io.diagram.objects, app_io.view.object_selections), app_io);
             } else {
                 app_io.view.object_selections = [object_io];
