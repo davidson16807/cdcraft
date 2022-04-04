@@ -13,7 +13,7 @@ function UserArcsAndStoredArcs(
 ) {
     const ids = diagram_ids;
     return {
-        user_arc_to_stored_arc: function(arc, is_transposed) {
+        user_arc_to_stored_arc: function(arc) {
             const source_cell = ids.cell_position_to_cell_id(arc.source);
             const target_cell = ids.cell_position_to_cell_id(arc.target);
 
@@ -22,14 +22,13 @@ function UserArcsAndStoredArcs(
             const is_snapped = (
                 glm.distance(arc.source, source_cell) < max_snap_distance && 
                 glm.distance(arc.target, target_cell) < max_snap_distance);
-            const effective_source = is_transposed? arc.source : source_cell; // TODO: maybe snap arc.source to nearest cell before calling this method during arrow drags?
             const is_hidden = glm.distance(arc.target, arc.source) < min_loop_chord_length;
             const is_valid = is_snapped && !is_hidden;
 
             const source = 
                   is_hidden?     source_cell
                 : is_snapped?    source_cell
-                :                effective_source;
+                :                arc.source;
             const target = 
                   is_hidden?  source_cell
                 : is_snapped? target_cell

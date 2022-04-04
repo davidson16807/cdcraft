@@ -1,6 +1,6 @@
 'use strict';
 
-function ArrowDrags(user_arcs_and_stored_arcs, default_min_length_clockwise, min_length_clockwise_change_per_scroll){
+function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_clockwise, min_length_clockwise_change_per_scroll){
     function move(arrow_in, model_position, model_offset) {
         const arc_in = arrow_in.arc;
         const arrow_out = new DiagramArrow(
@@ -59,8 +59,8 @@ function ArrowDrags(user_arcs_and_stored_arcs, default_min_length_clockwise, min
                 initialize: () => new DiagramArrow(
                         user_arcs_and_stored_arcs.user_arc_to_stored_arc(
                             new UserArc(
-                                initial_model_position, 
-                                initial_model_position,
+                                diagram_ids.cell_position_to_cell_id(initial_model_position), 
+                                diagram_ids.cell_position_to_cell_id(initial_model_position),
                                 default_min_length_clockwise,
                             )
                         ),

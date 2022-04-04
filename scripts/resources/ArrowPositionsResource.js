@@ -25,14 +25,13 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
             for(let arrow of arrows){
                 const old_stored = arrow.arc;
                 const old_used = user_arcs_and_stored_arcs.stored_arc_to_user_arc(old_stored);
-                // TODO: move this logic to a category, possibly something resembling UserArcsAndStoredArcs
                 const source_hash = diagram_ids.cell_id_to_cell_hash(old_stored.source);
                 const target_hash = diagram_ids.cell_id_to_cell_hash(old_stored.target);
                 const new_used = new UserArc(
                     position_map[source_hash] || old_used.source,
                     position_map[target_hash] || old_used.target,
                     old_used.min_length_clockwise);
-                const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_used, true);
+                const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_used);
                 if(new_stored.is_valid || show_invalid){
                     updated_arrows.push(new DiagramArrow(
                             new_stored,
