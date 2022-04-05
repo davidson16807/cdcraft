@@ -13,7 +13,8 @@ function UserArcsAndStoredArcs(
 ) {
     const ids = diagram_ids;
     return {
-        user_arc_to_stored_arc: function(arc) {
+        user_arc_to_stored_arc: function(arc, default_offset_id) {
+            default_offset_id = default_offset_id || glm.vec2();
             const source_cell = ids.cell_position_to_cell_id(arc.source);
             const target_cell = ids.cell_position_to_cell_id(arc.target);
 
@@ -25,6 +26,11 @@ function UserArcsAndStoredArcs(
                 glm.distance(arc.target, target_cell) < max_snap_distance);
             const is_valid = is_snapped && !is_hidden;
 
+            const target_offset_id = 
+                 !is_valid?  default_offset_id
+                : is_loop?   ids.offset_to_offset_id(arc.target.sub(arc.source)) 
+                :            glm.vec2();
+
             const source = 
                   is_hidden?     source_cell
                 : is_snapped?    source_cell
@@ -34,11 +40,6 @@ function UserArcsAndStoredArcs(
                   is_hidden?  source_cell
                 : is_snapped? target_cell
                 :             arc.target;
-
-            const target_offset_id = 
-                 !is_valid?  glm.vec2()
-                : is_loop?   ids.offset_to_offset_id(arc.target.sub(arc.source)) 
-                :            glm.vec2();
 
             return new StoredArc(
                 source, 

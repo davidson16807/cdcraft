@@ -28,12 +28,10 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
                 const source_hash = diagram_ids.cell_id_to_cell_hash(old_stored.source);
                 const target_hash = diagram_ids.cell_id_to_cell_hash(old_stored.target);
                 const new_users = new UserArc(
-                    position_map[source_hash] || old_users.source,
-                    position_map[target_hash] || old_users.target,
-                    old_users.min_length_clockwise);
-                const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users);
-                new_stored.target_offset_id = glm.length(new_stored.target_offset_id) != 0?
-                    new_stored.target_offset_id : old_stored.target_offset_id
+                        position_map[source_hash] != null? old_stored.target_offset_id.mul(-0.015).add(position_map[source_hash]) : old_users.source, 
+                        position_map[target_hash] != null? old_stored.target_offset_id.mul( 0.015).add(position_map[target_hash]) : old_users.target,
+                        old_users.min_length_clockwise);
+                const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users, old_stored.target_offset_id);
                 if(new_stored.is_valid || show_invalid){
                     updated_arrows.push(new DiagramArrow(
                             new_stored,
