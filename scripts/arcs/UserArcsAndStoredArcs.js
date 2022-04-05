@@ -29,6 +29,7 @@ function UserArcsAndStoredArcs(
                   is_hidden?     source_cell
                 : is_snapped?    source_cell
                 :                arc.source;
+
             const target = 
                   is_hidden?  source_cell
                 : is_snapped? target_cell
@@ -36,7 +37,7 @@ function UserArcsAndStoredArcs(
 
             const target_offset_id = 
                  !is_valid?  glm.vec2()
-                : is_loop?   ids.offset_to_offset_id(ids.cell_position_and_cell_id_to_offset(arc.target, target_cell)) 
+                : is_loop?   ids.offset_to_offset_id(arc.target.sub(arc.source)) 
                 :            glm.vec2();
 
             return new StoredArc(
@@ -49,8 +50,8 @@ function UserArcsAndStoredArcs(
         },
         stored_arc_to_user_arc: function(arc){
             return new UserArc(
-                arc.source, 
-                arc.target_offset_id.mul(target_offset_distance).add(arc.target),
+                arc.target_offset_id.mul(-target_offset_distance).add(arc.source), 
+                arc.target_offset_id.mul( target_offset_distance).add(arc.target),
                 arc.min_length_clockwise
             );
         }
