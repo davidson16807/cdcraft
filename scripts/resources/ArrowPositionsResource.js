@@ -13,9 +13,8 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
                 const stored_arc = arrow.arc;
                 const source_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.source);
                 const target_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.target);
-                const user_arc = user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-                position_map[source_hash] = user_arc.source;
-                position_map[target_hash] = user_arc.target;
+                position_map[source_hash] = stored_arc.source;
+                position_map[target_hash] = stored_arc.target;
             }
             return position_map;
         },
