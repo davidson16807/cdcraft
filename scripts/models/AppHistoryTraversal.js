@@ -1,5 +1,5 @@
 
-function ApplicationHistoryTraversal() {
+function AppHistoryTraversal() {
     return {
 
         do: function(app_io, command, is_recorded){

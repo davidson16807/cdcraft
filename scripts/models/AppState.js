@@ -1,10 +1,10 @@
 'use strict';
 
 /*
-`ApplicationState` is a data structure that contains all state within the application. 
+`AppState` is a data structure that contains all state within the application. 
 It guarantees that for any combination of real numbered attribute values there is a valid application state.
 */
-class ApplicationState {
+class AppState {
     constructor(model, view, dragging, drag_state, undo_history, redo_history){
         this.diagram = model;
         this.view = view;

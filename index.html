@@ -11,23 +11,35 @@
     <script src="./libraries/auto-render.min.js"></script>
     <script src="./scripts/DiagramIds.js"></script>
     <script src="./scripts/CellHashing.js"></script>
+    <script src="./scripts/Command.js"></script>
     <script src="./scripts/frames/ScreenReferenceFrameStorage.js"></script>
     <script src="./scripts/frames/DiagramReferenceFrame.js"></script>
     <script src="./scripts/frames/FrameShifting.js"></script>
     <script src="./scripts/frames/ScreenReferenceFrameStore.js"></script>
     <script src="./scripts/models/arcs/StoredArc.js"></script>
-    <script src="./scripts/models/arcs/SamplerArcRendering.js"></script>
-    <script src="./scripts/models/arcs/UserArcsAndSvgArcs.js"></script>
     <script src="./scripts/models/arcs/UserArc.js"></script>
     <script src="./scripts/models/arcs/SvgArc.js"></script>
-    <script src="./scripts/models/arcs/UserArcFrameShifting.js"></script>
-    <script src="./scripts/models/arcs/SamplerArcResizing.js"></script>
-    <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArc.js"></script>
     <script src="./scripts/models/arcs/ArcGeometry.js"></script>
-    <script src="./scripts/models/arcs/UserArcsAndSamplerArcs.js"></script>
+    <script src="./scripts/models/arcs/SamplerArcRendering.js"></script>
+    <script src="./scripts/models/arcs/SamplerArcResizing.js"></script>
+    <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcFrameShifting.js"></script>
+    <script src="./scripts/models/arcs/UserArcsAndSvgArcs.js"></script>
+    <script src="./scripts/models/arcs/UserArcFrameShifting.js"></script>
+    <script src="./scripts/models/arcs/UserArcsAndSamplerArcs.js"></script>
     <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
+    <script src="./scripts/models/arrows/Arrow.js"></script>
+    <script src="./scripts/models/arrows/DiagramArrow.js"></script>
+    <script src="./scripts/models/arrows/DiagramArrowListsAndLookups.js"></script>
+    <script src="./scripts/models/objects/DiagramObject.js"></script>
+    <script src="./scripts/models/objects/DiagramObjectSetOperations.js"></script>
+    <script src="./scripts/models/Diagram.js"></script>
+    <script src="./scripts/models/DiagramViewState.js"></script>
+    <script src="./scripts/models/DiagramControlState.js"></script>
+    <script src="./scripts/models/AppState.js"></script>
+    <script src="./scripts/models/AppHistoryTraversal.js"></script>
+    <script src="./scripts/models/AppDragOperations.js"></script>
     <script src="./scripts/views/ViewEventDeferal.js"></script>
     <script src="./scripts/views/SvgObjectView.js"></script>
     <script src="./scripts/views/SvgObjectSelectionView.js"></script>
@@ -36,25 +48,13 @@
     <script src="./scripts/views/SvgArrowSelectionView.js"></script>
     <script src="./scripts/views/SvgGridView.js"></script>
     <script src="./scripts/views/SvgAppView.js"></script>
-    <script src="./scripts/models/arrows/Arrow.js"></script>
-    <script src="./scripts/models/arrows/DiagramArrowListsAndLookups.js"></script>
-    <script src="./scripts/models/arrows/DiagramArrow.js"></script>
-    <script src="./scripts/models/objects/DiagramObject.js"></script>
-    <script src="./scripts/models/objects/DiagramObjectSetOperations.js"></script>
-    <script src="./scripts/models/Diagram.js"></script>
-    <script src="./scripts/models/DiagramViewState.js"></script>
-    <script src="./scripts/models/DiagramControlState.js"></script>
-    <script src="./scripts/models/ApplicationState.js"></script>
-    <script src="./scripts/Command.js"></script>
     <script src="./scripts/dom/Html.js"></script>
     <script src="./scripts/dom/Svg.js"></script>
     <script src="./scripts/updaters/drags/ViewDrags.js"></script>
     <script src="./scripts/updaters/drags/SelectionDrags.js"></script>
     <script src="./scripts/updaters/drags/ArrowDrags.js"></script>
     <script src="./scripts/updaters/drags/DragState.js"></script>
-    <script src="./scripts/updaters/ApplicationHistoryTraversal.js"></script>
-    <script src="./scripts/updaters/ApplicationDragOperations.js"></script>
-    <script src="./scripts/updaters/ApplicationUpdater.js"></script>
+    <script src="./scripts/updaters/AppUpdater.js"></script>
     <script src="./scripts/resources/ArrowPositionsResource.js"></script>
     <script src="./scripts/resources/ObjectPositionResource.js"></script>
     <script src="./scripts/resources/PositionMapOperations.js"></script>
@@ -270,20 +270,20 @@ const view_drags =
     Math.log2(500) // log2_cell_width_max
 );
 
-const application_history_traversal = 
-    ApplicationHistoryTraversal();
+const app_history_traversal = 
+    AppHistoryTraversal();
 
 const drag_state_ops = 
-    ApplicationDragOperations(
+    AppDragOperations(
         screen_frame_storage,
         offset_shifting, 
         position_shifting, 
-        application_history_traversal,
+        app_history_traversal,
     );
 
 
 const app_updater = 
-    ApplicationUpdater(
+    AppUpdater(
         {
             selection_drags           : selection_drags,
             arrow_drags               : arrow_drags,
@@ -311,7 +311,7 @@ const diagram_dom =
 const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Math.log2(150));
 const disengaged_drag = view_drags.release(initial_screen_frame_store)
 const disengaged_drag_state = disengaged_drag.initialize();
-const app = new ApplicationState(
+const app = new AppState(
         new Diagram([], []), 
         new DiagramViewState(initial_screen_frame_store), 
         disengaged_drag,

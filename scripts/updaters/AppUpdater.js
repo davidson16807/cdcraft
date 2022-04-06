@@ -84,11 +84,11 @@ function DomBinding(operations) {
 
 
 /*
-`ApplicationUpdater` returns a namespace of functions that reflect how events map to state operations.
+`AppUpdater` returns a namespace of functions that reflect how events map to state operations.
 All functions represent the transformation of state in reponse to controller events. 
 Its name is in reference to the "Updater" within the "Model-View-Updater" pattern (A.K.A. "Elm" architecture)
 */
-function ApplicationUpdater(
+function AppUpdater(
         dependencies
     ){
     const selection_drags = dependencies.selection_drags;

@@ -3,12 +3,12 @@
 
 
 /*
-`ApplicationDragOperations` returns a namespace of *conceptually* pure functions 
+`AppDragOperations` returns a namespace of *conceptually* pure functions 
 that describe how ApplicationState changes in response to drag operations: 
 its modifications to the ModelView, its transitions in drag state, and its update to the undo/redo history
 as drags are initialized, transformed, and released.
 */
-function ApplicationDragOperations(
+function AppDragOperations(
         screen_frame_storage,  
         offset_frame_shifting, 
         position_frame_shifting, 
