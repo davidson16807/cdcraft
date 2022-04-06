@@ -1,5 +1,7 @@
 'use strict';
 
+
+
 /*
 `ApplicationDragOperations` returns a namespace of *conceptually* pure functions 
 that describe how ApplicationState changes in response to drag operations: 
@@ -10,10 +12,12 @@ function ApplicationDragOperations(
         screen_frame_storage,  
         offset_frame_shifting, 
         position_frame_shifting, 
+        application_history_traversal,
     ) {
     const storage = screen_frame_storage;
     const offset_shifting = offset_frame_shifting;
     const position_shifting = position_frame_shifting;
+    const history = application_history_traversal;
     return {
 
         wheel: function(screen_focus, scroll_count, app_io) {
@@ -22,7 +26,7 @@ function ApplicationDragOperations(
             const model_focus = position_shifting.leave(screen_focus, screen_frame);
 
             app_io.drag_state = app_io.drag_type.wheel(app_io.drag_state, model_focus, scroll_count);
-            app_io.drag_type.command(app_io.drag_state, false, false).forward(app_io.diagram, app_io.view);
+            history.do(app_io, app_io.drag_type.command(app_io.drag_state, false, false), false);
         },
 
         move: function (screen_position, screen_offset, app_io) {
@@ -34,27 +38,23 @@ function ApplicationDragOperations(
             app_io.drag_type = app_io.drag_type;
             app_io.drag_state = app_io.drag_type.move(app_io.drag_state, model_position, model_offset);
 
-            app_io.drag_type.command(app_io.drag_state, false, false).forward(app_io.diagram, app_io.view);
+            history.do(app_io, app_io.drag_type.command(app_io.drag_state, false, false), false);
         },
 
         transition: function(drag_type, app_io) {
             const screen_frame_store = app_io.view.screen_frame_store;
 
-            const drag_arrow = drag_type.initialize();
-
             const is_released = drag_type.id == DragState.released;
             const is_canceled = drag_type.id != DragState.released && drag_type.id != app_io.drag_type.id;
 
-
             if (is_released || is_canceled) { 
-                app_io.drag_type.command(app_io.drag_state, is_released, is_canceled).forward(app_io.diagram, app_io.view); 
-            }
-
-            app_io.drag_type = drag_type;
-            app_io.drag_state = drag_arrow;
-
-            if (!(is_released || is_canceled)) {
-                app_io.drag_type.command(app_io.drag_state, is_released, is_canceled).forward(app_io.diagram, app_io.view);
+                history.do(app_io, app_io.drag_type.command(app_io.drag_state, is_released, is_canceled), !is_canceled);
+                app_io.drag_type = drag_type;
+                app_io.drag_state = drag_type.initialize();
+            } else {
+                app_io.drag_type = drag_type;
+                app_io.drag_state = drag_type.initialize();
+                history.do(app_io, app_io.drag_type.command(app_io.drag_state, is_released, is_canceled), false);
             }
         }
 

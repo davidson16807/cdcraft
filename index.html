@@ -52,6 +52,7 @@
     <script src="./scripts/updaters/drags/SelectionDrags.js"></script>
     <script src="./scripts/updaters/drags/ArrowDrags.js"></script>
     <script src="./scripts/updaters/drags/DragState.js"></script>
+    <script src="./scripts/updaters/ApplicationHistoryTraversal.js"></script>
     <script src="./scripts/updaters/ApplicationDragOperations.js"></script>
     <script src="./scripts/updaters/ApplicationUpdater.js"></script>
     <script src="./scripts/resources/ArrowPositionsResource.js"></script>
@@ -269,12 +270,15 @@ const view_drags =
     Math.log2(500) // log2_cell_width_max
 );
 
+const application_history_traversal = 
+    ApplicationHistoryTraversal();
 
 const drag_state_ops = 
     ApplicationDragOperations(
         screen_frame_storage,
         offset_shifting, 
         position_shifting, 
+        application_history_traversal,
     );
 
 
