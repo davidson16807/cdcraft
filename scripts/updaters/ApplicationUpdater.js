@@ -153,7 +153,7 @@ function ApplicationUpdater(
                 drag_ops.transition( mouse_actions[state](app_io, event), app_io);
                 app_io.view.arrow_selections = [];
                 app_io.view.object_selections = [];
-            } else if (event.button == 2 && !event.shiftKey) {
+            } else if (event.button == 2 && !event.shiftKey && !event.ctrlKey) {
                 // rmb handles selections, cancel if nothing is selected
                 app_io.view.arrow_selections = [];
                 app_io.view.object_selections = [];
@@ -206,13 +206,20 @@ function ApplicationUpdater(
         },
 
         arrowselect: function(event, drawing, arrow_io, app_io, dom_io){
-            app_io.view.arrow_selections.push(arrow_io);
+            if (event.ctrlKey) {
+                app_io.view.arrow_selections = app_io.view.arrow_selections.filter(arrow => arrow != arrow_io);
+            } else {
+                app_io.view.arrow_selections.push(arrow_io);
+            }
             drawing.redraw(app_io, dom_io);
-            
         },
 
         objectselect: function(event, drawing, object_io, app_io, dom_io){
-            app_io.view.object_selections.push(object_io);
+            if (event.ctrlKey) {
+                app_io.view.object_selections = app_io.view.object_selections.filter(object => object != object_io);
+            } else {
+                app_io.view.object_selections.push(object_io);
+            }
             drawing.redraw(app_io, dom_io);
         },
 
