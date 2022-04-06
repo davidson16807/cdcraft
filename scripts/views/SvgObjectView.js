@@ -45,6 +45,7 @@ function SvgObjectView(dependencies) {
             ]);
         const deferal = view_event_deferal(drawing, object, dom);
         g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        g.addEventListener('mousedown',  event => event.button == 2 && deferal.callbackPreventStop(onselect)(event));
         g.addEventListener('mouseenter', event => (!object.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(event));
         return g;
     }

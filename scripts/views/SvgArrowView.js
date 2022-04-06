@@ -34,6 +34,7 @@ function SvgArrowView(svg, svg_arrow_attributes, view_event_deferal) {
             ]);
         const deferal = view_event_deferal(drawing, arrow, dom);
         g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        g.addEventListener('mousedown',  event => event.button == 2 && deferal.callbackPreventStop(onselect)(event));
         g.addEventListener('mouseenter', event => (!arrow.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(event));
         return g;
     }
