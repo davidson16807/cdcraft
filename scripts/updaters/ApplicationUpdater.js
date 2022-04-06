@@ -182,9 +182,11 @@ function ApplicationUpdater(
         },
 
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
-            if (app_io.view.object_selections.length > 0 || app_io.view.arrow_selections.length > 0) {
+            if (app_io.view.arrow_selections.filter(arrow => arrow == arrow_io).length > 0) {
                 drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.view.arrow_selections, app_io.diagram.objects, app_io.view.object_selections), app_io);
             } else {
+                app_io.view.arrow_selections = [];
+                app_io.view.object_selections = [];
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow_io), app_io);
             }
             drawing.redraw(app_io, dom_io);
@@ -196,6 +198,7 @@ function ApplicationUpdater(
             if (position_map[position_hash] != null) {
                 drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.view.arrow_selections, app_io.diagram.objects, app_io.view.object_selections), app_io);
             } else {
+                app_io.view.arrow_selections = [];
                 app_io.view.object_selections = [object_io];
                 drag_ops.transition( selection_drags.move(app_io.diagram.arrows, [], app_io.diagram.objects, app_io.view.object_selections), app_io);
             }
