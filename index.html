@@ -175,8 +175,8 @@ const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
 const user_arcs_and_stored_arcs =
     UserArcsAndStoredArcs(
         diagram_ids, 
-        0.01, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
-        0.015, // target offset distance
+        0.04, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
+        0.08, // target offset distance
     );
 const user_arcs_and_sampler_arcs = UserArcsAndSamplerArcs(ArcGeometry());
 
@@ -281,22 +281,20 @@ const drag_state_ops =
         app_history_traversal,
     );
 
-
 const app_updater = 
-    AppUpdater(
-        {
-            selection_drags           : selection_drags,
-            arrow_drags               : arrow_drags,
-            view_drags                : view_drags,
-            screen_frame_storage      : screen_frame_storage,
-            position_shifting         : position_shifting,
-            object_position_resources : ObjectPositionResource(diagram_ids, true),                        
-            diagram_ids               : diagram_ids,
-            drag_state_ops            : drag_state_ops,
-        }
-    );
+    AppUpdater({
+        selection_drags           : selection_drags,
+        arrow_drags               : arrow_drags,
+        view_drags                : view_drags,
+        screen_frame_storage      : screen_frame_storage,
+        position_shifting         : position_shifting,
+        object_position_resources : ObjectPositionResource(diagram_ids, true),                        
+        diagram_ids               : diagram_ids,
+        drag_state_ops            : drag_state_ops,
+        app_history_traversal     : app_history_traversal,
+    });
 
-const diagram_dom = 
+const app_dom = 
     SvgAppView({
         screen_frame_storage         : screen_frame_storage,
         diagram_object_set_ops       : diagram_object_set_ops,
@@ -318,10 +316,7 @@ const app = new AppState(
         disengaged_drag_state,
     );
 
-
-document.body.appendChild(diagram_dom.draw(document, app));
-
-
+document.body.appendChild(app_dom.draw(document, app));
 
 </script>
 </body>

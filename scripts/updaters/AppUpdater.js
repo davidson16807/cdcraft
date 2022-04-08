@@ -21,32 +21,6 @@ function ModelDomBindScoping() {
 }
 
 /*
-function AppDomBindCommandeering(modeldombind_scoping, app_commandeering) {
-    return {
-
-        do: function(appbind_io, partbind_io, command){
-            app_commandeering.do(bind_io, command);
-            const bind_io = modeldombind_scoping[command.scope];
-            bind_io.binding.update(bind_io.dom, bind_io.model);
-        },
-
-        undo: function(bind_io){
-            app_commandeering.undo(bind_io);
-            const bind_io = modeldombind_scoping[command.scope];
-            bind_io.binding.update(bind_io.dom, bind_io.model);
-        },
-
-        redo: function(bind_io){
-            app_commandeering.undo(bind_io);
-            const bind_io = modeldombind_scoping[command.scope];
-            bind_io.binding.update(bind_io.dom, bind_io.model);
-        },
-
-    };
-}
-*/
-
-/*
 given a unary function defined as operations[opcode]→parameters→model→model,
 return a Command that commutes model⇆model.
 If `opcode` is within `inverse_opcode_lookup`, use the opcode it maps to as the inverse.
@@ -71,14 +45,6 @@ function CommandCreation(operations, inverse_opcode_lookup){
     };
 }
 
-function DomBinding(operations) {
-    return {
-        update: function(opcode, model, view_out){
-            
-        }
-    };
-}
-
 
 
 
@@ -99,6 +65,7 @@ function AppUpdater(
     const object_position_resources = dependencies.object_position_resources;
     const diagram_ids = dependencies.diagram_ids;
     const drag_ops = dependencies.drag_state_ops;
+    const history = dependencies.app_history_traversal;
 
     const mouse_actions = {
         pan: function(app, event){
@@ -114,6 +81,15 @@ function AppUpdater(
             return arrow_drags.create(app.diagram.arrows, model_position);
         },
     };
+    const actions = {
+        'undo': app_io => history.undo(app_io),
+        'redo': app_io => history.redo(app_io),
+    }
+    const keydown = {
+        'ctrl+z': 'undo',
+        'ctrl+y': 'redo',
+        'ctrl+shift+z': 'redo',
+    }
     return {
 
         contextmenu: function(event, drawing, app_io, dom_io){
@@ -158,6 +134,17 @@ function AppUpdater(
         touchmove: function(event, drawing, app_io, dom_io){
         },
 
+        keydown: function(event, drawing, app_io, dom_io){
+            const keycode = `${event.ctrlKey?'ctrl+':''}${event.shiftKey?'shift+':''}${event.key}`
+            const action_id = keydown[keycode];
+            if (action_id!=null) {
+                const action = actions[action_id];
+                if (action!=null) {
+                    action(app_io);
+                    drawing.redraw(app_io, dom_io);
+                }
+            }
+        },
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
             if (app_io.view.arrow_selections.filter(arrow => arrow == arrow_io).length > 0) {
                 drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.view.arrow_selections, app_io.diagram.objects, app_io.view.object_selections), app_io);

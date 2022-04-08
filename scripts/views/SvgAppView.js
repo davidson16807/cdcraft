@@ -100,12 +100,15 @@ function SvgAppView(dependencies, onevents) {
                 ontouchsource  : deferal.callback            (onevents.touchsource ),
                 ontouchmove    : deferal.callbackPreventStop (onevents.touchmove   ),
                 ontouchend     : deferal.callback            (onevents.touchend    ),
+                onkeydown      : deferal.callback            (onevents.keydown    ),
             }, [g]);
 
         const app_node = html.div({
                 id: 'app',
                 class: "state.drag_type.id == 'pan'? 'pan-cursor' : ''",
             }, [svg_node]);
+
+        dom.addEventListener('keydown', deferal.callback(onevents.keydown));
 
         return app_node;
     };

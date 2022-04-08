@@ -12,14 +12,18 @@ function AppHistoryTraversal() {
 
         undo: function(app_io){
             const command = app_io.undo_history.pop();
-            command.forward(app_io.diagram, app_io.view);
-            app_io.redo_history.push(command);
+            if (command) {
+                command.backward(app_io.diagram, app_io.view);
+                app_io.redo_history.push(command);
+            }
         },
 
         redo: function(app_io){
             const command = app_io.redo_history.pop();
-            command.forward(app_io.diagram, app_io.view);
-            app_io.undo_history.push(command);
+            if (command) {
+                command.forward(app_io.diagram, app_io.view);
+                app_io.undo_history.push(command);
+            }
         },
 
     }
