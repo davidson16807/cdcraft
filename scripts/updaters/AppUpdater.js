@@ -135,7 +135,7 @@ function AppUpdater(
         },
 
         keydown: function(event, drawing, app_io, dom_io){
-            const keycode = `${event.ctrlKey?'ctrl+':''}${event.shiftKey?'shift+':''}${event.key}`
+            const keycode = `${event.ctrlKey?'ctrl+':''}${event.shiftKey?'shift+':''}${event.key.toLowerCase()}`
             const action_id = keydown[keycode];
             if (action_id!=null) {
                 const action = actions[action_id];
