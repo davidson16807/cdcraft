@@ -147,7 +147,7 @@ function AppUpdater(
         },
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
             if (app_io.diagram.arrow_selections.filter(arrow => arrow == arrow_io).length > 0) {
-                drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.diagram.arrow_selections, app_io.diagram.objects, app_io.diagram.object_selections), app_io);
+                drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             } else {
                 app_io.diagram.arrow_selections = [];
                 app_io.diagram.object_selections = [];
@@ -160,11 +160,11 @@ function AppUpdater(
             const position_map = object_position_resources.get(app_io.diagram.object_selections);
             const position_hash = diagram_ids.cell_id_to_cell_hash(object_io.position);
             if (position_map[position_hash] != null) {
-                drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.diagram.arrow_selections, app_io.diagram.objects, app_io.diagram.object_selections), app_io);
+                drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             } else {
                 app_io.diagram.arrow_selections = [];
                 app_io.diagram.object_selections = [object_io];
-                drag_ops.transition( selection_drags.move(app_io.diagram.arrows, [], app_io.diagram.objects, app_io.diagram.object_selections), app_io);
+                drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             }
             drawing.redraw(app_io, dom_io);
         },

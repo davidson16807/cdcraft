@@ -17,6 +17,7 @@ class DiagramArrow {
         this.end_style_id = end_style_id || 0;
         this.line_style_id = line_style_id || 0;
     }
+
     copy(){
         return new DiagramArrow(
             this.arc.copy(),
@@ -28,4 +29,5 @@ class DiagramArrow {
             this.line_style_id,
         );
     }
+
 }

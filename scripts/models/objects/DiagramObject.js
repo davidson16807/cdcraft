@@ -12,7 +12,9 @@ class DiagramObject {
         this.is_edited = is_edited || false;
         this.is_valid = is_valid || true;
     }
+
     copy(){
         return new DiagramObject(this.position, this.depiction, this.annotation, this.is_edited);
     }
+
 }

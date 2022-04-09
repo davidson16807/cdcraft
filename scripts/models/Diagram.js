@@ -18,11 +18,11 @@ class Diagram {
 
     copy(){
         return new Diagram(
-            arrows.map(arrow => arrow.copy()),
-            objects.map(object => object.copy()),
-            screen_frame_store.copy(),
-            arrow_selections.map(arrow => arrow.copy()),
-            object_selections.map(object => object.copy()),
+            this.arrows.map(arrow => arrow.copy()),
+            this.objects.map(object => object.copy()),
+            this.screen_frame_store.copy(),
+            this.arrow_selections.map(arrow => arrow.copy()),
+            this.object_selections.map(object => object.copy()),
         );
     }
 
