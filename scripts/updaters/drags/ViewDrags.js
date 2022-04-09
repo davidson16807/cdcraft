@@ -25,9 +25,9 @@ function ViewDrags(screen_frame_storage, position_shifting, offset_shifting,
                 wheel: (screen_frame_store, screen_focus, scroll_count) => screen_frame_store,
                 command: (screen_frame_store, is_released, is_canceled) => new Command(
                         // forward
-                        (model_inout, view_inout) => { view_inout.screen_frame_store = screen_frame_store },
+                        (diagram_io) => { diagram_io.screen_frame_store = screen_frame_store },
                         // backward
-                        (model_inout, view_inout) => { view_inout.screen_frame_store = original_screen_frame_store },
+                        (diagram_io) => { diagram_io.screen_frame_store = original_screen_frame_store },
                     )
             };
         },
@@ -65,9 +65,9 @@ function ViewDrags(screen_frame_storage, position_shifting, offset_shifting,
                 },
                 command: (screen_frame_store, is_released, is_canceled) => new Command(
                         // forward
-                        (model_inout, view_inout) => { view_inout.screen_frame_store = screen_frame_store },
+                        (diagram_io) => { diagram_io.screen_frame_store = screen_frame_store },
                         // backward
-                        (model_inout, view_inout) => { view_inout.screen_frame_store = original_screen_frame_store },
+                        (diagram_io) => { diagram_io.screen_frame_store = original_screen_frame_store },
                     )
             };
         }

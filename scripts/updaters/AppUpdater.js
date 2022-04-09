@@ -70,12 +70,12 @@ function AppUpdater(
     const mouse_actions = {
         pan: function(app, event){
             const screen_offset = glm.vec2(event.movementX, event.movementY);
-            const screen_frame_store = app.view.screen_frame_store;
+            const screen_frame_store = app.diagram.screen_frame_store;
             return view_drags.pan(screen_frame_store);
         },
         arrow: function(app, event){
             const screen_position = glm.vec2(event.clientX, event.clientY);
-            const screen_frame_store = app.view.screen_frame_store;
+            const screen_frame_store = app.diagram.screen_frame_store;
             const screen_frame = screen_frame_storage.unpack(screen_frame_store);
             const model_position = position_shifting.leave(screen_position, screen_frame);
             return arrow_drags.create(app.diagram.arrows, model_position);
@@ -104,12 +104,12 @@ function AppUpdater(
             if (event.button < 2) {
                 const state = [DragState.arrow, DragState.pan][event.button];
                 drag_ops.transition( mouse_actions[state](app_io, event), app_io);
-                app_io.view.arrow_selections = [];
-                app_io.view.object_selections = [];
+                app_io.diagram.arrow_selections = [];
+                app_io.diagram.object_selections = [];
             } else if (event.button == 2 && !event.shiftKey && !event.ctrlKey) {
                 // rmb handles selections, cancel if nothing is selected
-                app_io.view.arrow_selections = [];
-                app_io.view.object_selections = [];
+                app_io.diagram.arrow_selections = [];
+                app_io.diagram.object_selections = [];
             }
             drawing.redraw(app_io, dom_io);
         },
@@ -121,7 +121,7 @@ function AppUpdater(
         },
 
         mouseup: function(event, drawing, app_io, dom_io){
-            drag_ops.transition( view_drags.release(app_io.view.screen_frame_store), app_io);
+            drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             drawing.redraw(app_io, dom_io);
         },
 
@@ -146,43 +146,43 @@ function AppUpdater(
             }
         },
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
-            if (app_io.view.arrow_selections.filter(arrow => arrow == arrow_io).length > 0) {
-                drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.view.arrow_selections, app_io.diagram.objects, app_io.view.object_selections), app_io);
+            if (app_io.diagram.arrow_selections.filter(arrow => arrow == arrow_io).length > 0) {
+                drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.diagram.arrow_selections, app_io.diagram.objects, app_io.diagram.object_selections), app_io);
             } else {
-                app_io.view.arrow_selections = [];
-                app_io.view.object_selections = [];
+                app_io.diagram.arrow_selections = [];
+                app_io.diagram.object_selections = [];
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow_io), app_io);
             }
             drawing.redraw(app_io, dom_io);
         },
 
         objectclick: function(event, drawing, object_io, app_io, dom_io){
-            const position_map = object_position_resources.get(app_io.view.object_selections);
+            const position_map = object_position_resources.get(app_io.diagram.object_selections);
             const position_hash = diagram_ids.cell_id_to_cell_hash(object_io.position);
             if (position_map[position_hash] != null) {
-                drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.view.arrow_selections, app_io.diagram.objects, app_io.view.object_selections), app_io);
+                drag_ops.transition( selection_drags.move(app_io.diagram.arrows, app_io.diagram.arrow_selections, app_io.diagram.objects, app_io.diagram.object_selections), app_io);
             } else {
-                app_io.view.arrow_selections = [];
-                app_io.view.object_selections = [object_io];
-                drag_ops.transition( selection_drags.move(app_io.diagram.arrows, [], app_io.diagram.objects, app_io.view.object_selections), app_io);
+                app_io.diagram.arrow_selections = [];
+                app_io.diagram.object_selections = [object_io];
+                drag_ops.transition( selection_drags.move(app_io.diagram.arrows, [], app_io.diagram.objects, app_io.diagram.object_selections), app_io);
             }
             drawing.redraw(app_io, dom_io);
         },
 
         arrowselect: function(event, drawing, arrow_io, app_io, dom_io){
             if (event.ctrlKey) {
-                app_io.view.arrow_selections = app_io.view.arrow_selections.filter(arrow => arrow != arrow_io);
+                app_io.diagram.arrow_selections = app_io.diagram.arrow_selections.filter(arrow => arrow != arrow_io);
             } else {
-                app_io.view.arrow_selections.push(arrow_io);
+                app_io.diagram.arrow_selections.push(arrow_io);
             }
             drawing.redraw(app_io, dom_io);
         },
 
         objectselect: function(event, drawing, object_io, app_io, dom_io){
             if (event.ctrlKey) {
-                app_io.view.object_selections = app_io.view.object_selections.filter(object => object != object_io);
+                app_io.diagram.object_selections = app_io.diagram.object_selections.filter(object => object != object_io);
             } else {
-                app_io.view.object_selections.push(object_io);
+                app_io.diagram.object_selections.push(object_io);
             }
             drawing.redraw(app_io, dom_io);
         },

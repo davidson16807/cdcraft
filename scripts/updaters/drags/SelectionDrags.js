@@ -26,34 +26,34 @@ function SelectionDrags(
                     return is_canceled?
                         new Command(
                           // forward
-                          (model_io, view_io) => {
-                            model_io.arrows = arrow_positions_resource.delete(initial_arrows, cell_positions);
-                            model_io.objects = object_position_resource.delete(initial_objects, cell_positions);
-                            view_io.arrow_selections = [];
-                            view_io.object_selections = [];
+                          (diagram_io) => {
+                            diagram_io.arrows = arrow_positions_resource.delete(initial_arrows, cell_positions);
+                            diagram_io.objects = object_position_resource.delete(initial_objects, cell_positions);
+                            diagram_io.arrow_selections = [];
+                            diagram_io.object_selections = [];
                           },
                           // backward
-                          (model_io, view_io) => {
-                            model_io.arrows = initial_arrows;
-                            model_io.objects = initial_objects;
-                            view_io.arrow_selections = arrow_selections;
-                            view_io.object_selections = object_selections;
+                          (diagram_io) => {
+                            diagram_io.arrows = initial_arrows;
+                            diagram_io.objects = initial_objects;
+                            diagram_io.arrow_selections = arrow_selections;
+                            diagram_io.object_selections = object_selections;
                           },
                         )
                       : new Command(
                           // forward
-                          (model_io, view_io) => {
-                            model_io.arrows = arrow_positions_resource.put(initial_arrows, cell_positions, !(is_released));
-                            model_io.objects = object_position_resource.put(initial_objects, cell_positions, !(is_released));
-                            view_io.arrow_selections = arrow_positions_resource.put(arrow_selections, cell_positions, !(is_released));
-                            view_io.object_selections = object_position_resource.put(object_selections, cell_positions, !(is_released));
+                          (diagram_io) => {
+                            diagram_io.arrows = arrow_positions_resource.put(initial_arrows, cell_positions, !is_released);
+                            diagram_io.objects = object_position_resource.put(initial_objects, cell_positions, !is_released);
+                            diagram_io.arrow_selections = arrow_positions_resource.put(arrow_selections, cell_positions, !is_released);
+                            diagram_io.object_selections = object_position_resource.put(object_selections, cell_positions, !is_released);
                           },
                           // backward
-                          (model_io, view_io) => {
-                            model_io.arrows = initial_arrows;
-                            model_io.objects = initial_objects;
-                            view_io.arrow_selections = arrow_selections;
-                            view_io.object_selections = object_selections;
+                          (diagram_io) => {
+                            diagram_io.arrows = initial_arrows;
+                            diagram_io.objects = initial_objects;
+                            diagram_io.arrow_selections = arrow_selections;
+                            diagram_io.object_selections = object_selections;
                           },
                         )
                 }

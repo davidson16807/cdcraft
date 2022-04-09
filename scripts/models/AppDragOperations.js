@@ -21,7 +21,7 @@ function AppDragOperations(
     return {
 
         wheel: function(screen_focus, scroll_count, app_io) {
-            const screen_frame_store = app_io.view.screen_frame_store;
+            const screen_frame_store = app_io.diagram.screen_frame_store;
             const screen_frame = storage.unpack(screen_frame_store);
             const model_focus = position_shifting.leave(screen_focus, screen_frame);
 
@@ -30,7 +30,7 @@ function AppDragOperations(
         },
 
         move: function (screen_position, screen_offset, app_io) {
-            const screen_frame_store = app_io.view.screen_frame_store;
+            const screen_frame_store = app_io.diagram.screen_frame_store;
             const screen_frame = storage.unpack(screen_frame_store);
             const model_position = position_shifting.leave(screen_position, screen_frame);
             const model_offset = offset_shifting.leave(screen_offset, screen_frame);
@@ -42,7 +42,7 @@ function AppDragOperations(
         },
 
         transition: function(drag_type, app_io) {
-            const screen_frame_store = app_io.view.screen_frame_store;
+            const screen_frame_store = app_io.diagram.screen_frame_store;
 
             const is_released = drag_type.id == DragState.released;
             const is_canceled = drag_type.id != DragState.released && drag_type.id != app_io.drag_type.id;

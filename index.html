@@ -35,8 +35,6 @@
     <script src="./scripts/models/objects/DiagramObject.js"></script>
     <script src="./scripts/models/objects/DiagramObjectSetOperations.js"></script>
     <script src="./scripts/models/Diagram.js"></script>
-    <script src="./scripts/models/DiagramViewState.js"></script>
-    <script src="./scripts/models/DiagramControlState.js"></script>
     <script src="./scripts/models/AppState.js"></script>
     <script src="./scripts/models/AppHistoryTraversal.js"></script>
     <script src="./scripts/models/AppDragOperations.js"></script>
@@ -310,8 +308,7 @@ const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Mat
 const disengaged_drag = view_drags.release(initial_screen_frame_store)
 const disengaged_drag_state = disengaged_drag.initialize();
 const app = new AppState(
-        new Diagram([], []), 
-        new DiagramViewState(initial_screen_frame_store), 
+        new Diagram([], [], initial_screen_frame_store), 
         disengaged_drag,
         disengaged_drag_state,
     );

@@ -73,13 +73,13 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
                         new Command(
                           // forward
-                          (model_inout, view_inout) => model_inout.arrows.splice(original_length, 1),
+                          (diagram_io) => diagram_io.arrows.splice(original_length, 1),
                           // backward
-                          (model_inout, view_inout) => model_inout.arrows.splice(original_length, 1),
+                          (diagram_io) => diagram_io.arrows.splice(original_length, 1),
                         )
                       : new Command(
                           // forward
-                          (model_inout, view_inout) => model_inout.arrows[original_length] = new DiagramArrow(
+                          (diagram_io) => diagram_io.arrows[original_length] = new DiagramArrow(
                                 replacement_arrow.arc,
                                 !is_released,
                                 replacement_arrow.label,
@@ -89,7 +89,7 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                                 replacement_arrow.line_style_id,
                             ),
                           // backward
-                          (model_inout, view_inout) => model_inout.arrows.splice(original_length, 1),
+                          (diagram_io) => diagram_io.arrows.splice(original_length, 1),
                         )
                 }
             };
@@ -117,13 +117,13 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                     is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
                         new Command(
                           // forward
-                          (model_inout, view_inout) => model_inout.arrows.splice(arrow_id, 1),
+                          (diagram_io) => diagram_io.arrows.splice(arrow_id, 1),
                           // backward
-                          (model_inout, view_inout) => model_inout.arrows.splice(arrow_id, 0, replaced_arrow),
+                          (diagram_io) => diagram_io.arrows.splice(arrow_id, 0, replaced_arrow),
                         )
                       : new Command(
                             // forward
-                            (model_inout, view_inout) => model_inout.arrows[arrow_id] = new DiagramArrow(
+                            (diagram_io) => diagram_io.arrows[arrow_id] = new DiagramArrow(
                                   replacement_arrow.arc,
                                   !is_released,
                                   replacement_arrow.label,
@@ -133,7 +133,7 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                                   replacement_arrow.line_style_id,
                               ),
                             // backward
-                            (model_inout, view_inout) => model_inout.arrows[arrow_id] = replaced_arrow,
+                            (diagram_io) => diagram_io.arrows[arrow_id] = replaced_arrow,
                         )
             };
         },

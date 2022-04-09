@@ -5,9 +5,8 @@
 It guarantees that for any combination of real numbered attribute values there is a valid application state.
 */
 class AppState {
-    constructor(model, view, dragging, drag_state, undo_history, redo_history){
-        this.diagram = model;
-        this.view = view;
+    constructor(diagram, dragging, drag_state, undo_history, redo_history){
+        this.diagram = diagram;
         this.drag_type = dragging;
         this.drag_state = drag_state;
         this.undo_history = undo_history || [];

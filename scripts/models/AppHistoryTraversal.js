@@ -3,7 +3,7 @@ function AppHistoryTraversal() {
     return {
 
         do: function(app_io, command, is_recorded){
-            command.forward(app_io.diagram, app_io.view);
+            command.forward(app_io.diagram);
             if (is_recorded) {
                 app_io.redo_history = [];
                 app_io.undo_history.push(command);
@@ -13,7 +13,7 @@ function AppHistoryTraversal() {
         undo: function(app_io){
             const command = app_io.undo_history.pop();
             if (command) {
-                command.backward(app_io.diagram, app_io.view);
+                command.backward(app_io.diagram);
                 app_io.redo_history.push(command);
             }
         },
@@ -21,7 +21,7 @@ function AppHistoryTraversal() {
         redo: function(app_io){
             const command = app_io.redo_history.pop();
             if (command) {
-                command.forward(app_io.diagram, app_io.view);
+                command.forward(app_io.diagram);
                 app_io.undo_history.push(command);
             }
         },
