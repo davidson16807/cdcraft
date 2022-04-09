@@ -7,6 +7,7 @@ function ViewDrags(screen_frame_storage, position_shifting, offset_shifting,
     const min = Math.min;
     const clamp = (x, lo, hi) => min(max(x, lo), hi);
     return {
+
         pan: function(original_screen_frame_store){
             return {
                 id: DragState.pan,
@@ -23,14 +24,17 @@ function ViewDrags(screen_frame_storage, position_shifting, offset_shifting,
                         );
                 },
                 wheel: (screen_frame_store, screen_focus, scroll_count) => screen_frame_store,
-                command: (screen_frame_store, is_released, is_canceled) => new Command(
-                        // forward
-                        (diagram_io) => { diagram_io.screen_frame_store = screen_frame_store },
-                        // backward
-                        (diagram_io) => { diagram_io.screen_frame_store = original_screen_frame_store },
-                    )
+                command: (screen_frame_store, is_released, is_canceled) => 
+                    diagram => new Diagram(
+                                diagram.arrows,
+                                diagram.objects,
+                                diagram.arrow_selections,
+                                diagram.object_selections,
+                                screen_frame_store,
+                            ),
             };
         },
+
         release: function(original_screen_frame_store){
             const max = Math.max;
             const min = Math.min;
@@ -63,13 +67,16 @@ function ViewDrags(screen_frame_storage, position_shifting, offset_shifting,
                             screen_frame_store.topleft_cell_position.add(model_zoom_offset), updated_log2_cell_width
                         );
                 },
-                command: (screen_frame_store, is_released, is_canceled) => new Command(
-                        // forward
-                        (diagram_io) => { diagram_io.screen_frame_store = screen_frame_store },
-                        // backward
-                        (diagram_io) => { diagram_io.screen_frame_store = original_screen_frame_store },
-                    )
+                command: (screen_frame_store, is_released, is_canceled) => 
+                    diagram => new Diagram(
+                                diagram.arrows,
+                                diagram.objects,
+                                diagram.arrow_selections,
+                                diagram.object_selections,
+                                screen_frame_store,
+                            ),
             };
         }
+
     };
 }

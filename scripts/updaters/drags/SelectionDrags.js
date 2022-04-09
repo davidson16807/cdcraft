@@ -23,41 +23,21 @@ function SelectionDrags(
                     position_map_operations.offset(cell_positions, model_offset),
                 wheel: (cell_positions, screen_focus, scroll_count) => cell_positions,
                 // delete the object and its arrows if canceled, otherwise move the object and its arrows
-                command: (cell_positions, is_released, is_canceled) => {
-                    return is_canceled?
-                        new Command(
-                          // forward
-                          (diagram_io) => {
-                            diagram_io.arrows = arrow_positions_resource.delete(initial_diagram.arrows, cell_positions);
-                            diagram_io.objects = object_position_resource.delete(initial_diagram.objects, cell_positions);
-                            diagram_io.arrow_selections = [];
-                            diagram_io.object_selections = [];
-                          },
-                          // backward
-                          (diagram_io) => {
-                            diagram_io.arrows = initial_diagram.arrows;
-                            diagram_io.objects = initial_diagram.objects;
-                            diagram_io.arrow_selections = initial_diagram.arrow_selections;
-                            diagram_io.object_selections = initial_diagram.object_selections;
-                          },
-                        )
-                      : new Command(
-                          // forward
-                          (diagram_io) => {
-                            diagram_io.arrows = arrow_positions_resource.put(initial_diagram.arrows, cell_positions, !is_released);
-                            diagram_io.objects = object_position_resource.put(initial_diagram.objects, cell_positions, !is_released);
-                            diagram_io.arrow_selections = arrow_positions_resource.put(initial_diagram.arrow_selections, cell_positions, !is_released);
-                            diagram_io.object_selections = object_position_resource.put(initial_diagram.object_selections, cell_positions, !is_released);
-                          },
-                          // backward
-                          (diagram_io) => {
-                            diagram_io.arrows = initial_diagram.arrows;
-                            diagram_io.objects = initial_diagram.objects;
-                            diagram_io.arrow_selections = initial_diagram.arrow_selections;
-                            diagram_io.object_selections = initial_diagram.object_selections;
-                          },
-                        )
-                }
+                command: (cell_positions, is_released, is_canceled) => 
+                    (is_canceled? 
+                        diagram => new Diagram(
+                                arrow_positions_resource.delete(initial_diagram.arrows, cell_positions),
+                                object_position_resource.delete(initial_diagram.objects, cell_positions),
+                                [], [],
+                                diagram.screen_frame_store,
+                            )
+                      : diagram => new Diagram(
+                                arrow_positions_resource.put(initial_diagram.arrows, cell_positions, !is_released),
+                                object_position_resource.put(initial_diagram.objects, cell_positions, !is_released),
+                                arrow_positions_resource.put(initial_diagram.arrow_selections, cell_positions, !is_released),
+                                object_position_resource.put(initial_diagram.object_selections, cell_positions, !is_released),
+                                diagram.screen_frame_store,
+                            )),
             };
         },
     };

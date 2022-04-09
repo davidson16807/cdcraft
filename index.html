@@ -308,7 +308,7 @@ const initial_screen_frame_store = new ScreenReferenceFrameStore(glm.vec2(), Mat
 const disengaged_drag = view_drags.release(initial_screen_frame_store)
 const disengaged_drag_state = disengaged_drag.initialize();
 const app = new AppState(
-        new Diagram([], [], initial_screen_frame_store), 
+        new Diagram([], [], [], [], initial_screen_frame_store), 
         disengaged_drag,
         disengaged_drag_state,
     );

@@ -70,33 +70,36 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                 wheel: wheel,
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
-                    return is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
-                        new Command(
-                          // forward
-                          (diagram_io) => diagram_io.arrows.splice(original_length, 1),
-                          // backward
-                          (diagram_io) => diagram_io.arrows.splice(original_length, 1),
-                        )
-                      : new Command(
-                          // forward
-                          (diagram_io) => diagram_io.arrows[original_length] = new DiagramArrow(
-                                replacement_arrow.arc,
-                                !is_released,
-                                replacement_arrow.label,
-                                replacement_arrow.label_offset,
-                                replacement_arrow.source_style_id,
-                                replacement_arrow.end_style_id,
-                                replacement_arrow.line_style_id,
-                            ),
-                          // backward
-                          (diagram_io) => diagram_io.arrows.splice(original_length, 1),
-                        )
+                    return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
+                            diagram => new Diagram(
+                                    arrows,
+                                    diagram.objects,
+                                    [], [],
+                                    diagram.screen_frame_store,
+                                )
+                          : diagram => new Diagram(
+                                    [...arrows, 
+                                        new DiagramArrow(
+                                            replacement_arrow.arc,
+                                            !is_released,
+                                            replacement_arrow.label,
+                                            replacement_arrow.label_offset,
+                                            replacement_arrow.source_style_id,
+                                            replacement_arrow.end_style_id,
+                                            replacement_arrow.line_style_id,
+                                        )],
+                                diagram.objects,
+                                [], [],
+                                diagram.screen_frame_store,
+                            )
                 }
             };
         },
 
         edit: function(arrows, replaced_arrow) {
             const arrow_id = arrows.indexOf(replaced_arrow);
+            const arrows_before = arrows.slice(0,arrow_id);
+            const arrows_after = arrows.slice(arrow_id+1);
             return {
                 id: DragState.arrow,
                 is_model_drag: true,
@@ -115,26 +118,29 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                 // delete the arrow if canceled or not snapped, otherwise edit the arrow
                 command: (replacement_arrow, is_released, is_canceled) => 
                     is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
-                        new Command(
-                          // forward
-                          (diagram_io) => diagram_io.arrows.splice(arrow_id, 1),
-                          // backward
-                          (diagram_io) => diagram_io.arrows.splice(arrow_id, 0, replaced_arrow),
-                        )
-                      : new Command(
-                            // forward
-                            (diagram_io) => diagram_io.arrows[arrow_id] = new DiagramArrow(
-                                  replacement_arrow.arc,
-                                  !is_released,
-                                  replacement_arrow.label,
-                                  replacement_arrow.label_offset,
-                                  replacement_arrow.source_style_id,
-                                  replacement_arrow.end_style_id,
-                                  replacement_arrow.line_style_id,
-                              ),
-                            // backward
-                            (diagram_io) => diagram_io.arrows[arrow_id] = replaced_arrow,
-                        )
+                            diagram => new Diagram(
+                                    [...arrows_before, ...arrows_after],
+                                    diagram.objects,
+                                    [], [],
+                                    diagram.screen_frame_store,
+                                )
+                          : diagram => new Diagram(
+                                    [...arrows_before, 
+                                     new DiagramArrow(
+                                              replacement_arrow.arc,
+                                              !is_released,
+                                              replacement_arrow.label,
+                                              replacement_arrow.label_offset,
+                                              replacement_arrow.source_style_id,
+                                              replacement_arrow.end_style_id,
+                                              replacement_arrow.line_style_id,
+                                          ),
+                                     ...arrows_after],
+                                    diagram.objects,
+                                    [], [],
+                                    diagram.screen_frame_store,
+                                ),
+
             };
         },
     };

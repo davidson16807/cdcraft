@@ -48,15 +48,14 @@ function AppDragOperations(
             const is_canceled = drag_type.id != DragState.released && drag_type.id != app_io.drag_type.id;
 
             if (is_released || is_canceled) { 
-                history.do(app_io, app_io.drag_type.command(app_io.drag_state, is_released, is_canceled), !is_canceled);
+                history.do(app_io, app_io.drag_type.command(app_io.drag_state, is_released, is_canceled), !is_released);
                 app_io.drag_type = drag_type;
                 app_io.drag_state = drag_type.initialize();
             } else {
-                app_io.drag_type = drag_type;
-                app_io.drag_state = drag_type.initialize();
                 history.do(app_io, app_io.drag_type.command(app_io.drag_state, is_released, is_canceled), false);
             }
         }
 
     };
 }
+

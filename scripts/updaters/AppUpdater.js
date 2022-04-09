@@ -104,12 +104,24 @@ function AppUpdater(
             if (event.button < 2) {
                 const state = [DragState.arrow, DragState.pan][event.button];
                 drag_ops.transition( mouse_actions[state](app_io, event), app_io);
-                app_io.diagram.arrow_selections = [];
-                app_io.diagram.object_selections = [];
+                history.do(app_io, diagram => {
+                    return new Diagram(
+                            diagram.arrows,
+                            diagram.objects,
+                            [], [],
+                            diagram.screen_frame_store,
+                        );
+                }, false);
             } else if (event.button == 2 && !event.shiftKey && !event.ctrlKey) {
                 // rmb handles selections, cancel if nothing is selected
-                app_io.diagram.arrow_selections = [];
-                app_io.diagram.object_selections = [];
+                history.do(app_io, diagram => {
+                    return new Diagram(
+                            diagram.arrows,
+                            diagram.objects,
+                            [], [],
+                            diagram.screen_frame_store,
+                        );
+                }, false);
             }
             drawing.redraw(app_io, dom_io);
         },
@@ -145,12 +157,11 @@ function AppUpdater(
                 }
             }
         },
+
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
-            if (app_io.diagram.arrow_selections.filter(arrow => arrow == arrow_io).length > 0) {
+            if (app_io.diagram.arrow_selections[app_io.diagram.arrows.indexOf(arrow_io)] != null) {
                 drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             } else {
-                app_io.diagram.arrow_selections = [];
-                app_io.diagram.object_selections = [];
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow_io), app_io);
             }
             drawing.redraw(app_io, dom_io);
@@ -162,28 +173,48 @@ function AppUpdater(
             if (position_map[position_hash] != null) {
                 drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             } else {
-                app_io.diagram.arrow_selections = [];
-                app_io.diagram.object_selections = [object_io];
+                history.do(app_io, diagram => {
+                    return new Diagram(
+                            diagram.arrows,
+                            diagram.objects,
+                            [], [object_io],
+                            diagram.screen_frame_store,
+                        );
+                });
                 drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             }
             drawing.redraw(app_io, dom_io);
         },
 
         arrowselect: function(event, drawing, arrow_io, app_io, dom_io){
-            if (event.ctrlKey) {
-                app_io.diagram.arrow_selections = app_io.diagram.arrow_selections.filter(arrow => arrow != arrow_io);
-            } else {
-                app_io.diagram.arrow_selections.push(arrow_io);
-            }
+            const id = app_io.diagram.arrows.indexOf(arrow_io);
+            const arrow_selections = event.ctrlKey? 
+                diagram.arrow_selections.filter(arrow => arrow != arrow_io) : [...diagram.arrow_selections, arrow_io];
+            history.do(app_io, diagram => {
+                return new Diagram(
+                        diagram.arrows,
+                        diagram.objects,
+                        arrow_selections,
+                        diagram.object_selections,
+                        diagram.screen_frame_store,
+                    );
+            }, true);
             drawing.redraw(app_io, dom_io);
         },
 
         objectselect: function(event, drawing, object_io, app_io, dom_io){
-            if (event.ctrlKey) {
-                app_io.diagram.object_selections = app_io.diagram.object_selections.filter(object => object != object_io);
-            } else {
-                app_io.diagram.object_selections.push(object_io);
-            }
+            const id = app_io.diagram.objects.indexOf(object_io);
+            const object_selections = event.ctrlKey? 
+                diagram.object_selections.filter(object => object != object_io) : [...diagram.object_selections, object_io];
+            history.do(app_io, diagram => {
+                return new Diagram(
+                        diagram.arrows,
+                        diagram.objects,
+                        diagram.arrow_selections,
+                        object_selections,
+                        diagram.screen_frame_store,
+                    );
+            }, true);
             drawing.redraw(app_io, dom_io);
         },
 
