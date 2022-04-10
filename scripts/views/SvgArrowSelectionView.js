@@ -12,10 +12,10 @@ function SvgArrowSelectionView(svg, svg_arrow_attributes, view_event_deferal) {
     };
 
     const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, arrow, drag_type, onclick) {
+    drawing.draw = function(dom, screen_frame_store, arrow, opacity, onclick) {
         const g = svg.g(
             {
-
+                opacity: opacity,
                 onmousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(event),
             },
             [

@@ -22,9 +22,11 @@ function SvgObjectSelectionView(dependencies) {
     };
 
     const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick) {
+    drawing.draw = function(dom, screen_frame_store, object, opacity, onclick) {
         const g = svg.g(
-            {},
+            {
+                opacity: opacity,
+            },
             [
                 svg.circle({class:"object-highlight", r:23}, screen_position(screen_frame_store, object.position)),
             ]);

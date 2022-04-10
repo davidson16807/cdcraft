@@ -109,29 +109,19 @@ function AppUpdater(
         },
 
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
-            if (app_io.diagram.arrow_selections[app_io.diagram.arrows.indexOf(arrow_io)] != null) {
-                drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
-            } else {
-                drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow_io), app_io);
-            }
+            drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow_io), app_io);
             drawing.redraw(app_io, dom_io);
         },
 
         objectclick: function(event, drawing, object_io, app_io, dom_io){
-            const position_map = object_position_resources.get(app_io.diagram.object_selections);
-            const position_hash = diagram_ids.cell_id_to_cell_hash(object_io.position);
-            if (position_map[position_hash] != null) {
-                drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
-            } else {
-                history.do(app_io, 
-                    new Diagram(
-                            app_io.diagram.arrows,
-                            app_io.diagram.objects,
-                            [], [object_io],
-                            app_io.diagram.screen_frame_store,
-                        ), false);
-                drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
-            }
+            history.do(app_io, 
+                new Diagram(
+                        app_io.diagram.arrows,
+                        app_io.diagram.objects,
+                        [], [object_io],
+                        app_io.diagram.screen_frame_store,
+                    ), false);
+            drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             drawing.redraw(app_io, dom_io);
         },
 
@@ -164,6 +154,12 @@ function AppUpdater(
                         object_selections,
                         app_io.diagram.screen_frame_store,
                     ), true);
+            drawing.redraw(app_io, dom_io);
+        },
+
+
+        selection_click: function(event, drawing, arrow_io, app_io, dom_io){
+            drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             drawing.redraw(app_io, dom_io);
         },
 
