@@ -178,7 +178,7 @@ const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
 const user_arcs_and_stored_arcs =
     UserArcsAndStoredArcs(
         diagram_ids, 
-        0.04, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
+        0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
         0.08, // target offset distance
     );
 const user_arcs_and_sampler_arcs = UserArcsAndSamplerArcs(ArcGeometry());
