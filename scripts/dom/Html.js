@@ -6,6 +6,9 @@
 function Html(){
 
     function node(tag, attributes, children, textContent){
+        attributes = attributes || {};
+        children = children || [];
+        textContent = textContent || '';
         const result = document.createElement(tag);
         for (let name in attributes){
             if (name.startsWith('on')) {

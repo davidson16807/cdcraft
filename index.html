@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="./styles/bootstrap.min.css">
     <script src="./libraries/glm-js.min.js"></script>
     <script src="./libraries/katex.min.js"></script>
-    <script src="./libraries/auto-render.min.js"></script>
     <script src="./scripts/DiagramIds.js"></script>
     <script src="./scripts/CellHashing.js"></script>
     <script src="./scripts/frames/ScreenReferenceFrameStorage.js"></script>
@@ -154,25 +153,6 @@
 <script type="text/javascript">
 'use strict';
 
-const KatexDirective = (renderMathInElement) => ({
-      name: 'katex',
-      directive: function(el, binding) {
-        renderMathInElement(el);
-      },
-    });
-
-const KatexPlugin = (renderMathInElement) => ({
-      install: (vue, options) => {
-        const katex_directive = KatexDirective(renderMathInElement);
-        vue.directive(katex_directive.name, katex_directive.directive);
-      },
-    });
-
-// Vue.use(KatexPlugin(renderMathInElement));
-
-
-
-
 const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
 
 const user_arcs_and_stored_arcs =
@@ -236,6 +216,7 @@ const object_view =
         diagram_ids                : diagram_ids,
         position_shifting          : position_shifting,
         view_event_deferal         : view_event_deferal,
+        katex                      : katex,
     });
 
 const object_selection_view = 
