@@ -1,14 +1,17 @@
+'use strict';
 
-function AppHistoryTraversal() {
+function AppHistoryTraversal(diagram_metrics) {
     return {
 
         do: function(app_io, diagram, is_recorded){
             if (diagram != app_io.diagram) {
                 if (is_recorded) {
                     app_io.undo_history.push(app_io.diagram);
-                    if (diagram.arrows != app_io.diagram.arrows ||
-                        diagram.objects != app_io.diagram.objects) {
-                        // only reset redo history if change is hard
+                    if (diagram_metrics.is_model_different(diagram, app_io.diagram)) {
+                        /*
+                        do not reset redo history if only the view has changed, 
+                        since it would otherwise be annoying
+                        */
                         app_io.redo_history = [];
                     }
                 }
@@ -21,9 +24,7 @@ function AppHistoryTraversal() {
             let diagram;
             while(!is_done && app_io.undo_history.length > 0) {
                 diagram = app_io.undo_history.pop();
-                is_done = (is_soft || 
-                    diagram.arrows != app_io.diagram.arrows ||
-                    diagram.objects != app_io.diagram.objects);
+                is_done = is_soft || diagram_metrics.is_model_different(diagram, app_io.diagram);
                 app_io.redo_history.push(app_io.diagram);
                 app_io.diagram = diagram;
             }
@@ -34,9 +35,7 @@ function AppHistoryTraversal() {
             let diagram;
             while(!is_done && app_io.redo_history.length > 0) {
                 diagram = app_io.redo_history.pop();
-                is_done = (is_soft || 
-                    diagram.arrows != app_io.diagram.arrows ||
-                    diagram.objects != app_io.diagram.objects);
+                is_done = is_soft || diagram_metrics.is_model_different(diagram, app_io.diagram);
                 app_io.undo_history.push(app_io.diagram);
                 app_io.diagram = diagram;
             }

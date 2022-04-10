@@ -1,7 +1,5 @@
 'use strict';
 
-
-
 /*
 `AppDragOperations` returns a namespace of *conceptually* pure functions 
 that describe how ApplicationState changes in response to drag operations: 

@@ -33,7 +33,8 @@
     <script src="./scripts/models/arrows/DiagramArrowListsAndLookups.js"></script>
     <script src="./scripts/models/objects/DiagramObject.js"></script>
     <script src="./scripts/models/objects/DiagramObjectSetOperations.js"></script>
-    <script src="./scripts/models/Diagram.js"></script>
+    <script src="./scripts/models/diagrams/Diagram.js"></script>
+    <script src="./scripts/models/diagrams/DiagramMetrics.js"></script>
     <script src="./scripts/models/AppState.js"></script>
     <script src="./scripts/models/AppHistoryTraversal.js"></script>
     <script src="./scripts/models/AppDragOperations.js"></script>
@@ -275,7 +276,7 @@ const view_drags =
 );
 
 const app_history_traversal = 
-    AppHistoryTraversal();
+    AppHistoryTraversal(DiagramMetrics());
 
 const drag_state_ops = 
     AppDragOperations(
