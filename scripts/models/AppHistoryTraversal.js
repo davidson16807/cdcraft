@@ -1,12 +1,15 @@
 'use strict';
 
-function AppHistoryTraversal(diagram_metrics) {
+function AppHistoryTraversal(diagram_metrics, max_history_size) {
     return {
 
         do: function(app_io, diagram, is_recorded){
             if (diagram != app_io.diagram) {
                 if (is_recorded) {
                     app_io.undo_history.push(app_io.diagram);
+                    if (app_io.undo_history.length > max_history_size) {
+                        app_io.undo_history.shift();
+                    }
                     if (diagram_metrics.is_model_different(diagram, app_io.diagram)) {
                         /*
                         do not reset redo history if only the view has changed, 
