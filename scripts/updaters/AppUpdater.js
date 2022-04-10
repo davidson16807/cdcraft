@@ -1,54 +1,6 @@
 'use strict';
 
 
-
-function ModelDomBindScoping() {
-    return {
-
-        arrow: function (appbind, arrowbind) {
-            return appbind;
-        },
-
-        object: function (appbind, objectbind) {
-            return objectbind;
-        },
-
-        app: function (appbind, partbind_io) {
-            return appbind;
-        },
-
-    };
-}
-
-/*
-given a unary function defined as operations[opcode]→parameters→model→model,
-return a Command that commutes model⇆model.
-If `opcode` is within `inverse_opcode_lookup`, use the opcode it maps to as the inverse.
-Otherwise, return a command that caches the input and returns it. 
-*/
-function CommandCreation(operations, inverse_opcode_lookup){
-    return {
-        create: function(opcode, parameters, model){
-            const invert = inverse_opcode_lookup[opcode];
-            return invert != null?
-                Command(
-                    opcode, invert,
-                    (model) => operations[opcode](parameters)(model),
-                    (model) => operations[invert](parameters)(model)
-                ):
-                Command(
-                    opcode, opcode,
-                    (model1) => operations[opcode](parameters)(model),
-                    (model2) => model,
-                );
-        }
-    };
-}
-
-
-
-
-
 /*
 `AppUpdater` returns a namespace of functions that reflect how events map to state operations.
 All functions represent the transformation of state in reponse to controller events. 
@@ -104,24 +56,22 @@ function AppUpdater(
             if (event.button < 2) {
                 const state = [DragState.arrow, DragState.pan][event.button];
                 drag_ops.transition( mouse_actions[state](app_io, event), app_io);
-                history.do(app_io, diagram => {
-                    return new Diagram(
-                            diagram.arrows,
-                            diagram.objects,
+                history.do(app_io, 
+                    new Diagram(
+                            app_io.diagram.arrows,
+                            app_io.diagram.objects,
                             [], [],
-                            diagram.screen_frame_store,
-                        );
-                }, false);
+                            app_io.diagram.screen_frame_store,
+                        ), false);
             } else if (event.button == 2 && !event.shiftKey && !event.ctrlKey) {
                 // rmb handles selections, cancel if nothing is selected
-                history.do(app_io, diagram => {
-                    return new Diagram(
-                            diagram.arrows,
-                            diagram.objects,
+                history.do(app_io, 
+                    new Diagram(
+                            app_io.diagram.arrows,
+                            app_io.diagram.objects,
                             [], [],
-                            diagram.screen_frame_store,
-                        );
-                }, false);
+                            app_io.diagram.screen_frame_store,
+                        ), false);
             }
             drawing.redraw(app_io, dom_io);
         },
@@ -173,14 +123,13 @@ function AppUpdater(
             if (position_map[position_hash] != null) {
                 drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             } else {
-                history.do(app_io, diagram => {
-                    return new Diagram(
-                            diagram.arrows,
-                            diagram.objects,
+                history.do(app_io, 
+                    new Diagram(
+                            app_io.diagram.arrows,
+                            app_io.diagram.objects,
                             [], [object_io],
-                            diagram.screen_frame_store,
-                        );
-                });
+                            app_io.diagram.screen_frame_store,
+                        ), false);
                 drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             }
             drawing.redraw(app_io, dom_io);
@@ -190,15 +139,14 @@ function AppUpdater(
             const id = app_io.diagram.arrows.indexOf(arrow_io);
             const arrow_selections = event.ctrlKey? 
                 diagram.arrow_selections.filter(arrow => arrow != arrow_io) : [...diagram.arrow_selections, arrow_io];
-            history.do(app_io, diagram => {
-                return new Diagram(
-                        diagram.arrows,
-                        diagram.objects,
+            history.do(app_io, 
+                new Diagram(
+                        app_io.diagram.arrows,
+                        app_io.diagram.objects,
                         arrow_selections,
-                        diagram.object_selections,
-                        diagram.screen_frame_store,
-                    );
-            }, true);
+                        app_io.diagram.object_selections,
+                        app_io.diagram.screen_frame_store,
+                    ), true);
             drawing.redraw(app_io, dom_io);
         },
 
@@ -206,15 +154,14 @@ function AppUpdater(
             const id = app_io.diagram.objects.indexOf(object_io);
             const object_selections = event.ctrlKey? 
                 diagram.object_selections.filter(object => object != object_io) : [...diagram.object_selections, object_io];
-            history.do(app_io, diagram => {
-                return new Diagram(
-                        diagram.arrows,
-                        diagram.objects,
-                        diagram.arrow_selections,
+            history.do(app_io, 
+                new Diagram(
+                        app_io.diagram.arrows,
+                        app_io.diagram.objects,
+                        app_io.diagram.arrow_selections,
                         object_selections,
-                        diagram.screen_frame_store,
-                    );
-            }, true);
+                        app_io.diagram.screen_frame_store,
+                    ), true);
             drawing.redraw(app_io, dom_io);
         },
 

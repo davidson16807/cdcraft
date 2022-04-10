@@ -2,8 +2,7 @@
 function AppHistoryTraversal() {
     return {
 
-        do: function(app_io, command, is_recorded){
-            diagram = command(app_io.diagram);
+        do: function(app_io, diagram, is_recorded){
             if (diagram != app_io.diagram) {
                 if (is_recorded) {
                     app_io.undo_history.push(app_io.diagram);

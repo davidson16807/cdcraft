@@ -26,7 +26,7 @@ function AppDragOperations(
             const model_focus = position_shifting.leave(screen_focus, screen_frame);
 
             app_io.drag_state = app_io.drag_type.wheel(app_io.drag_state, model_focus, scroll_count);
-            history.do(app_io, app_io.drag_type.command(app_io.drag_state, false, false), false);
+            history.do(app_io, app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);
         },
 
         move: function (screen_position, screen_offset, app_io) {
@@ -35,10 +35,8 @@ function AppDragOperations(
             const model_position = position_shifting.leave(screen_position, screen_frame);
             const model_offset = offset_shifting.leave(screen_offset, screen_frame);
 
-            app_io.drag_type = app_io.drag_type;
             app_io.drag_state = app_io.drag_type.move(app_io.drag_state, model_position, model_offset);
-
-            history.do(app_io, app_io.drag_type.command(app_io.drag_state, false, false), false);
+            history.do(app_io, app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);
         },
 
         transition: function(drag_type, app_io) {
@@ -48,11 +46,11 @@ function AppDragOperations(
             const is_canceled = drag_type.id != DragState.released && drag_type.id != app_io.drag_type.id;
 
             if (is_released || is_canceled) { 
-                history.do(app_io, app_io.drag_type.command(app_io.drag_state, is_released, is_canceled), !is_released);
+                history.do(app_io, app_io.drag_type.command(app_io.drag_state, is_released, is_canceled)(app_io.diagram), !is_released);
                 app_io.drag_type = drag_type;
                 app_io.drag_state = drag_type.initialize();
             } else {
-                history.do(app_io, app_io.drag_type.command(app_io.drag_state, is_released, is_canceled), false);
+                history.do(app_io, app_io.drag_type.command(app_io.drag_state, is_released, is_canceled)(app_io.diagram), false);
             }
         }
 
