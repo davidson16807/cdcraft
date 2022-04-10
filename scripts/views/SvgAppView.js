@@ -30,6 +30,12 @@ function SvgAppView(dependencies, onevents) {
     const drawing = {};
 
     function _redraw(old_app, new_app, dom_io) {
+        if (old_app == null || old_app.drag_type == new_app.drag_type){
+            dom_io
+                .getElementById('graphics')
+                .setAttribute('cursor', new_app.drag_type.id == 'released'? 'default' : 'move')
+        }
+
         if (old_app == null || old_app.screen_frame_store != new_app.screen_frame_store) {
             dom_io
                 .getElementById('transformation')
@@ -123,6 +129,7 @@ function SvgAppView(dependencies, onevents) {
 
         const svg_node = svg.svg(
             {
+                id: 'graphics',
                 oncontextmenu  : deferal.callbackPrevent     (onevents.contextmenu ),
                 onmousedown    : deferal.callbackPrevent     (onevents.mousedown   ),
                 onmousemove    : deferal.callbackPrevent     (onevents.mousemove   ),
