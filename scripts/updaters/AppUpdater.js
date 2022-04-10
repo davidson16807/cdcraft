@@ -57,7 +57,7 @@ function AppUpdater(
 
         wheel: function(event, drawing, app_io, dom_io){
             drag_ops.wheel( glm.vec2(event.clientX, event.clientY), event.deltaY, app_io);
-            drawing.redraw(app_io, dom_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         mousedown: function(event, drawing, app_io, dom_io){
@@ -81,18 +81,18 @@ function AppUpdater(
                             app_io.diagram.screen_frame_store,
                         ), false);
             }
-            drawing.redraw(app_io, dom_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         mousemove: function(event, drawing, app_io, dom_io){
             // mouse motion is a degenerate case of touchscreen motion where the number of touchpoints is one
             drag_ops.move( glm.vec2(event.clientX, event.clientY), glm.vec2(event.movementX, event.movementY), app_io);
-            drawing.redraw(app_io, dom_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         mouseup: function(event, drawing, app_io, dom_io){
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
-            drawing.redraw(app_io, dom_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         touchsource: function(event, drawing, app_io, dom_io){
@@ -111,14 +111,14 @@ function AppUpdater(
                 const action = actions[action_id];
                 if (action!=null) {
                     action(app_io);
-                    drawing.redraw(app_io, dom_io);
+                    drawing.redraw(undefined, app_io, dom_io);
                 }
             }
         },
 
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
             drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow_io), app_io);
-            drawing.redraw(app_io, dom_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         objectclick: function(event, drawing, object_io, app_io, dom_io){
@@ -130,7 +130,7 @@ function AppUpdater(
                         app_io.diagram.screen_frame_store,
                     ), false);
             drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
-            drawing.redraw(app_io, dom_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         arrowselect: function(event, drawing, arrow_io, app_io, dom_io){
@@ -146,7 +146,7 @@ function AppUpdater(
                         app_io.diagram.object_selections,
                         app_io.diagram.screen_frame_store,
                     ), true);
-            drawing.redraw(app_io, dom_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         objectselect: function(event, drawing, object_io, app_io, dom_io){
@@ -162,13 +162,13 @@ function AppUpdater(
                         object_selections,
                         app_io.diagram.screen_frame_store,
                     ), true);
-            drawing.redraw(app_io, dom_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         selection_click: function(event, drawing, arrow_io, app_io, dom_io){
             if (event.ctrlKey) {}
             drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
-            drawing.redraw(app_io, dom_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
     }

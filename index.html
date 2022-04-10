@@ -131,6 +131,7 @@
         .highlight-on-hover .arrow {
             visibility: visible;
         }
+
         .highlight-never {
             visibility: hidden;
         }
@@ -141,10 +142,7 @@
             visibility: visible;
         }
 
-        #arrow-selection-hitboxes{
-            opacity: 0;
-        }
-        #object-selection-hitboxes{
+        .hitbox{
             opacity: 0;
         }
 
@@ -320,7 +318,7 @@ const app = new AppState(
         disengaged_drag_state,
     );
 
-document.body.appendChild(app_dom.draw(document, app));
+app_dom.draw(app, document);
 
 </script>
 </body>

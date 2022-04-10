@@ -29,72 +29,97 @@ function SvgAppView(dependencies, onevents) {
 
     const drawing = {};
 
-    function _redraw(dom, app, g_io) {
-        g_io.setAttribute('transformation', frame_transform(app.diagram.screen_frame_store));
-        g_io.replaceChildren(...[
-                svg_grid_view.draw(app.diagram.screen_frame_store),
+    function _redraw(old_app, new_app, dom_io) {
+        if (old_app == null || old_app.screen_frame_store != new_app.screen_frame_store) {
+            dom_io
+                .getElementById('transformation')
+                .setAttribute('transformation', frame_transform(new_app.diagram.screen_frame_store));
+            dom_io
+                .getElementById('cell-borders')
+                .replaceWith(svg_grid_view.draw(new_app.diagram.screen_frame_store));
+        }
 
-                svg.g({id:"object-selections"}, 
-                    app.diagram.object_selections
-                        .map(object => 
-                            svg_object_selection_view.draw(
-                                dom,
-                                app.diagram.screen_frame_store, 
-                                object))),
-                svg.g({id:"arrow-selections"}, 
-                    app.diagram.arrow_selections
-                        .map(arrow => 
-                            svg_arrow_selection_view.draw(
-                                dom,
-                                app.diagram.screen_frame_store, 
-                                arrow))),
+        if (old_app == null || old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
+            dom_io.getElementById('arrow-selections')
+                .replaceChildren(...new_app.diagram.arrow_selections
+                    .map(arrow => 
+                        svg_arrow_selection_view.draw(
+                            dom_io,
+                            new_app.diagram.screen_frame_store, 
+                            arrow)));
+            dom_io.getElementById('arrow-selection-hitboxes')
+                .replaceChildren(...new_app.diagram.arrow_selections
+                    .map(arrow => 
+                        svg_arrow_selection_view.draw(
+                            dom_io,
+                            new_app.diagram.screen_frame_store, 
+                            arrow, 
+                            (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, arrow, new_app, dom_io))));
+        }
 
-                svg.g({id:"objects"},
-                    inferred_objects(app.diagram)
-                        .map(object => 
-                            svg_object_view.draw(
-                                dom,
-                                app.diagram.screen_frame_store, 
-                                object, 
-                                app.drag_type, 
-                                (event, arrow_drawing, object, dom2) => onevents.objectclick(event, drawing, object, app, dom),
-                                (event, arrow_drawing, object, dom2) => onevents.objectselect(event, drawing, object, app, dom)))),
-                svg.g({id:"arrows"}, 
-                    app.diagram.arrows
-                        .map(arrow => 
-                            svg_arrow_view.draw(
-                                dom,
-                                app.diagram.screen_frame_store, 
-                                arrow, 
-                                app.drag_type, 
-                                (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, app, dom),
-                                (event, arrow_drawing, arrow, dom2) => onevents.arrowselect(event, drawing, arrow, app, dom)))),
+        if (old_app == null || old_app.diagram.object_selections != new_app.diagram.object_selections) {
+            dom_io.getElementById('object-selections')
+                .replaceChildren(...new_app.diagram.object_selections
+                    .map(object => 
+                        svg_object_selection_view.draw(
+                            dom_io,
+                            new_app.diagram.screen_frame_store, 
+                            object)));
+            dom_io.getElementById('object-selection-hitboxes')
+                .replaceChildren(...new_app.diagram.object_selections
+                    .map(object => 
+                        svg_object_selection_view.draw(
+                            dom_io,
+                            new_app.diagram.screen_frame_store, 
+                            object, 
+                            (event, arrow_drawing, object, dom2) => onevents.selection_click(event, drawing, object, new_app, dom_io))));
+        }
 
-                svg.g({id:"object-selection-hitboxes"}, 
-                    app.diagram.object_selections
-                        .map(object => 
-                            svg_object_selection_view.draw(
-                                dom,
-                                app.diagram.screen_frame_store, 
-                                object, 
-                                (event, arrow_drawing, object, dom2) => onevents.selection_click(event, drawing, object, app, dom)))),
-                svg.g({id:"arrow-selection-hitboxes"}, 
-                    app.diagram.arrow_selections
-                        .map(arrow => 
-                            svg_arrow_selection_view.draw(
-                                dom,
-                                app.diagram.screen_frame_store, 
-                                arrow, 
-                                (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, arrow, app, dom)))),
+        if (old_app == null || 
+            old_app.diagram.objects != new_app.diagram.objects || 
+            old_app.drag_type != new_app.drag_type) {
+            dom_io.getElementById('objects')
+                .replaceChildren(...inferred_objects(new_app.diagram)
+                    .map(object => 
+                        svg_object_view.draw(
+                            dom_io,
+                            new_app.diagram.screen_frame_store, 
+                            object, 
+                            new_app.drag_type, 
+                            (event, arrow_drawing, object, dom2) => onevents.objectclick(event, drawing, object, new_app, dom_io),
+                            (event, arrow_drawing, object, dom2) => onevents.objectselect(event, drawing, object, new_app, dom_io))));
+        }
 
-            ]);
+        if (old_app == null || 
+            old_app.diagram.arrows != new_app.diagram.arrows || 
+            old_app.drag_type != new_app.drag_type) {
+            dom_io.getElementById('arrows')
+                .replaceChildren(...new_app.diagram.arrows
+                    .map(arrow => 
+                        svg_arrow_view.draw(
+                            dom_io,
+                            new_app.diagram.screen_frame_store, 
+                            arrow, 
+                            new_app.drag_type, 
+                            (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, new_app, dom_io),
+                            (event, arrow_drawing, arrow, dom2) => onevents.arrowselect(event, drawing, arrow, new_app, dom_io))));
+        }
+
     }
 
-    drawing.draw = function(dom, app){
-        const deferal = view_event_deferal(drawing, app, dom);
+    drawing.draw = function(app, dom_io){
+        const deferal = view_event_deferal(drawing, app, dom_io);
 
-        const g = svg.g({id: "transformation"},[]);
-        _redraw(dom, app, g);
+        const g = svg.g({id: "transformation"}, 
+            [
+                svg.g({id:"cell-borders"}),
+                svg.g({id:"object-selections"}),
+                svg.g({id:"arrow-selections"}),
+                svg.g({id:"objects"}),
+                svg.g({id:"arrows"}),
+                svg.g({id:"object-selection-hitboxes", class:"hitbox"}),
+                svg.g({id:"arrow-selection-hitboxes", class:"hitbox"}),
+            ]);
 
         const svg_node = svg.svg(
             {
@@ -114,15 +139,15 @@ function SvgAppView(dependencies, onevents) {
                 class: "state.drag_type.id == 'pan'? 'pan-cursor' : ''",
             }, [svg_node]);
 
-        dom.addEventListener('keydown', deferal.callback(onevents.keydown));
-
+        dom_io.body.appendChild(app_node);
+        dom_io.addEventListener('keydown', deferal.callback(onevents.keydown));
+        _redraw(undefined, app, dom_io);
         return app_node;
     };
 
-    drawing.redraw = function(app, dom_io)
+    drawing.redraw = function(old_app, new_app, dom_io)
     {
-        const g_io = dom_io.getElementById('transformation');
-        _redraw(dom_io, app, g_io);
+        _redraw(old_app, new_app, dom_io);
     }
 
     return drawing;
