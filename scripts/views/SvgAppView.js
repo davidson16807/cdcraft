@@ -27,16 +27,6 @@ function SvgAppView(dependencies, onevents) {
         return inferred;
     };
 
-    `
-    <div id="app" v-bind:class="state.drag_type.id == 'pan'? 'pan-cursor' : ''">
-        <svg id="svg">
-            <g id="transformation" v-bind:transform="transformation()">
-                ...
-            </g>
-        </svg>
-    </div>
-    `
-
     const drawing = {};
 
     function _redraw(dom, app, g_io) {

@@ -14,18 +14,6 @@ function SvgObjectView(dependencies) {
         return position_shifting.enter(position, screen_frame);
     };
 
-
-    `
-    <g id="objects" v-for="object in inferred_objects(state.diagram)" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'"
-            v-on:mousedown="!object.is_edited && objectclick(object, $event)" v-on:mouseenter="objectselect(object, $event)">
-        <circle class="object-highlight" v-bind:cx="screen_position(object.position).x" v-bind:cy="screen_position(object.position).y" r="23" />
-        <!-- NOTE: object position is offset along the axis by half the width of the <foreignObject> -->
-        <foreignObject class="object" v-bind:x="screen_position(object.position).x-40" v-bind:y="screen_position(object.position).y"
-            width="80" height="40">
-            <div v-katex>\( \bullet \)</div>
-        </foreignObject>
-    </g>
-    `
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onselect) {
         const object_screen_position = screen_position(screen_frame_store, object.position);

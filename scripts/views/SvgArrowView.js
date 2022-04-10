@@ -3,19 +3,6 @@
 function SvgArrowView(svg, svg_arrow_attributes, view_event_deferal) {
     const arrows = svg_arrow_attributes;
 
-    `
-    <g v-for="arrow in state.diagram.arrows" v-bind:class="state.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'" 
-            v-on:mousedown="!arrow.is_edited && arrowclick(arrow, $event)" v-on:mouseenter="arrowselect(arrow, $event)">
-        <path class="arrow-highlight" v-bind:d="arrowpath(arrow.arc)" />
-        <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="10"/>
-        <circle class="arrow-tip-highlight" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="10"/>
-        <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 0).x" v-bind:cy="arrowsample(arrow.arc, 0).y" r="13"/> -->
-        <!-- <circle class="arrow-handle" v-bind:cx="arrowsample(arrow.arc, 1).x" v-bind:cy="arrowsample(arrow.arc, 1).y" r="13" /> -->
-        <path class="arrow" v-bind:d="arrowhead(arrow.arc)" />
-        <path class="arrow" v-bind:d="arrowpath(arrow.arc)"/>
-    </g>
-    `
-
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, arrow, drag_type, onclick, onselect) {
         const text_width = 80;

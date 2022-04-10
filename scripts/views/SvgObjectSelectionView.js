@@ -21,11 +21,6 @@ function SvgObjectSelectionView(dependencies) {
         }
     };
 
-    `
-    <g v-for="object in state.drawing.object_selections" v-on:mousedown="object_selection_click(object, $event)" >
-        <circle class="object-highlight" v-bind:cx="screen_position(object.position).x" v-bind:cy="screen_position(object.position).y" r="23" />
-    </g>
-    `
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick) {
         const g = svg.g(

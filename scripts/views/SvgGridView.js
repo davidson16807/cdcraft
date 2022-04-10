@@ -11,16 +11,6 @@ function SvgGridView(dependencies) {
         return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, screen_frame_store.log2_cell_width))+1;
     };
 
-    `
-    <g id="grids" v-for="i in cell_count()">
-        <line class="cell-border"
-              v-bind:x1="cell_border_position(i,0).x" v-bind:y1="cell_border_position(0,-cell_count()).y" 
-              v-bind:x2="cell_border_position(i,0).x" v-bind:y2="cell_border_position(0,cell_count()).y"/>
-        <line class="cell-border"
-              v-bind:y1="cell_border_position(0,i).y" v-bind:x1="cell_border_position(-cell_count(),0).x" 
-              v-bind:y2="cell_border_position(0,i).y" v-bind:x2="cell_border_position(cell_count(),0).x"/>
-    </g>
-    `
     return {
         draw: function(screen_frame_store) {
             const count = cell_count(screen_frame_store);
