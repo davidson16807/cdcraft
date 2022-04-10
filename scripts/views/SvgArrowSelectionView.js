@@ -12,10 +12,9 @@ function SvgArrowSelectionView(svg, svg_arrow_attributes, view_event_deferal) {
     };
 
     const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, arrow, opacity, onclick) {
+    drawing.draw = function(dom, screen_frame_store, arrow, onclick) {
         const g = svg.g(
             {
-                opacity: opacity,
                 onmousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(event),
             },
             [
@@ -24,7 +23,9 @@ function SvgArrowSelectionView(svg, svg_arrow_attributes, view_event_deferal) {
                 svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(screen_frame_store, arrow.arc,1)),
             ]);
         const deferal = view_event_deferal(drawing, arrow, dom);
-        g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        if (onclick) {
+            g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        }
         return g;
     }
     return drawing;

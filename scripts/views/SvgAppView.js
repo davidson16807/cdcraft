@@ -40,16 +40,14 @@ function SvgAppView(dependencies, onevents) {
                             svg_object_selection_view.draw(
                                 dom,
                                 app.diagram.screen_frame_store, 
-                                object, 
-                                1))),
+                                object))),
                 svg.g({id:"arrow-selections"}, 
                     app.diagram.arrow_selections
                         .map(arrow => 
                             svg_arrow_selection_view.draw(
                                 dom,
                                 app.diagram.screen_frame_store, 
-                                arrow, 
-                                1))),
+                                arrow))),
 
                 svg.g({id:"objects"},
                     inferred_objects(app.diagram)
@@ -79,7 +77,6 @@ function SvgAppView(dependencies, onevents) {
                                 dom,
                                 app.diagram.screen_frame_store, 
                                 object, 
-                                0,
                                 (event, arrow_drawing, object, dom2) => onevents.selection_click(event, drawing, object, app, dom)))),
                 svg.g({id:"arrow-selection-hitboxes"}, 
                     app.diagram.arrow_selections
@@ -88,7 +85,6 @@ function SvgAppView(dependencies, onevents) {
                                 dom,
                                 app.diagram.screen_frame_store, 
                                 arrow, 
-                                0,
                                 (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, arrow, app, dom)))),
 
             ]);

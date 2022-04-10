@@ -22,16 +22,16 @@ function SvgObjectSelectionView(dependencies) {
     };
 
     const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, object, opacity, onclick) {
+    drawing.draw = function(dom, screen_frame_store, object, onclick) {
         const g = svg.g(
-            {
-                opacity: opacity,
-            },
+            {},
             [
                 svg.circle({class:"object-highlight", r:23}, screen_position(screen_frame_store, object.position)),
             ]);
         const deferal = view_event_deferal(drawing, object, dom);
-        g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        if (onclick) {
+            g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        }
         return g;
     }
     return drawing;

@@ -32,9 +32,13 @@ function SvgObjectView(dependencies) {
                     object_screen_position.sub(glm.vec2(text_width/2, 0)))
             ]);
         const deferal = view_event_deferal(drawing, object, dom);
-        g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
-        g.addEventListener('mousedown',  event => event.button == 2 && deferal.callbackPreventStop(onselect)(event));
-        g.addEventListener('mouseenter', event => (!object.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(event));
+        if (onclick) {
+            g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        }
+        if (onselect) {
+            g.addEventListener('mousedown',  event => event.button == 2 && deferal.callbackPreventStop(onselect)(event));
+            g.addEventListener('mouseenter', event => (!object.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(event));
+        }
         return g;
     }
     return drawing;

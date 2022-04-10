@@ -157,8 +157,8 @@ function AppUpdater(
             drawing.redraw(app_io, dom_io);
         },
 
-
         selection_click: function(event, drawing, arrow_io, app_io, dom_io){
+            if (event.ctrlKey) {}
             drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             drawing.redraw(app_io, dom_io);
         },
