@@ -35,14 +35,12 @@ function AppUpdater(
     };
     const actions = {
         'undo': app_io => {
+            drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             history.undo(app_io);
-            app_io.drag_type = view_drags.release(app_io.diagram.screen_frame_store);
-            app_io.drag_state = app_io.drag_type.initialize();
         },
         'redo': app_io => {
+            drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             history.redo(app_io);
-            app_io.drag_type = view_drags.release(app_io.diagram.screen_frame_store);
-            app_io.drag_state = app_io.drag_type.initialize();
         },
     }
     const keydown = {
