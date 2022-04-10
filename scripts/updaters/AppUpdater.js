@@ -138,7 +138,8 @@ function AppUpdater(
         arrowselect: function(event, drawing, arrow_io, app_io, dom_io){
             const id = app_io.diagram.arrows.indexOf(arrow_io);
             const arrow_selections = event.ctrlKey? 
-                diagram.arrow_selections.filter(arrow => arrow != arrow_io) : [...diagram.arrow_selections, arrow_io];
+                  app_io.diagram.arrow_selections.filter(arrow => arrow != arrow_io) 
+                : [...app_io.diagram.arrow_selections, arrow_io];
             history.do(app_io, 
                 new Diagram(
                         app_io.diagram.arrows,
@@ -153,7 +154,8 @@ function AppUpdater(
         objectselect: function(event, drawing, object_io, app_io, dom_io){
             const id = app_io.diagram.objects.indexOf(object_io);
             const object_selections = event.ctrlKey? 
-                diagram.object_selections.filter(object => object != object_io) : [...diagram.object_selections, object_io];
+                  app_io.diagram.object_selections.filter(object => object != object_io) 
+                : [...app_io.diagram.object_selections, object_io];
             history.do(app_io, 
                 new Diagram(
                         app_io.diagram.arrows,
