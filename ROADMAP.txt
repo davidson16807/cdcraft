@@ -1,12 +1,19 @@
 TODO:
 toolbar
+arrow editor
+object editor
+export/import
+touchpad support
+functor arrows
+copy/paste
+angle symbols
+
 circle cursor on rmb
 refactor so app operations return new app objects
 edit object text
 edit arrow text
 arrow popups
 arrow colors
-touchpad support
 latex export
 json export
 url links

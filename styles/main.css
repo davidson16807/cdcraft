@@ -57,7 +57,7 @@ svg {
     color: black;
     text-align: center;
     /*NOTE: I have found no better way to align a <foreignObject> component than through manual adjustment.*/
-    transform: translate(0px, -13px); 
+    transform: translate(0px, -29px);
 }
 
 .highlight-on-hover {
@@ -85,4 +85,97 @@ svg {
 
 .hitbox{
     opacity: 0;
+}
+
+
+
+/*
+"#hidden-downloader" is an element that is required by the browser 
+ in order to download files, yet is not otherwise needed by the user interface
+It  has no styling and is never meant to be seen.
+*/
+#hidden-downloader{
+    display: none;
+}
+
+/*
+"#drop-dialog" is a visual cue that indicates to the user
+ that he can drag and drop files into the application.
+*/
+#drop-dialog {
+    position    : absolute;
+    top         : 23%;
+    left        : 23%;
+    bottom      : 23%;
+    right       : 23%;
+    padding     : 5.57%;
+    text-align  : center;
+    border-style: dashed;
+}
+
+/*
+"#loading-dialog" is a visual cue that indicates to the user
+ that the application is loading something.
+*/
+.loading-dialog {
+    position: fixed;
+    top: 43%;
+    left: 43%;
+    width: 15%;
+    text-align: center;
+}
+.loading-dialog h2{
+    text-align: center;
+}
+
+/*
+".notifications" express short nonessential messages to the user.
+They require no interaction on the users behalf. 
+They appear at the bottom of the screen and are inspired by 
+ the notifications that appear in Skyrim to indicate things like encumbrance. 
+*/
+.notifications-dialog {
+    position: fixed;
+    bottom: 8.4%;
+    left: 20%;
+    width: 61%;
+    text-align: center;
+}
+.notifications-dialog h3 {
+    text-align: center;
+}
+.notifications-dialog .fade-enter-active, .fade-leave-active {
+  transition: opacity 3s;
+}
+.notifications-dialog .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
+
+/*
+".dialog" express longer messages to the user.
+They may potentially require interaction on the users behalf. 
+They appear as a white box in the center of the screen, 
+ and are inspired by Windows dialog boxes.
+*/
+.dialog {
+    color: black;
+    background-color: white;
+    padding: 3.44%;
+    border-radius: 1em;
+}
+
+/*
+".hidden-when-loading" indicates an element must not render when 
+ a new game or save file is loaded. 
+This may be used to avoid confusing the user, 
+ or to prevent invalid states from occuring due to user interaction.
+*/
+.hidden-when-loading{
+    display: none;
+}
+
+
+/* set "overflow: hidden" to hide the scrollbar ; */
+body {
+    overflow : hidden;
 }

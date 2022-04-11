@@ -8,7 +8,7 @@ function SvgObjectView(dependencies) {
     const diagram_ids                = dependencies.diagram_ids;
     const position_shifting          = dependencies.position_shifting;
     const view_event_deferal         = dependencies.view_event_deferal;
-    const katex                      = dependencies.katex;
+    const render                     = dependencies.render;
 
     function screen_position (screen_frame_store, position) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
@@ -19,8 +19,8 @@ function SvgObjectView(dependencies) {
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onselect) {
         const object_screen_position = screen_position(screen_frame_store, object.position);
         const text_width = 80;
-        const div = html.div();
-        katex.render("\\bullet", div, {throwOnError: false});
+        const div = html.div({},[],'\\[\\bullet\\]');
+        render(div, {throwOnError: false});
         const g = svg.g(
             {
                 class: (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),

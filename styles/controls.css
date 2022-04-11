@@ -1,5 +1,6 @@
 /*
-"app.css" contains all styling that is specific to the application.
+"control.css" contains all styling that is specific to 
+control elements in the application, as buttons and toolbars.
 It is written using a responsive, mobile-first design approach. 
 It assumes the user is accessing the site on a modern, evergreen browser. 
 It also assumes it is being used in tandem with main.css. 
@@ -158,22 +159,13 @@ These only appear when pointer precision indicates a desktop user.
 .instructions {
     display: none;
 }
-        /* enable display */
-        /* small grey text */
-        /* positioned in the corner */
-/* 
 @media (pointer: fine), (pointer: none) {
     .instructions {
-        display     : flex;
-        color       : grey;
-        font-style  : italic;
-        font-size   : 61%;
-        margin-left   : auto;
-        margin-bottom : auto;
-        padding-left: 0.3rem;
+        display     : block;
+        /*color       : grey;*/
+        font-size   : 75%;
     }
 }
-*/
 .horizontal-axis-group {
     display   : flex;
     flex-flow : row nowrap;
@@ -191,9 +183,10 @@ These only appear when pointer precision indicates a desktop user.
 /*
 ".short-axis-group" behaves similarly to bootstrap's .btn-group,
  however it switches between vertical and horizontal axes dependant on screen orientation.
-It picks whichever axis is longest at any given time:
-In portrait mode, it assumes a vertical layout. 
-In horizontal mode, it assumes a horizontal layout. 
+It picks whichever axis is shortest at any given time:
+In portrait mode, it assumes a horizontal layout. 
+In horizontal mode, it assumes a vertical layout. 
+On a desktop, consistency is valued more than screenspace to it is positioned horizontally.
 The short axis is important because we can add components along it indefinitely
  without ever obstructing the main content.
 Since one of our core design principles is to prevent obstruction of the main focus, 
@@ -436,156 +429,3 @@ input[type="range"].slider-vertical {
     }
 }
 */
-
-/* ====== END OF SCREEN SPECIFIC CONTENT ======*/
-
-
-.label {
-    background-color: buttonface;
-    color: #212529;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.2rem;
-}
-/* 
-We give special attention to styling the time warp control,
-because it features so prominently
-*/
-#time-control .input-group{
-    flex-flow : row nowrap;
-    width     : 190px;
-}
-#time-control .input-group-prepend,
-#time-control .input-group-text {
-    flex: 2 1 auto;
-}
-
-/*
-"#chart" conveys nonspatial data to the user on a 2d plot.
-It occurs in the bottom right corner. 
-*/
-#chart{
-    width: 300px;
-    /* bottom right corner */
-    position : fixed;
-    bottom   : 1em;
-    right    : 1em;
-}
-#chart canvas{
-    padding: 1em;
-}
-#chart .stat {
-    float: right;
-    margin: 1em;
-}
-#chart .stat .name{
-    margin: 1em;
-    text-align: left;
-}
-#chart .stat .value{
-    margin: 1em;
-    text-align: right;
-}
-
-/*
-"#stats" displays performance metrics such as fps. 
-It is only visible in dev environments. 
-It appears in the bottom left corner, since that's the only corner that 
- hasn't been taken up yet.
-*/
-#stats {
-    /* bottom right corner */
-    position : fixed;
-    top     : 1em;
-    left    : 1em;
-}
-
-/*
-"#hidden-downloader" is an element that is required by the browser 
- in order to download files, yet is not otherwise needed by the user interface
-It  has no styling and is never meant to be seen.
-*/
-#hidden-downloader{
-    display: none;
-}
-
-/*
-"#drop-dialog" is a visual cue that indicates to the user
- that he can drag and drop files into the application.
-*/
-#drop-dialog {
-    position    : absolute;
-    top         : 23%;
-    left        : 23%;
-    bottom      : 23%;
-    right       : 23%;
-    padding     : 5.57%;
-    text-align  : center;
-    border-style: dashed;
-}
-
-/*
-"#loading-dialog" is a visual cue that indicates to the user
- that the application is loading something.
-*/
-.loading-dialog {
-    position: fixed;
-    top: 43%;
-    left: 43%;
-    width: 15%;
-    text-align: center;
-}
-.loading-dialog h2{
-    text-align: center;
-}
-
-/*
-".notifications" express short nonessential messages to the user.
-They require no interaction on the users behalf. 
-They appear at the bottom of the screen and are inspired by 
- the notifications that appear in Skyrim to indicate things like encumbrance. 
-*/
-.notifications-dialog {
-    position: fixed;
-    bottom: 8.4%;
-    left: 20%;
-    width: 61%;
-    text-align: center;
-}
-.notifications-dialog h3 {
-    text-align: center;
-}
-.notifications-dialog .fade-enter-active, .fade-leave-active {
-  transition: opacity 3s;
-}
-.notifications-dialog .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
-}
-
-/*
-".dialog" express longer messages to the user.
-They may potentially require interaction on the users behalf. 
-They appear as a white box in the center of the screen, 
- and are inspired by Windows dialog boxes.
-*/
-.dialog {
-    color: black;
-    background-color: white;
-    padding: 3.44%;
-    border-radius: 1em;
-}
-
-/*
-".hidden-when-loading" indicates an element must not render when 
- a new game or save file is loaded. 
-This may be used to avoid confusing the user, 
- or to prevent invalid states from occuring due to user interaction.
-*/
-.hidden-when-loading{
-    display: none;
-}
-
-
-/* set "overflow: hidden" to hide the scrollbar ; */
-body {
-    overflow : hidden;
-}

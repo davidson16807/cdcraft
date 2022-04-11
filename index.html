@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="./styles/katex.min.css">
     <link rel="stylesheet" href="./styles/bootstrap.css">
     <link rel="stylesheet" href="./styles/main.css">
-    <link rel="stylesheet" href="./styles/app.css">
+    <link rel="stylesheet" href="./styles/controls.css">
     <script src="./libraries/glm-js.min.js"></script>
     <script src="./libraries/katex.min.js"></script>
+    <script src="./libraries/auto-render.min.js"></script>
     <script src="./scripts/DiagramIds.js"></script>
     <script src="./scripts/CellHashing.js"></script>
     <script src="./scripts/frames/ScreenReferenceFrameStorage.js"></script>
@@ -80,20 +81,22 @@
  <div id="toolbar" class="short-axis-group collapse control">
 
     <button type="button" class="btn-large">
-        <img src="icons/grid.svg"/>
         <div>Hide Grid</div>
+        <img src="icons/grid.svg"/>
+        <div class="instructions">&nbsp;</div>
     </button>
 
-    <button type="button" class="btn-large">
-        <img src="icons/redo.svg"/>
+    <button type="button" class="btn-large btn-dark">
         <div>Redo</div>
+        <img src="icons/redo.svg"/>
+        <div class="instructions">ctrl+Z</div>
     </button>
 
     <button type="button" class="btn-large">
-        <img src="icons/undo.svg"/>
         <div>Undo</div>
+        <img src="icons/undo.svg"/>
+        <div class="instructions">ctrl+Y</div>
     </button>
-
 
 </div>
 
@@ -164,7 +167,7 @@ const object_view =
         diagram_ids                : diagram_ids,
         position_shifting          : position_shifting,
         view_event_deferal         : view_event_deferal,
-        katex                      : katex,
+        render                     : renderMathInElement,
     });
 
 const object_selection_view = 

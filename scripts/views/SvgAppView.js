@@ -144,7 +144,10 @@ function SvgAppView(dependencies, onevents) {
         const app_node = html.div({
                 id: 'app',
                 class: "state.drag_type.id == 'pan'? 'pan-cursor' : ''",
-            }, [svg_node]);
+            }, [
+                svg_node,
+                
+            ]);
 
         dom_io.body.appendChild(app_node);
         dom_io.addEventListener('keydown', deferal.callback(onevents.keydown));
