@@ -122,8 +122,8 @@ This will be the case regardless of screen orientation.
 */
 .btn {
     /* we follow apple recommendations for button size */
-    min-width : 44px;
-    min-height: 44px;
+    /*min-width : 70px;*/
+    min-height: 70px;
     display   : flex;
     flex-flow : column nowrap;
     align-items: center;
@@ -137,12 +137,27 @@ This will be the case regardless of screen orientation.
 
 .title {
     font-size: 261%;
-    font-family: sans-serif;
 }
-.desktop.banner {
+.wide-screen {
+    display: none;
+}
+.short-screen {
+    display: inherit;
+}
+@media screen and (min-width: 900px) {
+  .short-screen {
+    display: none;
+  }
+  .wide-screen {
+    display: inherit;
+  }
+}
+
+.banner {
     padding-top: 0.2rem;
     padding-left: 1rem;
-    padding-right: 7rem;
+    padding-right: 2rem;
+    /*min-width: 38.2%;*/
     display   : flex;
     flex-flow : column nowrap;
     align-items: left;
