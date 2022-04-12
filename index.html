@@ -138,6 +138,18 @@
 
 </div>
 
+<svg id="graphics">
+    <g id="transformation">
+        <g id="cell-borders"></g>
+        <g id="object-selections"></g>
+        <g id="arrow-selections"></g>
+        <g id="objects"></g>
+        <g id="arrows"></g>
+        <g id="object-selection-hitboxes" class="hitbox"></g>
+        <g id="arrow-selection-hitboxes" class="hitbox"></g>
+    </g>
+</svg>
+
 
 <script type="text/javascript">
 'use strict';
@@ -267,7 +279,7 @@ const app_updater =
         app_history_traversal     : app_history_traversal,
     });
 
-const app_dom = 
+const app_view = 
     SvgAppView({
         screen_frame_storage         : screen_frame_storage,
         diagram_object_set_ops       : diagram_object_set_ops,
@@ -288,7 +300,7 @@ const app = new AppState(
         disengaged_drag_state,
     );
 
-app_dom.draw(app, document);
+app_view.wire(app, document);
 
 </script>
 </body>

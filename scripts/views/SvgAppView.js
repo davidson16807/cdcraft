@@ -113,46 +113,20 @@ function SvgAppView(dependencies, onevents) {
 
     }
 
-    drawing.draw = function(app, dom_io){
+    drawing.wire = function(app, dom_io){
         const deferal = view_event_deferal(drawing, app, dom_io);
-
-        const g = svg.g({id: "transformation"}, 
-            [
-                svg.g({id:"cell-borders"}),
-                svg.g({id:"object-selections"}),
-                svg.g({id:"arrow-selections"}),
-                svg.g({id:"objects"}),
-                svg.g({id:"arrows"}),
-                svg.g({id:"object-selection-hitboxes", class:"hitbox"}),
-                svg.g({id:"arrow-selection-hitboxes", class:"hitbox"}),
-            ]);
-
-        const svg_node = svg.svg(
-            {
-                id: 'graphics',
-                oncontextmenu  : deferal.callbackPrevent     (onevents.contextmenu ),
-                onmousedown    : deferal.callbackPrevent     (onevents.mousedown   ),
-                onmousemove    : deferal.callbackPrevent     (onevents.mousemove   ),
-                onmouseup      : deferal.callback            (onevents.mouseup     ),
-                onwheel        : deferal.callback            (onevents.wheel       ),
-                ontouchsource  : deferal.callback            (onevents.touchsource ),
-                ontouchmove    : deferal.callbackPreventStop (onevents.touchmove   ),
-                ontouchend     : deferal.callback            (onevents.touchend    ),
-                onkeydown      : deferal.callback            (onevents.keydown    ),
-            }, [g]);
-
-        const app_node = html.div({
-                id: 'app',
-                class: "state.drag_type.id == 'pan'? 'pan-cursor' : ''",
-            }, [
-                svg_node,
-                
-            ]);
-
-        dom_io.body.appendChild(app_node);
         dom_io.addEventListener('keydown', deferal.callback(onevents.keydown));
+        const graphics_io = dom_io.getElementById('graphics');
+        graphics_io.addEventListener('contextmenu', deferal.callbackPrevent     (onevents.contextmenu ));
+        graphics_io.addEventListener('mousedown',   deferal.callbackPrevent     (onevents.mousedown   ));
+        graphics_io.addEventListener('mousemove',   deferal.callbackPrevent     (onevents.mousemove   ));
+        graphics_io.addEventListener('mouseup',     deferal.callback            (onevents.mouseup     ));
+        graphics_io.addEventListener('wheel',       deferal.callback            (onevents.wheel       ));
+        graphics_io.addEventListener('touchsource', deferal.callback            (onevents.touchsource ));
+        graphics_io.addEventListener('touchmove',   deferal.callbackPreventStop (onevents.touchmove   ));
+        graphics_io.addEventListener('touchend',    deferal.callback            (onevents.touchend    ));
+        graphics_io.addEventListener('keydown',     deferal.callback            (onevents.keydown     ));
         _redraw(undefined, app, dom_io);
-        return app_node;
     };
 
     drawing.redraw = function(old_app, new_app, dom_io)
