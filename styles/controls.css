@@ -135,50 +135,41 @@ This will be the case regardless of screen orientation.
     height: 48px;
 }
 
-.title {
-    font-size: 261%;
-}
-.wide-screen {
-    display: none;
-}
-.short-screen {
-    display: inherit;
-}
-@media screen and (min-width: 900px) {
-  .short-screen {
-    display: none;
-  }
-  .wide-screen {
-    display: inherit;
-  }
-}
 
 .banner {
     padding-top: 0.2rem;
     padding-left: 1rem;
     padding-right: 2rem;
     /*min-width: 38.2%;*/
-    display   : flex;
-    flex-flow : column nowrap;
     align-items: left;
-}
-
-.desktop {
+    flex-flow : column nowrap;
     display: none;
 }
-@media (pointer: fine), (pointer: none) {
-    .desktop {
-        display: inherit;
-    }
+.logo {
+    font-size: 261%;
+    display: none;
+    flex-flow : row nowrap;
 }
-
-.mobile {
+.mobile-logo {
+    color: dimgrey;
+    font-size: 423%;
+}
+.title, .subtitle {
+    padding-left: 0.5rem;
+    display: none;
+}
+@media (min-width: 640px) {
+  .mobile-logo {
+    display: none;
+  }
+  .banner, .logo {
+    display : flex;
+  }
+}
+@media (min-width: 900px) {
+  .title, .subtitle {
     display: inherit;
-}
-@media (pointer: fine), (pointer: none) {
-    .mobile {
-        display: none
-    }
+  }
 }
 
 /* text is enlarged and placed beside the icon to save vertical space */

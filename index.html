@@ -78,28 +78,26 @@
 </head>
 <body>
 
-<div class="bottom right mobile title">∙⇆∙</div>
 
 <div id="toolbar" class="top left short-axis-group collapse control">
 
-    <div class="desktop banner"> 
-        <div class="short-screen title">∙⇆∙</div>
-        <div class="wide-screen title">∙⇆∙ cdcraft</div>
-        <div class="wide-screen subtitle">A workspace of commutative diagrams</div>
+    <div class="banner"> 
+        <div class="logo">∙⇆∙<div class="title">cdcraft</div></div>
+        <div class="subtitle">A workspace of commutative diagrams</div>
     </div>
-
-    <button type="button" class="btn btn-large">
+<!-- 
+    <button id="save" type="button" class="btn btn-large">
         <div>Save</div>
         <img src="icons/save.svg"/>
         <div class="instructions">ctrl+S</div>
     </button>
 
-    <button type="button" class="btn btn-large">
+    <button id="load" type="button" class="btn btn-large">
         <div>Load</div>
         <img src="icons/load.svg"/>
         <div class="instructions">ctrl+O</div>
     </button>
-
+ -->
     <button id="undo" type="button" class="btn btn-large">
         <div>Undo</div>
         <img src="icons/undo.svg"/>
@@ -111,32 +109,35 @@
         <img src="icons/redo.svg"/>
         <div class="instructions">ctrl+Y</div>
     </button>
-
-    <button type="button" class="btn btn-large">
+<!-- 
+    <button id="copy" type="button" class="btn btn-large">
         <div>Copy</div>
         <img src="icons/copy.svg"/>
         <div class="instructions">ctrl+C</div>
     </button>
 
-    <button type="button" class="btn btn-large">
+    <button id="cut" type="button" class="btn btn-large">
         <div>Cut</div>
         <img src="icons/cut.svg"/>
         <div class="instructions">ctrl+C</div>
     </button>
 
-    <button type="button" class="btn btn-large">
+    <button id="paste" type="button" class="btn btn-large">
         <div>Paste</div>
         <img src="icons/paste.svg"/>
         <div class="instructions">ctrl+V</div>
     </button>
-
-    <button id="toggle grid" type="button" class="btn btn-large">
-        <div id="toggle grid label" >Hide&nbsp;Grid</div>
+ -->
+    <button id="toggle-grid" type="button" class="btn btn-large">
+        <div> <span id="toggle-grid-verb">Hide</span>&nbsp;Grid</div>
         <img src="icons/grid.svg"/>
         <div class="instructions">&nbsp;</div>
     </button>
 
 </div>
+
+<div class="bottom right mobile-logo">∙⇆∙</div>
+
 
 <svg id="graphics">
     <g id="transformation">

@@ -42,7 +42,10 @@ function SvgAppView(dependencies, onevents) {
                 .setAttribute('transformation', frame_transform(new_app.diagram.screen_frame_store));
             dom_io
                 .getElementById('cell-borders')
-                .replaceWith(svg_grid_view.draw(new_app.diagram.screen_frame_store));
+                .replaceWith(svg_grid_view.draw(new_app.diagram.screen_frame_store, new_app.is_grid_hidden));
+            dom_io
+                .getElementById('toggle-grid-verb')
+                .textContent = (new_app.is_grid_hidden? 'Show' : 'Hide');
         }
 
         if (old_app == null || old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
@@ -115,7 +118,13 @@ function SvgAppView(dependencies, onevents) {
 
     drawing.wire = function(app, dom_io){
         const deferal = view_event_deferal(drawing, app, dom_io);
+        // keyboard events
         dom_io.addEventListener('keydown', deferal.callback(onevents.keydown));
+        // button events
+        dom_io.getElementById('undo').addEventListener('click', deferal.callback(onevents.undo));
+        dom_io.getElementById('redo').addEventListener('click', deferal.callback(onevents.redo));
+        dom_io.getElementById('toggle-grid').addEventListener('click', deferal.callback(onevents.toggle_grid));
+        // mouse/touchpad events
         const graphics_io = dom_io.getElementById('graphics');
         graphics_io.addEventListener('contextmenu', deferal.callbackPrevent     (onevents.contextmenu ));
         graphics_io.addEventListener('mousedown',   deferal.callbackPrevent     (onevents.mousedown   ));
@@ -125,7 +134,6 @@ function SvgAppView(dependencies, onevents) {
         graphics_io.addEventListener('touchsource', deferal.callback            (onevents.touchsource ));
         graphics_io.addEventListener('touchmove',   deferal.callbackPreventStop (onevents.touchmove   ));
         graphics_io.addEventListener('touchend',    deferal.callback            (onevents.touchend    ));
-        graphics_io.addEventListener('keydown',     deferal.callback            (onevents.keydown     ));
         _redraw(undefined, app, dom_io);
     };
 

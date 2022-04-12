@@ -102,6 +102,7 @@ function AppUpdater(
         touchmove: function(event, drawing, app_io, dom_io){
         },
 
+
         keydown: function(event, drawing, app_io, dom_io){
             const keycode = `${event.ctrlKey?'ctrl+':''}${event.shiftKey?'shift+':''}${event.key.toLowerCase()}`
             const action_id = keydown[keycode];
@@ -112,6 +113,21 @@ function AppUpdater(
                     drawing.redraw(undefined, app_io, dom_io);
                 }
             }
+        },
+
+        undo: function(event, drawing, app_io, dom_io) {
+            actions['undo'](app_io);
+            drawing.redraw(undefined, app_io, dom_io);
+        },
+
+        redo: function(event, drawing, app_io, dom_io) {
+            actions['redo'](app_io);
+            drawing.redraw(undefined, app_io, dom_io);
+        },
+
+        toggle_grid: function(event, drawing, app_io, dom_io) {
+            app_io.is_grid_hidden = !app_io.is_grid_hidden;
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){

@@ -12,7 +12,7 @@ function SvgGridView(dependencies) {
     };
 
     return {
-        draw: function(screen_frame_store) {
+        draw: function(screen_frame_store, is_grid_hidden) {
             const count = cell_count(screen_frame_store);
             function cell_border_position(x,y) {
                 const screen_frame = screen_frame_storage.unpack(screen_frame_store);
@@ -20,17 +20,19 @@ function SvgGridView(dependencies) {
                 return position_shifting.enter(model_border_position, screen_frame);
             };
             const lines = [];
-            for(let i=0; i<count; i++){
-                lines.push(
-                    svg.line({class:"vertical-cell-border"},
-                        cell_border_position(i,-count), 
-                        cell_border_position(i,count),
-                    ));
-                lines.push(
-                    svg.line({class:"vertical-cell-border"},
-                        cell_border_position(-count,i), 
-                        cell_border_position(count,i),
-                    ));
+            if (!is_grid_hidden) {
+                for(let i=0; i<count; i++){
+                    lines.push(
+                        svg.line({class:"vertical-cell-border"},
+                            cell_border_position(i,-count), 
+                            cell_border_position(i,count),
+                        ));
+                    lines.push(
+                        svg.line({class:"vertical-cell-border"},
+                            cell_border_position(-count,i), 
+                            cell_border_position(count,i),
+                        ));
+                }
             }
             return svg.g({id:"cell-borders"}, lines);
         }
