@@ -57,16 +57,28 @@ This requires placing it in the bottom right, as far away from our branding as p
 In landscape orientations, it will expand from bottom right to top right.
 In portrait orientations, it will expand from bottom right to bottom left. 
 */
-.control {
+.bottom{
     /* bottom right corner */
     position  : fixed;
     bottom    : 0;
+}
+.top{
+    /* bottom right corner */
+    position  : fixed;
+    top       : 0;
+}
+.right{
+    /* bottom right corner */
+    position  : fixed;
     right     : 0;
+}
+.left{
+    /* bottom right corner */
+    position  : fixed;
+    left      : 0;
+}
 
-    /* flex, wrap right to left, bottom to top*/
-    display   : flex;
-    flex-flow : row-reverse nowrap;
-
+.control {
     /* max height should not cause world to become obstructed */
     max-height: 23.6%;
     overflow-y: hidden;
@@ -79,12 +91,6 @@ In portrait orientations, it will expand from bottom right to bottom left.
 }
 @media (pointer: fine), (pointer: none), (orientation: landscape) {
     .control {
-        /* 
-        Content should progress from bottom right to top right, and should not wrap.
-        content should be aligned to the right side of the screen,
-        */
-        flex-flow   : column-reverse nowrap;
-        align-items : flex-end;
         /* 
         Because we do not wrap content, we run the risk of content running off the screen. 
         To prevent this, we set the height not exceed the height of the window. 
@@ -118,8 +124,6 @@ This will be the case regardless of screen orientation.
     /* we follow apple recommendations for button size */
     min-width : 44px;
     min-height: 44px;
-    /* text is shrunk and placed below the icon to give a space saving square shape */
-    font-size : 0.5rem !important;
     display   : flex;
     flex-flow : column nowrap;
     align-items: center;
@@ -127,9 +131,41 @@ This will be the case regardless of screen orientation.
 }
 .btn img {
     /* we follow google material recommendations for icon size */
-    width:  24px;
-    height: 24px;
+    width:  48px;
+    height: 48px;
 }
+
+.title {
+    font-size: 261%;
+    font-family: sans-serif;
+}
+.desktop.banner {
+    padding-top: 0.2rem;
+    padding-left: 1rem;
+    padding-right: 7rem;
+    display   : flex;
+    flex-flow : column nowrap;
+    align-items: left;
+}
+
+.desktop {
+    display: none;
+}
+@media (pointer: fine), (pointer: none) {
+    .desktop {
+        display: inherit;
+    }
+}
+
+.mobile {
+    display: inherit;
+}
+@media (pointer: fine), (pointer: none) {
+    .mobile {
+        display: none
+    }
+}
+
 /* text is enlarged and placed beside the icon to save vertical space */
 /* cancel the height/width restrictions that are imposed on mobile */
 /* 
@@ -176,9 +212,6 @@ These only appear when pointer precision indicates a desktop user.
     flex-flow : column nowrap;
     justify-content: space-evenly;
 }
-.form-control {
-  height: auto;
-}
 
 /*
 ".short-axis-group" behaves similarly to bootstrap's .btn-group,
@@ -186,7 +219,7 @@ These only appear when pointer precision indicates a desktop user.
 It picks whichever axis is shortest at any given time:
 In portrait mode, it assumes a horizontal layout. 
 In horizontal mode, it assumes a vertical layout. 
-On a desktop, consistency is valued more than screenspace to it is positioned horizontally.
+On a desktop, consistency is valued over screenspace so it is positioned horizontally.
 The short axis is important because we can add components along it indefinitely
  without ever obstructing the main content.
 Since one of our core design principles is to prevent obstruction of the main focus, 
@@ -196,75 +229,68 @@ Since one of our core design principles is to prevent obstruction of the main fo
 .short-axis-group {
     /* flex, wrap right to left, bottom to top*/
     display    : flex;
-    flex-flow  : row-reverse nowrap;
-    align-items: flex-end;
+    flex-flow  : row nowrap;
 }
-.short-axis-group .btn + .btn,
-.short-axis-group .btn + .short-axis-group,
-.short-axis-group .short-axis-group + .btn,
-.short-axis-group .short-axis-group + .short-axis-group {
-  margin-bottom: -1px;
-  margin-right : 0;
-}
-.short-axis-group .btn,
-.short-axis-group .short-axis-group .btn {
-  border-top-left-radius     : 0.25rem ;
-  border-top-right-radius    : 0.25rem ;
-  border-bottom-left-radius  : 0.25rem ;
-  border-bottom-right-radius : 0.25rem ;
-}
-.short-axis-group .btn:not(:last-child):not(.dropdown-toggle),
-.short-axis-group .short-axis-group:not(:last-child) .btn {
-  border-bottom-left-radius : 0  ;
-  border-top-left-radius : 0  ;
-}
-.short-axis-group .btn:not(:first-child),
-.short-axis-group .short-axis-group:not(:first-child) > .btn {
-  border-top-right-radius: 0  ;
-  border-bottom-right-radius: 0  ;
-}
-@media (pointer: fine), (pointer: none), (orientation: landscape) {
+@media (orientation: landscape) and (pointer: coarse) {
     .short-axis-group {
         /* 
         We want everything within a button group to be consistently sized,
         so we set all flexbox properties to "stretch".
         */
         display   : flex;
-        flex-flow : column-reverse nowrap;
+        flex-flow : column nowrap;
         align-items: stretch;
     }
+}
 
-    /*
-    We copy paste most of the styling for Bootstrap's short-axis-group-vertical 
-     in order to style short-axis-group as short-axis-group-vertical
-    */
-    .short-axis-group .btn + .btn,
-    .short-axis-group .btn + .short-axis-group,
-    .short-axis-group .short-axis-group + .btn,
-    .short-axis-group .short-axis-group + .short-axis-group {
-      margin-top: -1px;
-      margin-left: 0;
-    }
-    .short-axis-group .btn,
-    .short-axis-group .short-axis-group .btn {
-      border-top-left-radius     : 0.25rem ;
-      border-top-right-radius    : 0.25rem ;
-      border-bottom-left-radius  : 0.25rem ;
-      border-bottom-right-radius : 0.25rem ;
-    }
-
-    .short-axis-group .btn:not(:last-child):not(.dropdown-toggle),
-    .short-axis-group .short-axis-group:not(:last-child) .btn {
-      border-bottom-left-radius : 0  ;
-      border-bottom-right-radius: 0  ;
-    }
-
-    .short-axis-group .btn:not(:first-child),
-    .short-axis-group .short-axis-group:not(:first-child) > .btn {
-      border-top-right-radius: 0  ;
-      border-top-left-radius : 0  ;
+.right.short-axis-group {
+    align-items: flex-end;
+}
+.left.short-axis-group {
+    align-items: flex-start;
+}
+@media (orientation: landscape) and (pointer: coarse) {
+    .left.short-axis-group, .right.short-axis-group {
+        align-items: stretch;
     }
 }
+
+
+
+
+.short-axis-group .btn,
+.short-axis-group .short-axis-group .btn {
+  border-top-left-radius     : 0;
+  border-top-right-radius    : 0;
+  border-bottom-left-radius  : 0;
+  border-bottom-right-radius : 0;
+}
+@media (orientation: portrait) or (pointer: fine) or (pointer: none) {
+    .short-axis-group .btn:first-of-type,
+    .short-axis-group .short-axis-group:first-of-type > .btn {
+      border-top-left-radius: 0.5rem;
+      border-bottom-left-radius: 0.5rem;
+    }
+    .short-axis-group .btn:last-child,
+    .short-axis-group .short-axis-group:last-child .btn {
+      border-top-right-radius : 0.5rem;
+      border-bottom-right-radius : 0.5rem;
+    }
+}
+@media (orientation: landscape) and (pointer: coarse) {
+    .short-axis-group .btn:first-of-type,
+    .short-axis-group .short-axis-group:first-of-type > .btn {
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+    }
+    .short-axis-group .btn:last-child,
+    .short-axis-group .short-axis-group:last-child .btn {
+      border-bottom-left-radius : 0.5rem;
+      border-bottom-right-radius : 0.5rem;
+    }
+}
+
+
 
 /*
 ".long-axis-group" behaves similarly to bootstrap's .btn-group,
@@ -283,63 +309,56 @@ Use it only when you can guarantee the number of components you're dealing with 
     so we set all flexbox properties to "stretch".
     */
     display   : flex;
-    flex-flow : column-reverse nowrap;
+    flex-flow : column nowrap;
 }
-.long-axis-group .btn + .btn,
-.long-axis-group .btn + .long-axis-group,
-.long-axis-group .long-axis-group + .btn,
-.long-axis-group .long-axis-group + .long-axis-group {
-  margin-top: -1px;
-  margin-left: 0;
+@media (orientation: landscape) and (pointer: coarse) {
+    .long-axis-group {
+        /* 
+        We want everything within a button group to be consistently sized,
+        so we set all flexbox properties to "stretch".
+        */
+        display   : flex;
+        flex-flow : row nowrap;
+        align-items: stretch;
+    }
 }
+
+
+
+
 .long-axis-group .btn,
 .long-axis-group .long-axis-group .btn {
-  border-top-left-radius     : 0.25rem ;
-  border-top-right-radius    : 0.25rem ;
-  border-bottom-left-radius  : 0.25rem ;
-  border-bottom-right-radius : 0.25rem ;
+  border-top-left-radius     : 0;
+  border-top-right-radius    : 0;
+  border-bottom-left-radius  : 0;
+  border-bottom-right-radius : 0;
 }
-.long-axis-group .btn:not(:last-child):not(.dropdown-toggle),
-.long-axis-group .long-axis-group:not(:last-child) .btn {
-  border-bottom-left-radius : 0  ;
-  border-bottom-right-radius: 0  ;
-}
-.long-axis-group .btn:not(:first-child),
-.long-axis-group .long-axis-group:not(:first-child) > .btn {
-  border-top-right-radius: 0  ;
-  border-top-left-radius : 0  ;
-}
-@media (pointer: fine), (pointer: none), (orientation: landscape) {
-    .long-axis-group {
-        /* flex, wrap right to left, bottom to top*/
-        display   : flex;
-        flex-flow : row-reverse nowrap;
+@media (orientation: landscape) and (pointer: coarse) {
+    .long-axis-group .btn:first-of-type,
+    .long-axis-group .long-axis-group:first-of-type > .btn {
+      border-top-left-radius: 0.5rem;
+      border-bottom-left-radius: 0.5rem;
     }
-    .long-axis-group .btn + .btn,
-    .long-axis-group .btn + .long-axis-group,
-    .long-axis-group .long-axis-group + .btn,
-    .long-axis-group .long-axis-group + .long-axis-group {
-      margin-bottom: -1px;
-      margin-right : 0;
-    }
-    .long-axis-group .btn,
-    .long-axis-group .long-axis-group .btn {
-      border-top-left-radius     : 0.25rem ;
-      border-top-right-radius    : 0.25rem ;
-      border-bottom-left-radius  : 0.25rem ;
-      border-bottom-right-radius : 0.25rem ;
-    }
-    .long-axis-group .btn:not(:last-child):not(.dropdown-toggle),
-    .long-axis-group .long-axis-group:not(:last-child) .btn {
-      border-bottom-left-radius : 0;
-      border-top-left-radius    : 0;
-    }
-    .long-axis-group .btn:not(:first-child),
-    .long-axis-group .long-axis-group:not(:first-child) > .btn {
-      border-top-right-radius   : 0;
-      border-bottom-right-radius: 0;
+    .long-axis-group .btn:last-child,
+    .long-axis-group .long-axis-group:last-child .btn {
+      border-top-right-radius : 0.5rem;
+      border-bottom-right-radius : 0.5rem;
     }
 }
+@media (orientation: portrait) or (pointer: fine) or (pointer: none) {
+    .long-axis-group .btn:first-of-type,
+    .long-axis-group .long-axis-group:first-of-type > .btn {
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+    }
+    .long-axis-group .btn:last-child,
+    .long-axis-group .long-axis-group:last-child .btn {
+      border-bottom-left-radius : 0.5rem;
+      border-bottom-right-radius : 0.5rem;
+    }
+}
+
+
 
 /* 
 is-long-axis-vertical only displays when the vertical axis is longest

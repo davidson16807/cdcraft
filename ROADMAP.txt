@@ -7,6 +7,7 @@ touchpad support
 functor arrows
 copy/paste
 angle symbols
+dark mode
 
 circle cursor on rmb
 refactor so app operations return new app objects
@@ -20,6 +21,3 @@ url links
 arrow decorations
 functor arrows
 refresh grids on window resize
-
-DONE:
-katex rendering

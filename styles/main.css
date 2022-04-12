@@ -1,4 +1,9 @@
 
+body{
+    font-family: sans-serif;
+}
+
+
 svg {
     position: fixed;
     top:0;
