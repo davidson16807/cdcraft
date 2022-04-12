@@ -121,9 +121,9 @@ function SvgAppView(dependencies, onevents) {
         // keyboard events
         dom_io.addEventListener('keydown', deferal.callback(onevents.keydown));
         // button events
-        dom_io.getElementById('undo').addEventListener('click', deferal.callback(onevents.undo));
-        dom_io.getElementById('redo').addEventListener('click', deferal.callback(onevents.redo));
-        dom_io.getElementById('toggle-grid').addEventListener('click', deferal.callback(onevents.toggle_grid));
+        dom_io.getElementById('undo')        .addEventListener('click', deferal.callback(onevents.buttonclick));
+        dom_io.getElementById('redo')        .addEventListener('click', deferal.callback(onevents.buttonclick));
+        dom_io.getElementById('toggle-grid') .addEventListener('click', deferal.callback(onevents.buttonclick));
         // mouse/touchpad events
         const graphics_io = dom_io.getElementById('graphics');
         graphics_io.addEventListener('contextmenu', deferal.callbackPrevent     (onevents.contextmenu ));

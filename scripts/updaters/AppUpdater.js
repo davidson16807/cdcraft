@@ -19,35 +19,58 @@ function AppUpdater(
     const drag_ops = dependencies.drag_state_ops;
     const history = dependencies.app_history_traversal;
 
-    const mouse_actions = {
-        pan: function(app, event){
-            const screen_offset = glm.vec2(event.movementX, event.movementY);
-            const screen_frame_store = app.diagram.screen_frame_store;
-            return view_drags.pan(screen_frame_store);
-        },
-        arrow: function(app, event){
-            const screen_position = glm.vec2(event.clientX, event.clientY);
-            const screen_frame_store = app.diagram.screen_frame_store;
-            const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-            const model_position = position_shifting.leave(screen_position, screen_frame);
-            return arrow_drags.create(app.diagram.arrows, model_position);
-        },
-    };
     const actions = {
-        'undo': app_io => {
+        undo: (app_io, event) => {
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             history.undo(app_io);
         },
-        'redo': app_io => {
+        redo: (app_io, event) => {
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             history.redo(app_io);
         },
+        toggle_grid: (app_io, event) => {
+            app_io.is_grid_hidden = !app_io.is_grid_hidden;
+        },
+        pan: function(app_io, event){
+            const screen_offset = glm.vec2(event.movementX, event.movementY);
+            const screen_frame_store = app_io.diagram.screen_frame_store;
+            drag_ops.transition( view_drags.pan(screen_frame_store), app_io);
+        },
+        arrow: function(app_io, event){
+            const screen_position = glm.vec2(event.clientX, event.clientY);
+            const screen_frame_store = app_io.diagram.screen_frame_store;
+            const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+            const model_position = position_shifting.leave(screen_position, screen_frame);
+            drag_ops.transition( arrow_drags.create(app_io.diagram.arrows, model_position), app_io);
+        },
+        deselect: function(app_io, event){
+            if (!event.shiftKey && !event.ctrlKey) {
+                // rmb handles selections, cancel if nothing is selected
+                history.do(app_io, 
+                    new Diagram(
+                            app_io.diagram.arrows,
+                            app_io.diagram.objects,
+                            [], [],
+                            app_io.diagram.screen_frame_store,
+                        ), false);
+            }
+        }
     }
     const keydown = {
         'ctrl+z': 'undo',
         'ctrl+y': 'redo',
         'ctrl+shift+z': 'redo',
     }
+    const buttonclick = {
+        'undo': 'undo',
+        'redo': 'redo',
+        'toggle-grid': 'toggle_grid',
+    }
+    const mousedown = [
+        'arrow',
+        'pan',
+        'deselect'
+    ]
     return {
 
         contextmenu: function(event, drawing, app_io, dom_io){
@@ -59,26 +82,7 @@ function AppUpdater(
         },
 
         mousedown: function(event, drawing, app_io, dom_io){
-            if (event.button < 2) {
-                const state = [DragState.arrow, DragState.pan][event.button];
-                drag_ops.transition( mouse_actions[state](app_io, event), app_io);
-                history.do(app_io, 
-                    new Diagram(
-                            app_io.diagram.arrows,
-                            app_io.diagram.objects,
-                            [], [],
-                            app_io.diagram.screen_frame_store,
-                        ), false);
-            } else if (event.button == 2 && !event.shiftKey && !event.ctrlKey) {
-                // rmb handles selections, cancel if nothing is selected
-                history.do(app_io, 
-                    new Diagram(
-                            app_io.diagram.arrows,
-                            app_io.diagram.objects,
-                            [], [],
-                            app_io.diagram.screen_frame_store,
-                        ), false);
-            }
+            actions[mousedown[event.button]](app_io, event);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
@@ -109,26 +113,23 @@ function AppUpdater(
             if (action_id!=null) {
                 const action = actions[action_id];
                 if (action!=null) {
-                    action(app_io);
+                    action(app_io, event);
                     drawing.redraw(undefined, app_io, dom_io);
                 }
             }
         },
 
-        undo: function(event, drawing, app_io, dom_io) {
-            actions['undo'](app_io);
-            drawing.redraw(undefined, app_io, dom_io);
+        buttonclick: function(event, drawing, app_io, dom_io){
+            const action_id = buttonclick[event.currentTarget.id];
+            if (action_id!=null) {
+                const action = actions[action_id];
+                if (action!=null) {
+                    action(app_io, event);
+                    drawing.redraw(undefined, app_io, dom_io);
+                }
+            }
         },
 
-        redo: function(event, drawing, app_io, dom_io) {
-            actions['redo'](app_io);
-            drawing.redraw(undefined, app_io, dom_io);
-        },
-
-        toggle_grid: function(event, drawing, app_io, dom_io) {
-            app_io.is_grid_hidden = !app_io.is_grid_hidden;
-            drawing.redraw(undefined, app_io, dom_io);
-        },
 
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
             drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow_io), app_io);
