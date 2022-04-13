@@ -11,13 +11,13 @@ class SvgArc{
         this.is_large_arc = is_large_arc;
         this.is_clockwise = is_clockwise;
     }
-    copy(){
+    with(attributes){
         return new SvgArc(
-            this.source,
-            this.target,
-            this.radius,
-            this.is_large_arc,
-            this.is_clockwise,
+            attributes.source       != null? attributes.source       : this.source,
+            attributes.target       != null? attributes.target       : this.target,
+            attributes.radius       != null? attributes.radius       : this.radius,
+            attributes.is_large_arc != null? attributes.is_large_arc : this.is_large_arc,
+            attributes.is_clockwise != null? attributes.is_clockwise : this.is_clockwise,
         );
     }
 };

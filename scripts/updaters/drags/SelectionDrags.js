@@ -6,7 +6,6 @@ function SelectionDrags(
         position_map_operations){
     return {
         move: function(initial_diagram) {
-            initial_diagram = initial_diagram.copy();
             return {
                 id: DragState.object,
                 is_model_drag: true,

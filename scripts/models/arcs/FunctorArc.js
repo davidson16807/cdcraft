@@ -15,12 +15,12 @@ class FunctorArc {
         this.min_length_clockwise = min_length_clockwise;
         this.is_valid = is_valid;
     }
-    copy(){
+    with(attributes){
         return new FunctorArc(
-            this.source_id,
-            this.target_id,
-            this.min_length_clockwise,
-            this.is_valid,
+            attributes.source_id            != null? attributes.source_id            : this.source_id,
+            attributes.target_id            != null? attributes.target_id            : this.target_id,
+            attributes.min_length_clockwise != null? attributes.min_length_clockwise : this.min_length_clockwise,
+            attributes.is_valid             != null? attributes.is_valid             : this.is_valid,
         );
     }
 }

@@ -10,7 +10,10 @@ class ScreenReferenceFrameStore {
         this.topleft_cell_position = topleft_cell_position;
         this.log2_cell_width = log2_cell_width;
     }
-    copy(){
-        return new ScreenReferenceFrameStore(this.topleft_cell_position, this.log2_cell_width);
+    with(attributes){
+        return new ScreenReferenceFrameStore(
+            attributes.topleft_cell_position  != null? attributes.topleft_cell_position  : this.topleft_cell_position, 
+            attributes.log2_cell_width        != null? attributes.log2_cell_width        : this.log2_cell_width
+        );
     }
 }

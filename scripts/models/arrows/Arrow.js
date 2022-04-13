@@ -8,7 +8,10 @@ class Arrow {
         this.source = source;
         this.target = target;
     }
-    copy(){ 
-        return new Arrow(this.source, this.target);
+    with(attributes){ 
+        return new Arrow(
+            attributes.source != null? attributes.source : this.source, 
+            attributes.target != null? attributes.target : this.target
+        );
     }
 }

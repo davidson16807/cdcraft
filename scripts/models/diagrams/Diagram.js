@@ -14,13 +14,13 @@ class Diagram {
         this.screen_frame_store = screen_frame_store;
     }
 
-    copy(){
+    with(attributes){
         return new Diagram(
-            this.arrows.map(arrow => arrow.copy()),
-            this.objects.map(object => object.copy()),
-            this.arrow_selections.map(arrow => arrow.copy()),
-            this.object_selections.map(object => object.copy()),
-            this.screen_frame_store.copy(),
+            attributes.arrows              != null? attributes.arrows              : this.arrows,
+            attributes.objects             != null? attributes.objects             : this.objects,
+            attributes.arrow_selections    != null? attributes.arrow_selections    : this.arrow_selections,
+            attributes.object_selections   != null? attributes.object_selections   : this.object_selections,
+            attributes.screen_frame_store  != null? attributes.screen_frame_store  : this.screen_frame_store,
         );
     }
 

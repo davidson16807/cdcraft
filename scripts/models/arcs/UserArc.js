@@ -11,11 +11,11 @@ class UserArc {
         this.target = target;
         this.min_length_clockwise = min_length_clockwise;
     }
-    copy(){
+    with(attributes){
         return new UserArc(
-            this.source,
-            this.target,
-            this.min_length_clockwise,
+            attributes.source                != null? attributes.source                : this.source,
+            attributes.target                != null? attributes.target                : this.target,
+            attributes.min_length_clockwise  != null? attributes.min_length_clockwise  : this.min_length_clockwise,
         );
     }
 }

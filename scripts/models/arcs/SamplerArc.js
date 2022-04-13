@@ -10,11 +10,11 @@ class SamplerArc {
         this.source_offset = source_offset;
         this.length_clockwise = length_clockwise;
     }
-    copy(){
+    with(attributes){
         return new SamplerArc(
-            this.origin,
-            this.source_offset,
-            this.length_clockwise,
+            attributes.origin           != null? attributes.origin           : this.origin,
+            attributes.source_offset    != null? attributes.source_offset    : this.source_offset,
+            attributes.length_clockwise != null? attributes.length_clockwise : this.length_clockwise,
         );
     }
 }

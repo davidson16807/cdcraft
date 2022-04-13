@@ -16,13 +16,13 @@ class StoredArc {
         this.target_offset_id = target_offset_id;
         this.is_valid = is_valid;
     }
-    copy(){
+    with(attributes){
         return new StoredArc(
-            this.source,
-            this.target,
-            this.min_length_clockwise,
-            this.target_offset_id,
-            this.is_valid,
+            attributes.source               != null? attributes.source               : this.source,
+            attributes.target               != null? attributes.target               : this.target,
+            attributes.min_length_clockwise != null? attributes.min_length_clockwise : this.min_length_clockwise,
+            attributes.target_offset_id     != null? attributes.target_offset_id     : this.target_offset_id,
+            attributes.is_valid             != null? attributes.is_valid             : this.is_valid,
         );
     }
 }
