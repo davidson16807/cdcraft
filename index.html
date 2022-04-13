@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="./styles/katex.min.css">
     <link rel="stylesheet" href="./styles/bootstrap.css">
-    <link rel="stylesheet" href="./styles/main.css">
-    <link rel="stylesheet" href="./styles/controls.css">
+    <link rel="stylesheet" href="./styles/graphics.css">
+    <link rel="stylesheet" href="./styles/toolbars.css">
     <script src="./libraries/glm-js.min.js"></script>
     <script src="./libraries/katex.min.js"></script>
     <script src="./libraries/auto-render.min.js"></script>
@@ -58,86 +58,8 @@
     <script src="./scripts/resources/ArrowPositionsResource.js"></script>
     <script src="./scripts/resources/ObjectPositionResource.js"></script>
     <script src="./scripts/resources/PositionMapOperations.js"></script>
-    <style type="text/css">
-
-        /*
-        NOTE: styling for solid black elements is repeated here to fix a 
-        cosmetic issue with a dark mode plugin I use, 
-        which likely exists other dark mode plugins.
-        */
-        .arrow {
-            stroke: black;
-        }
-
-        .object {
-            color: black;
-        }
-
-    </style>
-
 </head>
 <body>
-
-
-<div id="toolbar" class="top left short-axis-group collapse control">
-
-    <div class="banner"> 
-        <div class="logo">∙⇆∙<div class="title">cdcraft</div></div>
-        <div class="subtitle">A workspace of commutative diagrams</div>
-    </div>
-<!-- 
-    <button id="save" type="button" class="btn btn-large">
-        <div>Save</div>
-        <img src="icons/save.svg"/>
-        <div class="instructions">ctrl+S</div>
-    </button>
-
-    <button id="load" type="button" class="btn btn-large">
-        <div>Load</div>
-        <img src="icons/load.svg"/>
-        <div class="instructions">ctrl+O</div>
-    </button>
- -->
-    <button id="undo" type="button" class="btn btn-large">
-        <div>Undo</div>
-        <img src="icons/undo.svg"/>
-        <div class="instructions">ctrl+Z</div>
-    </button>
-
-    <button id="redo" type="button" class="btn btn-large">
-        <div>Redo</div>
-        <img src="icons/redo.svg"/>
-        <div class="instructions">ctrl+Y</div>
-    </button>
-<!-- 
-    <button id="copy" type="button" class="btn btn-large">
-        <div>Copy</div>
-        <img src="icons/copy.svg"/>
-        <div class="instructions">ctrl+C</div>
-    </button>
-
-    <button id="cut" type="button" class="btn btn-large">
-        <div>Cut</div>
-        <img src="icons/cut.svg"/>
-        <div class="instructions">ctrl+C</div>
-    </button>
-
-    <button id="paste" type="button" class="btn btn-large">
-        <div>Paste</div>
-        <img src="icons/paste.svg"/>
-        <div class="instructions">ctrl+V</div>
-    </button>
- -->
-    <button id="toggle-grid" type="button" class="btn btn-large">
-        <div> <span id="toggle-grid-verb">Hide</span>&nbsp;Grid</div>
-        <img src="icons/grid.svg"/>
-        <div class="instructions">&nbsp;</div>
-    </button>
-
-</div>
-
-<div class="bottom right mobile-logo">∙⇆∙</div>
-
 
 <svg id="graphics">
     <g id="transformation">
@@ -150,6 +72,131 @@
         <g id="arrow-selection-hitboxes" class="hitbox"></g>
     </g>
 </svg>
+
+<div id="toolbar" class="top left short-axis-group control">
+
+    <div class="banner"> 
+        <div class="logo">∙⇆∙<div class="title">cdcraft</div></div>
+        <div class="subtitle">A workspace of commutative diagrams</div>
+    </div>
+<!-- 
+    <button id="save" type="button" class="btn btn-dark">
+        <div>Save</div>
+        <img src="icons/save.svg"/>
+        <div class="instructions">ctrl+S</div>
+    </button>
+
+    <button id="load" type="button" class="btn btn-dark">
+        <div>Load</div>
+        <img src="icons/load.svg"/>
+        <div class="instructions">ctrl+O</div>
+    </button>
+ -->
+    <button id="undo" type="button" class="btn btn-dark" disabled>
+        <div>Undo</div>
+        <img src="icons/undo.svg"/>
+        <div class="instructions">ctrl+Z</div>
+    </button>
+
+    <button id="redo" type="button" class="btn btn-dark" disabled>
+        <div>Redo</div>
+        <img src="icons/redo.svg"/>
+        <div class="instructions">ctrl+Y</div>
+    </button>
+<!-- 
+    <button id="copy" type="button" class="btn btn-dark">
+        <div>Copy</div>
+        <img src="icons/copy.svg"/>
+        <div class="instructions">ctrl+C</div>
+    </button>
+
+    <button id="cut" type="button" class="btn btn-dark">
+        <div>Cut</div>
+        <img src="icons/cut.svg"/>
+        <div class="instructions">ctrl+C</div>
+    </button>
+
+    <button id="paste" type="button" class="btn btn-dark">
+        <div>Paste</div>
+        <img src="icons/paste.svg"/>
+        <div class="instructions">ctrl+V</div>
+    </button>
+ -->
+    <button id="link" type="button" class="btn btn-dark">
+        <div>Url</div>
+        <img src="icons/link.svg"/>
+    </button>
+
+    <button id="svg" type="button" class="btn btn-dark">
+        <div>SVG</div>
+        <img src="icons/code-angles.svg"/>
+    </button>
+
+    <button id="latex" type="button" class="btn btn-dark">
+        <div>TikZ</div>
+        <img src="icons/code-LaTeX.svg"/>
+    </button>
+
+    <button id="toggle-grid" type="button" class="btn btn-dark active">
+        <div>Grid</div>
+        <img src="icons/grid.svg"/>
+    </button>
+
+</div>
+
+<div class="bottom right mobile-logo">∙⇆∙</div>
+
+
+<!-- <div id="object-toolbar" class="bottom right horizontal-axis-group control">
+
+    <div class="btn btn-dark">
+        <div>Object</div>
+        <div class="instructions">&nbsp;</div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">Text</span>
+          </div>
+          <input type="text" class="form-control" placeholder="\[\bullet\]"/>
+        </div>
+    </div>
+
+</div>
+ -->
+
+<div id="arrow-toolbar" class="bottom right short-axis-group control">
+
+    <div class="horizontal-axis-group">
+        <button id="toggle-grid" type="button" class="btn btn-dark">
+            <div> <span id="toggle-grid-verb">Hide</span>&nbsp;Grid</div>
+            <img src="icons/grid.svg"/>
+            <div class="instructions">&nbsp;</div>
+        </button>
+        <button id="toggle-grid" type="button" class="btn btn-dark">
+            <div> <span id="toggle-grid-verb">Hide</span>&nbsp;Grid</div>
+            <img src="icons/grid.svg"/>
+            <div class="instructions">&nbsp;</div>
+        </button>
+        <button id="toggle-grid" type="button" class="btn btn-dark">
+            <div> <span id="toggle-grid-verb">Hide</span>&nbsp;Grid</div>
+            <img src="icons/grid.svg"/>
+            <div class="instructions">&nbsp;</div>
+        </button>
+    </div>
+
+    <div class="horizontal-axis-group">
+        <div class="btn btn-dark">
+            <div>Arrow</div>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Text</span>
+              </div>
+              <input type="text" class="form-control"/>
+            </div>
+        </div>
+    </div>
+
+</div>
+
 
 
 <script type="text/javascript">

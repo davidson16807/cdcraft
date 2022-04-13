@@ -1,5 +1,4 @@
 TODO:
-toolbar
 arrow editor
 object editor
 export/import
@@ -21,3 +20,5 @@ url links
 arrow decorations
 functor arrows
 refresh grids on window resize
+toggle "disabled" status on undo/redo buttons
+ctrl+A to select all

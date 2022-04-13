@@ -1,10 +1,28 @@
 
 body{
+    /* set "overflow: hidden" to hide the scrollbar ; */
+    overflow : hidden;
+
     font-family: sans-serif;
+    background-color: white;
+    color: black;
+}
+
+@media (prefers-color-scheme: dark){
+    body {
+        background-color: black;
+        color: white;
+    }
+}
+
+@media (prefers-color-scheme: dark){
+    svg {
+        fill: white !important;
+    }
 }
 
 
-svg {
+#graphics {
     position: fixed;
     top:0;
     left:0;
@@ -31,38 +49,76 @@ svg {
     stroke: black;
     pointer-events: all;
 }
+
 .arrow-highlight {
     fill: none;
     stroke: darkgrey;
     stroke-width:20;
     pointer-events: all;
 }
+
 .arrow-tip-highlight {
     fill: darkgrey;
     stroke: none;
     pointer-events: all;
 }
+
 .arrow-handle {
     fill: grey;
     stroke: none;
     pointer-events: all;
 }
+
 .arrow-handle:hover {
     fill: lightgrey;
     stroke: none;
     pointer-events: all;
 }
 
+@media (prefers-color-scheme: dark){
+
+    .arrow {
+        stroke: white;
+    }
+    .arrow-highlight {
+        stroke: dimgrey;
+    }
+    .arrow-tip-highlight {
+        fill: dimgrey;
+    }
+    .arrow-handle {
+        fill: grey;
+    }
+    .arrow-handle:hover {
+        fill: lightgrey;
+    }
+
+}
+
+
 .object-highlight {
     fill: darkgrey;
     stroke: none;
     pointer-events: all;
 }
+
 .object {
     color: black;
     text-align: center;
     /*NOTE: I have found no better way to align a <foreignObject> component than through manual adjustment.*/
     transform: translate(0px, -29px);
+}
+
+@media (prefers-color-scheme: dark){
+
+    .object-highlight {
+        fill: dimgrey;
+    }
+
+    .object {
+        color: white;
+    }
+
 }
 
 .highlight-on-hover {
@@ -177,10 +233,4 @@ This may be used to avoid confusing the user,
 */
 .hidden-when-loading{
     display: none;
-}
-
-
-/* set "overflow: hidden" to hide the scrollbar ; */
-body {
-    overflow : hidden;
 }

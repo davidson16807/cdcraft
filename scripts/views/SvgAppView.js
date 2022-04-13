@@ -43,9 +43,11 @@ function SvgAppView(dependencies, onevents) {
             dom_io
                 .getElementById('cell-borders')
                 .replaceWith(svg_grid_view.draw(new_app.diagram.screen_frame_store, new_app.is_grid_hidden));
-            dom_io
-                .getElementById('toggle-grid-verb')
-                .textContent = (new_app.is_grid_hidden? 'Show' : 'Hide');
+        }
+        if (new_app.is_grid_hidden) {
+            dom_io.getElementById('toggle-grid').classList.remove('active');
+        } else {
+            dom_io.getElementById('toggle-grid').classList.add('active');
         }
 
         if (old_app == null || old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
