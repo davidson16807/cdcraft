@@ -25,13 +25,7 @@ function ViewDrags(screen_frame_storage, position_shifting, offset_shifting,
                 },
                 wheel: (screen_frame_store, screen_focus, scroll_count) => screen_frame_store,
                 command: (screen_frame_store, is_released, is_canceled) => 
-                    diagram => new Diagram(
-                                diagram.arrows,
-                                diagram.objects,
-                                diagram.arrow_selections,
-                                diagram.object_selections,
-                                screen_frame_store,
-                            ),
+                    diagram => diagram.with({screen_frame_store: screen_frame_store})
             };
         },
 
@@ -68,13 +62,7 @@ function ViewDrags(screen_frame_storage, position_shifting, offset_shifting,
                         );
                 },
                 command: (screen_frame_store, is_released, is_canceled) => 
-                    diagram => new Diagram(
-                                diagram.arrows,
-                                diagram.objects,
-                                diagram.arrow_selections,
-                                diagram.object_selections,
-                                screen_frame_store,
-                            ),
+                    diagram => diagram.with({screen_frame_store: screen_frame_store})
             };
         }
 

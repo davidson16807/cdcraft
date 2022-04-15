@@ -71,27 +71,12 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
-                            diagram => new Diagram(
-                                    arrows,
-                                    diagram.objects,
-                                    [], [],
-                                    diagram.screen_frame_store,
-                                )
-                          : diagram => new Diagram(
-                                    [...arrows, 
-                                        new DiagramArrow(
-                                            replacement_arrow.arc,
-                                            !is_released,
-                                            replacement_arrow.label,
-                                            replacement_arrow.label_offset,
-                                            replacement_arrow.source_style_id,
-                                            replacement_arrow.end_style_id,
-                                            replacement_arrow.line_style_id,
-                                        )],
-                                diagram.objects,
-                                [], [],
-                                diagram.screen_frame_store,
-                            )
+                            diagram => diagram.with({arrows: arrows, arrow_selections: [], object_selections: []})
+                          : diagram => diagram.with({
+                                    arrows: [...arrows, replacement_arrow.with({is_edited: !is_released})],
+                                    arrow_selections: [],
+                                    object_selections: [],
+                                })
                 }
             };
         },
@@ -104,43 +89,27 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                 id: DragState.arrow,
                 is_model_drag: true,
                 is_view_drag: false,
-                initialize: () => new DiagramArrow(
-                        replaced_arrow.arc,
-                        true,
-                        replaced_arrow.label,
-                        replaced_arrow.label_offset,
-                        replaced_arrow.source_style_id,
-                        replaced_arrow.end_style_id,
-                        replaced_arrow.line_style_id,
-                    ),
+                initialize: () => replaced_arrow.with({is_edited: true}),
                 move: move,
                 wheel: wheel,
                 // delete the arrow if canceled or not snapped, otherwise edit the arrow
                 command: (replacement_arrow, is_released, is_canceled) => 
                     is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
-                            diagram => new Diagram(
-                                    [...arrows_before, ...arrows_after],
-                                    diagram.objects,
-                                    [], [],
-                                    diagram.screen_frame_store,
-                                )
-                          : diagram => new Diagram(
-                                    [...arrows_before, 
-                                     new DiagramArrow(
-                                              replacement_arrow.arc,
-                                              !is_released,
-                                              replacement_arrow.label,
-                                              replacement_arrow.label_offset,
-                                              replacement_arrow.source_style_id,
-                                              replacement_arrow.end_style_id,
-                                              replacement_arrow.line_style_id,
-                                          ),
-                                     ...arrows_after],
-                                    diagram.objects,
-                                    [], [],
-                                    diagram.screen_frame_store,
-                                ),
-
+                            diagram => diagram.with({
+                                    arrows: [...arrows_before, ...arrows_after],
+                                    arrow_selections: [],
+                                    object_selections: [],
+                                })
+                          : diagram => diagram.with({
+                                    arrows: 
+                                        [...arrows_before, 
+                                         replacement_arrow.with({is_edited: !is_released}),
+                                         ...arrows_after],
+                                    arrow_selections: 
+                                        glm.distance(replacement_arrow.arc.target, replaced_arrow.arc.target) > 0?
+                                            [] : [replacement_arrow], 
+                                    object_selections: [],
+                                })
             };
         },
     };

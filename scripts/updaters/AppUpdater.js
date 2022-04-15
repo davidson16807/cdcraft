@@ -137,14 +137,11 @@ function AppUpdater(
         },
 
         objectclick: function(event, drawing, object_io, app_io, dom_io){
-            history.do(app_io, 
-                new Diagram(
-                        app_io.diagram.arrows,
-                        app_io.diagram.objects,
-                        [], [object_io],
-                        app_io.diagram.screen_frame_store,
-                    ), false);
-            drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
+            const selected_diagram = app_io.diagram.with({
+                arrow_selections:[], 
+                object_selections:[object_io]
+            });
+            drag_ops.transition( selection_drags.move(selected_diagram), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
