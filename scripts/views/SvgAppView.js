@@ -30,10 +30,18 @@ function SvgAppView(dependencies, onevents) {
     const drawing = {};
 
     function _redraw(old_app, new_app, dom_io) {
-        if (old_app == null || old_app.drag_type == new_app.drag_type){
+        if (old_app == null || old_app.drag_type != new_app.drag_type){
             dom_io
                 .getElementById('graphics')
                 .setAttribute('cursor', new_app.drag_type.id == 'released'? 'default' : 'move')
+        }
+
+        if (old_app == null || old_app.undo_history != new_app.undo_history){
+            dom_io.getElementById('undo').disabled = new_app.undo_history.length == 0;
+        }
+
+        if (old_app == null || old_app.redo_history != new_app.redo_history){
+            dom_io.getElementById('redo').disabled = new_app.redo_history.length == 0;
         }
 
         if (old_app == null || old_app.screen_frame_store != new_app.screen_frame_store) {
