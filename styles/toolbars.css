@@ -80,7 +80,7 @@ In portrait orientations, it will expand from bottom right to bottom left.
 
 .control {
     /* max height should not cause world to become obstructed */
-    max-height: 23.6%;
+    max-height: 38.2%;
     overflow-y: hidden;
 
     /* max width on mobile */
@@ -88,7 +88,7 @@ In portrait orientations, it will expand from bottom right to bottom left.
     overflow-x: auto;
 }
 
-@media (pointer: fine), (pointer: none), (orientation: landscape) {
+@media (orientation: landscape) {
     .control {
         /* 
         Because we do not wrap content, we run the risk of content running off the screen. 
@@ -101,38 +101,38 @@ In portrait orientations, it will expand from bottom right to bottom left.
         To prevent obstructing the view of the main content, 
         and content width should resize as necessary. 
         */
-        max-width   : auto;
+        max-width   : 38.2%;
         overflow-x  : hidden;
     }
 }
 
-/*
-Mobile phones require big buttons that are easy to press. 
-Therefore, buttons icons are enlarged on small screens. 
-This applies regardless of screen orientation. 
-Text is also shrunk and placed below the icon to give a space saving square shape.
+@media (pointer: fine), (pointer: none) {
+    .control {
+        /* 
+        Because we do not wrap content, we run the risk of content running off the screen. 
+        To prevent this, we set the height not exceed the height of the window. 
+        If necessary, the user may scroll vertically through the content. 
+        */
+        max-height  : 100%;
+        overflow-y  : auto;
+        /* 
+        To prevent obstructing the view of the main content, 
+        and content width should resize as necessary. 
+        */
+        max-width   : 100%;
+        overflow-x  : scroll;
+    }
+}
 
-If the users have the ability to select buttons with pixel perfect precision, they do not require big buttons.
-However desktop users still presumably want to maximize screenspace spent towards the main content.
-So we therefore reduce the size of buttons to allow for this.
-Our buttons then become composed of small icons next to large text. 
-Since text consumes space horizontally, we will always want button groups to consume space vertically.
-This will be the case regardless of screen orientation. 
-*/
-.btn {
-    /* we follow apple recommendations for button size */
-    /*min-width : 70px;*/
-    min-height: 70px;
-    display   : flex;
-    flex-flow : column nowrap;
-    align-items: center;
-    flex: 1 2 auto;
+
+.control label {
+    display: block;
+    -webkit-user-select: none;  
+    -moz-user-select: none;    
+    -ms-user-select: none;      
+    user-select: none;
 }
-.btn img {
-    /* we follow google material recommendations for icon size */
-    width:  48px;
-    height: 48px;
-}
+
 
 
 .banner {
@@ -177,6 +177,106 @@ This will be the case regardless of screen orientation.
   }
 }
 
+
+
+/*
+Mobile phones require big buttons that are easy to press. 
+Therefore, buttons icons are enlarged on small screens. 
+This applies regardless of screen orientation. 
+Text is also shrunk and placed below the icon to give a space saving square shape.
+
+If the users have the ability to select buttons with pixel perfect precision, they do not require big buttons.
+However desktop users still presumably want to maximize screenspace spent towards the main content.
+So we therefore reduce the size of buttons to allow for this.
+Our buttons then become composed of small icons next to large text. 
+Since text consumes space horizontally, we will always want button groups to consume space vertically.
+This will be the case regardless of screen orientation. 
+*/
+.btn {
+    /* we follow apple recommendations for button size */
+    /*min-width : 70px;*/
+    display   : flex;
+    flex-flow : column nowrap;
+    align-items: center;
+    flex: 1 2 auto;
+    border-radius: 0.5rem;
+}
+.btn img {
+    width:  48px;
+    height: 48px;
+}
+.btn.btn-sm img {
+    width:  24px;
+    height: 24px;
+}
+.btn .img {
+    width:  48px;
+    height: 48px;
+    font-size: 161%;
+}
+.btn.btn-sm .img {
+    width:  24px;
+    height: 24px;
+}
+
+.btn-rainbow{
+    background: linear-gradient(to right, rgb(255, 0, 0), rgb(255, 191, 0), rgb(128, 255, 0), rgb(0, 255, 64), rgb(0, 255, 255), rgb(0, 64, 255), rgb(128, 0, 255));
+}
+.btn-contrast {
+    background: black;
+}
+@media (prefers-color-scheme: dark){
+    .btn-contrast {
+        background: white;
+    }
+}
+
+@media (pointer: fine) or (pointer: none) {
+  .btn img{
+    width:  24px;
+    height: 24px;
+  }
+  .btn .img{
+    width:  24px;
+    height: 24px;
+    font-size: 100%;
+  }
+}
+
+
+/*
+We also want to display hints to desktop users so they can learn shortcuts and hotkeys
+To accomplish this we display "instructions" next to button text. 
+These only appear when pointer precision indicates a desktop user.
+*/
+.instructions {
+    display: none;
+}
+@media (pointer: fine), (pointer: none) {
+    .instructions {
+        display     : block;
+        font-size   : 75%;
+    }
+}
+
+.maybe-slider {
+    width: max-content;
+}
+.maybe-slider input {
+    width: 120px;
+}
+
+.group-dark {
+  color: #fff;
+  background-color: #343a40;
+  border-color: #343a40;
+}
+
+.group-round {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+}
+
 /* text is enlarged and placed beside the icon to save vertical space */
 /* cancel the height/width restrictions that are imposed on mobile */
 /* 
@@ -198,42 +298,10 @@ This will be the case regardless of screen orientation.
 }
 */
 
-/*
-We also want to display hints to desktop users so they can learn shortcuts and hotkeys
-To accomplish this we display "instructions" next to button text. 
-These only appear when pointer precision indicates a desktop user.
-*/
-.instructions {
-    display: none;
-}
-@media (pointer: fine), (pointer: none) {
-    .instructions {
-        display     : block;
-        /*color       : grey;*/
-        font-size   : 75%;
-    }
-}
 .horizontal-axis-group {
     display   : flex;
     flex-flow : row nowrap;
     justify-content: space-evenly;
-}
-
-
-.horizontal-axis-group .btn,
-.horizontal-axis-group .btn {
-  border-top-left-radius     : 0;
-  border-top-right-radius    : 0;
-  border-bottom-left-radius  : 0;
-  border-bottom-right-radius : 0;
-}
-.horizontal-axis-group .btn:first-of-type {
-  border-top-left-radius: 0.5rem;
-  border-bottom-left-radius: 0.5rem;
-}
-.horizontal-axis-group .btn:last-child {
-  border-top-right-radius : 0.5rem;
-  border-bottom-right-radius : 0.5rem;
 }
 
 .vertical-axis-group {
@@ -242,17 +310,34 @@ These only appear when pointer precision indicates a desktop user.
     justify-content: space-evenly;
 }
 
-.vertical-axis-group .btn {
+
+.horizontal-axis-group.group-joined .btn,
+.horizontal-axis-group.group-joined .btn {
   border-top-left-radius     : 0;
   border-top-right-radius    : 0;
   border-bottom-left-radius  : 0;
   border-bottom-right-radius : 0;
 }
-.vertical-axis-group .btn:first-of-type {
+.horizontal-axis-group.group-joined .btn:first-of-type {
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+.horizontal-axis-group.group-joined .btn:last-of-type {
+  border-top-right-radius : 0.5rem;
+  border-bottom-right-radius : 0.5rem;
+}
+
+.vertical-axis-group.group-joined .btn {
+  border-top-left-radius     : 0;
+  border-top-right-radius    : 0;
+  border-bottom-left-radius  : 0;
+  border-bottom-right-radius : 0;
+}
+.vertical-axis-group.group-joined .btn:first-of-type {
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
 }
-.vertical-axis-group .btn:last-child {
+.vertical-axis-group.group-joined .btn:last-child {
   border-bottom-left-radius : 0.5rem;
   border-bottom-right-radius : 0.5rem;
 }
@@ -288,33 +373,28 @@ Since one of our core design principles is to prevent obstruction of the main fo
 }
 
 
-.short-axis-group .btn,
-.short-axis-group .short-axis-group .btn {
+.short-axis-group.group-joined .btn{
   border-top-left-radius     : 0;
   border-top-right-radius    : 0;
   border-bottom-left-radius  : 0;
   border-bottom-right-radius : 0;
 }
 @media (orientation: portrait) or (pointer: fine) or (pointer: none) {
-    .short-axis-group .btn:first-of-type,
-    .short-axis-group .short-axis-group:first-of-type > .btn {
+    .short-axis-group.group-joined > .btn:first-of-type {
       border-top-left-radius: 0.5rem;
       border-bottom-left-radius: 0.5rem;
     }
-    .short-axis-group .btn:last-child,
-    .short-axis-group .short-axis-group:last-child .btn {
+    .short-axis-group.group-joined > .btn:last-of-type {
       border-top-right-radius : 0.5rem;
       border-bottom-right-radius : 0.5rem;
     }
 }
 @media (orientation: landscape) and (pointer: coarse) {
-    .short-axis-group .btn:first-of-type,
-    .short-axis-group .short-axis-group:first-of-type > .btn {
+    .short-axis-group.group-joined > .btn:first-of-type {
       border-top-left-radius: 0.5rem;
       border-top-right-radius: 0.5rem;
     }
-    .short-axis-group .btn:last-child,
-    .short-axis-group .short-axis-group:last-child .btn {
+    .short-axis-group.group-joined > .btn:last-of-type {
       border-bottom-left-radius : 0.5rem;
       border-bottom-right-radius : 0.5rem;
     }
@@ -356,33 +436,32 @@ Use it only when you can guarantee the number of components you're dealing with 
 
 
 
-.long-axis-group .btn,
-.long-axis-group .long-axis-group .btn {
+.long-axis-group.group-joined .btn {
   border-top-left-radius     : 0;
   border-top-right-radius    : 0;
   border-bottom-left-radius  : 0;
   border-bottom-right-radius : 0;
 }
 @media (orientation: landscape) and (pointer: coarse) {
-    .long-axis-group .btn:first-of-type,
-    .long-axis-group .long-axis-group:first-of-type > .btn {
+    .long-axis-group.group-joined > .btn:first-of-type,
+    .long-axis-group.group-joined .long-axis-group.group-joined:first-of-type > .btn:first-of-type {
       border-top-left-radius: 0.5rem;
       border-bottom-left-radius: 0.5rem;
     }
-    .long-axis-group .btn:last-child,
-    .long-axis-group .long-axis-group:last-child .btn {
+    .long-axis-group.group-joined > .btn:last-of-type,
+    .long-axis-group.group-joined .long-axis-group.group-joined:last-of-type > .btn:last-of-type {
       border-top-right-radius : 0.5rem;
       border-bottom-right-radius : 0.5rem;
     }
 }
 @media (orientation: portrait) or (pointer: fine) or (pointer: none) {
-    .long-axis-group .btn:first-of-type,
-    .long-axis-group .long-axis-group:first-of-type > .btn {
+    .long-axis-group.group-joined > .btn:first-of-type,
+    .long-axis-group.group-joined .long-axis-group.group-joined:first-of-type > .btn:first-of-type {
       border-top-left-radius: 0.5rem;
       border-top-right-radius: 0.5rem;
     }
-    .long-axis-group .btn:last-child,
-    .long-axis-group .long-axis-group:last-child .btn {
+    .long-axis-group.group-joined > .btn:last-of-type,
+    .long-axis-group.group-joined .long-axis-group.group-joined:last-of-type > .btn:last-of-type {
       border-bottom-left-radius : 0.5rem;
       border-bottom-right-radius : 0.5rem;
     }
@@ -425,6 +504,24 @@ is-short-axis-horizontal only displays when the horizontal axis is shortest
     }
     .is-short-axis-horizontal {
       display: none;
+    }
+}
+/* 
+is-mobile only displays when the vertical axis is shortest
+is-desktop only displays when the horizontal axis is shortest
+*/
+.is-mobile {
+  display: inherit;
+}
+.is-desktop {
+  display: none;
+}
+@media (pointer: fine), (pointer: none) {
+    .is-mobile {
+      display: none;
+    }
+    .is-desktop {
+      display: inherit;
     }
 }
 
@@ -470,6 +567,12 @@ input[type="range"].slider-vertical {
     -webkit-appearance: slider-vertical;
     writing-mode: bt-lr;
 }
+
+input[type="text"] {
+    /*we follow apple recommendations for width of touchable components*/
+    width: 200px;
+}
+
 /* when pointer precision is better than a touchscreen, we can make sliders smaller */
 /* 
 @media (pointer: fine), (pointer: none) {

@@ -73,130 +73,229 @@
     </g>
 </svg>
 
-<div id="toolbar" class="top left short-axis-group control">
+<div id="toolbar" class="top left short-axis-group  control">
 
     <div class="banner"> 
         <div class="logo">∙⇆∙<div class="title">cdcraft</div></div>
         <div class="subtitle">A workspace of commutative diagrams</div>
     </div>
-<!-- 
-    <button id="save" type="button" class="btn btn-dark">
-        <div>Save</div>
-        <img src="icons/save.svg"/>
-        <div class="instructions">ctrl+S</div>
-    </button>
 
-    <button id="load" type="button" class="btn btn-dark">
-        <div>Load</div>
-        <img src="icons/load.svg"/>
-        <div class="instructions">ctrl+O</div>
-    </button>
- -->
-    <button id="undo" type="button" class="btn btn-dark" disabled>
-        <div>Undo</div>
-        <img src="icons/undo.svg"/>
-        <div class="instructions">ctrl+Z</div>
-    </button>
+    <div class="short-axis-group group-joined">
+            
+        
+    <!-- 
+        <button id="save" type="button" class="btn btn-dark">
+            <div>Save</div>
+            <img src="icons/save.svg"/>
+            <div class="instructions">ctrl+S</div>
+        </button>
 
-    <button id="redo" type="button" class="btn btn-dark" disabled>
-        <div>Redo</div>
-        <img src="icons/redo.svg"/>
-        <div class="instructions">ctrl+Y</div>
-    </button>
-<!-- 
-    <button id="copy" type="button" class="btn btn-dark">
-        <div>Copy</div>
-        <img src="icons/copy.svg"/>
-        <div class="instructions">ctrl+C</div>
-    </button>
+        <button id="load" type="button" class="btn btn-dark">
+            <div>Load</div>
+            <img src="icons/load.svg"/>
+            <div class="instructions">ctrl+O</div>
+        </button>
+     -->
+        <button id="undo" type="button" class="btn btn-dark" disabled>
+            <div>Undo</div>
+            <img src="icons/undo.svg"/>
+            <div class="instructions">ctrl+Z</div>
+        </button>
 
-    <button id="cut" type="button" class="btn btn-dark">
-        <div>Cut</div>
-        <img src="icons/cut.svg"/>
-        <div class="instructions">ctrl+C</div>
-    </button>
+        <button id="redo" type="button" class="btn btn-dark" disabled>
+            <div>Redo</div>
+            <img src="icons/redo.svg"/>
+            <div class="instructions">ctrl+Y</div>
+        </button>
+    <!-- 
+        <button id="copy" type="button" class="btn btn-dark">
+            <div>Copy</div>
+            <img src="icons/copy.svg"/>
+            <div class="instructions">ctrl+C</div>
+        </button>
 
-    <button id="paste" type="button" class="btn btn-dark">
-        <div>Paste</div>
-        <img src="icons/paste.svg"/>
-        <div class="instructions">ctrl+V</div>
-    </button>
- -->
-    <button id="link" type="button" class="btn btn-dark">
-        <div>Url</div>
-        <img src="icons/link.svg"/>
-    </button>
+        <button id="cut" type="button" class="btn btn-dark">
+            <div>Cut</div>
+            <img src="icons/cut.svg"/>
+            <div class="instructions">ctrl+C</div>
+        </button>
 
-    <button id="svg" type="button" class="btn btn-dark">
-        <div>SVG</div>
-        <img src="icons/code-angles.svg"/>
-    </button>
+        <button id="paste" type="button" class="btn btn-dark">
+            <div>Paste</div>
+            <img src="icons/paste.svg"/>
+            <div class="instructions">ctrl+V</div>
+        </button>
+        <button id="link" type="button" class="btn btn-dark">
+            <div>Url</div>
+            <img src="icons/link.svg"/>
+        </button>
 
-    <button id="latex" type="button" class="btn btn-dark">
-        <div>TikZ</div>
-        <img src="icons/code-LaTeX.svg"/>
-    </button>
+        <button id="svg" type="button" class="btn btn-dark">
+            <div>SVG</div>
+            <img src="icons/code-angles.svg"/>
+        </button>
 
-    <button id="toggle-grid" type="button" class="btn btn-dark active">
-        <div>Grid</div>
-        <img src="icons/grid.svg"/>
-    </button>
+        <button id="latex" type="button" class="btn btn-dark">
+            <div>TikZ</div>
+            <img src="icons/code-LaTeX.svg"/>
+        </button>
+     -->
 
+        <button id="toggle-grid" type="button" class="btn btn-dark active">
+            <div>Grid</div>
+            <img src="icons/grid.svg"/>
+        </button>
+
+    </div>
 </div>
 
 <div class="bottom right mobile-logo">∙⇆∙</div>
 
 
-<!-- <div id="object-toolbar" class="bottom right horizontal-axis-group control">
+<!-- 
+<div id="object-toolbar" class="bottom right short-axis-group group-dark group-round control">
 
-    <div class="btn btn-dark">
-        <div>Object</div>
-        <div class="instructions">&nbsp;</div>
-        <div class="input-group mb-3">
-          <div class="input-group-prepend">
-            <span class="input-group-text" id="basic-addon1">Text</span>
-          </div>
-          <input type="text" class="form-control" placeholder="\[\bullet\]"/>
-        </div>
-    </div>
-
-</div>
- -->
-
-<div id="arrow-toolbar" class="bottom right short-axis-group control">
-
-    <div class="horizontal-axis-group">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <div> <span id="toggle-grid-verb">Hide</span>&nbsp;Grid</div>
-            <img src="icons/grid.svg"/>
-            <div class="instructions">&nbsp;</div>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <div> <span id="toggle-grid-verb">Hide</span>&nbsp;Grid</div>
-            <img src="icons/grid.svg"/>
-            <div class="instructions">&nbsp;</div>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <div> <span id="toggle-grid-verb">Hide</span>&nbsp;Grid</div>
-            <img src="icons/grid.svg"/>
-            <div class="instructions">&nbsp;</div>
-        </button>
-    </div>
-
-    <div class="horizontal-axis-group">
-        <div class="btn btn-dark">
-            <div>Arrow</div>
-            <div class="input-group">
-              <div class="input-group-prepend">
-                <span class="input-group-text" id="basic-addon1">Text</span>
-              </div>
-              <input type="text" class="form-control"/>
+    <div class="group-round">
+        <h5>Object</h5>
+        <input type="text" class="form-control" placeholder="Object Text" />
+        <div class="horizontal-axis-group maybe-slider">
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <img src="icons/lock.svg"/>
+            </button>
+            <div class="vertical-axis-group">
+                <label>Position</label>
+                <input type="range" class="form-range" min="-5" max="5" id="range" disabled>
             </div>
         </div>
     </div>
 
 </div>
 
+
+<div id="arrow-toolbar" class="bottom right short-axis-group group-dark group-round control">
+
+    <div class="group-round">
+        <h5>Arrow</h5>
+        <input type="text" class="form-control" placeholder="Arrow Text" />
+        <div>&nbsp;</div>
+        <div class="horizontal-axis-group maybe-slider">
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <img src="icons/lock.svg"/>
+            </button>
+            <div class="vertical-axis-group">
+                <label>Position</label>
+                <input type="range" class="form-range" min="-5" max="5" id="range" disabled>
+            </div>
+        </div>
+    </div>
+
+    <div class="group-round">
+        <label>Curvature</label>
+        <input type="range" class="form-range" min="-5" max="5" id="range">
+        <label>Offset</label>
+        <input type="range" class="form-range" min="-5" max="5" id="range">
+        <label>Trim</label>
+        <input type="range" class="form-range" min="-5" max="5" id="range">
+    </div>
+
+    <div class="mobile group-round">
+        <label>Styling</label>
+        <div class="horizontal-axis-group">
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <img src="icons/menu-left.svg"/>
+            </button>
+            <img src="icons/grid.svg"/>
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <img src="icons/menu-right.svg"/>
+            </button>
+        </div>
+        <div class="horizontal-axis-group">
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <img src="icons/menu-left.svg"/>
+            </button>
+            <img src="icons/grid.svg"/>
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <img src="icons/menu-right.svg"/>
+            </button>
+        </div>
+        <div class="horizontal-axis-group">
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <img src="icons/menu-left.svg"/>
+            </button>
+            <img src="icons/grid.svg"/>
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <img src="icons/menu-right.svg"/>
+            </button>
+        </div>
+    </div>
+
+    <div class="group-round">
+        <div class="horizontal-axis-group group-joined">
+            <button id="toggle-grid" type="button" class="btn btn-dark active">
+                <div class="img">|</div>
+            </button>
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <div class="img">||</div>
+            </button>
+            <button id="toggle-grid" type="button" class="btn btn-dark">
+                <div class="img">|||</div>
+            </button>
+        </div>
+        <div class="horizontal-axis-group ">
+            <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
+                <div>Adjoint</div>
+                <div class="img" >⊣</div>
+            </button>
+            <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
+                <div>Pullback/Pushout</div>
+                <div class="img" >⌜</div>
+            </button>
+        </div>
+        <div class="horizontal-axis-group ">
+            <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
+                <div>Flip</div>
+                <img src="icons/swap-horizontal.svg"/>
+            </button>
+            <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
+                <div>Rotate</div>
+                <img src="icons/rotate-ccw.svg"/>
+            </button>
+            <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
+                <div>Rotate</div>
+                <img src="icons/rotate-cw.svg"/>
+            </button>
+        </div>
+    </div>
+
+    <div class="group-round">
+        <label>Color</label>
+        <div class="horizontal-axis-group group-joined">
+            <button id="toggle-grid" type="button" class="btn btn-success">
+                <div class="img" />
+            </button>
+            <button id="toggle-grid" type="button" class="btn btn-primary">
+                <div class="img" />
+            </button>
+            <button id="toggle-grid" type="button" class="btn btn-contrast active">
+                <div class="img" />
+            </button>
+        </div>
+        <div class="horizontal-axis-group group-joined">
+            <button id="toggle-grid" type="button" class="btn btn-danger">
+                <div class="img" />
+            </button>
+            <button id="toggle-grid" type="button" class="btn btn-warning">
+                <div class="img" />
+            </button>
+            <button id="toggle-grid" type="button" class="btn btn-rainbow">
+                <div class="img" />
+            </button>
+        </div>
+    </div>
+
+</div>
+
+ -->
 
 
 <script type="text/javascript">
