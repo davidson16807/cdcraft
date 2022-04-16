@@ -2,23 +2,9 @@
 
 function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_clockwise, min_length_clockwise_change_per_scroll){
     function move(arrow_in, model_position, model_offset) {
-        const arc_in = arrow_in.arc;
-        const arrow_out = new DiagramArrow(
-            user_arcs_and_stored_arcs.user_arc_to_stored_arc(
-                new UserArc(
-                    arc_in.source,
-                    model_position,
-                    arc_in.min_length_clockwise,
-                )
-            ),
-            arrow_in.is_edited,
-            arrow_in.label,
-            arrow_in.label_offset,
-            arrow_in.source_style_id,
-            arrow_in.end_style_id,
-            arrow_in.line_style_id,
-        );
-        return arrow_out;
+        return arrow_in.with({
+            arc: user_arcs_and_stored_arcs.user_arc_to_stored_arc(arrow_in.arc.with({target: model_position})),
+        });
     };
 
     const sign = Math.sign;
@@ -38,15 +24,9 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
         const is_different_sign = sign(excess_in) * sign(excess_out) < 0;
         const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
 
-        return new DiagramArrow(
-            new StoredArc(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_valid),
-            arrow_in.is_edited,
-            arrow_in.label,
-            arrow_in.label_offset,
-            arrow_in.source_style_id,
-            arrow_in.end_style_id,
-            arrow_in.line_style_id,
-        );
+        return arrow_in.with({
+            arc: new StoredArc(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_valid),
+        });
     };
 
     return {
@@ -71,11 +51,17 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
-                            diagram => diagram.with({arrows: arrows, arrow_selections: [], object_selections: []})
+                            diagram => diagram.with({
+                                    arrows: arrows, 
+                                    arrow_selections: [], 
+                                    object_selections: [],
+                                    inferred_object_selections: [],
+                                })
                           : diagram => diagram.with({
                                     arrows: [...arrows, replacement_arrow.with({is_edited: !is_released})],
                                     arrow_selections: [],
                                     object_selections: [],
+                                    inferred_object_selections: [],
                                 })
                 }
             };
@@ -93,22 +79,24 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                 move: move,
                 wheel: wheel,
                 // delete the arrow if canceled or not snapped, otherwise edit the arrow
-                command: (replacement_arrow, is_released, is_canceled) => 
-                    is_canceled || (is_released && !replacement_arrow.arc.is_valid)?
-                            diagram => diagram.with({
+                command: (replacement_arrow, is_released, is_canceled) => diagram => 
+                    is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
+                            diagram.with({
                                     arrows: [...arrows_before, ...arrows_after],
                                     arrow_selections: [],
                                     object_selections: [],
+                                    inferred_object_selections: [],
                                 })
-                          : diagram => diagram.with({
+                          : diagram.with({
                                     arrows: 
                                         [...arrows_before, 
                                          replacement_arrow.with({is_edited: !is_released}),
                                          ...arrows_after],
                                     arrow_selections: 
                                         glm.distance(replacement_arrow.arc.target, replaced_arrow.arc.target) > 0?
-                                            [] : [replacement_arrow], 
+                                            [] : [arrow_id], 
                                     object_selections: [],
+                                    inferred_object_selections: [],
                                 })
             };
         },

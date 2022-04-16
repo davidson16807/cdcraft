@@ -3,7 +3,9 @@
 function SvgAppView(dependencies, onevents) {
 
     const screen_frame_storage       = dependencies.screen_frame_storage;
-    const object_set_ops             = dependencies.diagram_object_set_ops;
+    const arrow_positions_resource   = dependencies.arrow_positions_resource;
+    const object_position_resource   = dependencies.object_position_resource;
+    const resource_operations        = dependencies.resource_operations;
     const svg_grid_view              = dependencies.svg_grid_view;
     const svg_object_view            = dependencies.svg_object_view;
     const svg_arrow_view             = dependencies.svg_arrow_view;
@@ -16,15 +18,6 @@ function SvgAppView(dependencies, onevents) {
     function frame_transform(screen_frame_store) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
         return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
-    };
-
-    function inferred_objects (diagram) {
-        const inferred = object_set_ops.set_to_list(
-                object_set_ops.update(
-                    object_set_ops.infer(diagram.arrows), 
-                    object_set_ops.list_to_set(diagram.objects)
-                ));
-        return inferred;
     };
 
     const drawing = {};
@@ -44,6 +37,12 @@ function SvgAppView(dependencies, onevents) {
             dom_io.getElementById('redo').disabled = new_app.redo_history.length == 0;
         }
 
+        if (new_app.is_grid_hidden) {
+            dom_io.getElementById('toggle-grid').classList.remove('active');
+        } else {
+            dom_io.getElementById('toggle-grid').classList.add('active');
+        }
+
         if (old_app == null || old_app.screen_frame_store != new_app.screen_frame_store) {
             dom_io
                 .getElementById('transformation')
@@ -52,53 +51,68 @@ function SvgAppView(dependencies, onevents) {
                 .getElementById('cell-borders')
                 .replaceWith(svg_grid_view.draw(new_app.diagram.screen_frame_store, new_app.is_grid_hidden));
         }
-        if (new_app.is_grid_hidden) {
-            dom_io.getElementById('toggle-grid').classList.remove('active');
-        } else {
-            dom_io.getElementById('toggle-grid').classList.add('active');
-        }
 
-        if (old_app == null || old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
+        if (old_app == null || 
+            old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
+            const arrow_selections_list = new_app.diagram.arrow_selections
+                    .map(id => new_app.diagram.arrows[id])
+                    .filter(arrow => arrow != null);
             dom_io.getElementById('arrow-selections')
-                .replaceChildren(...new_app.diagram.arrow_selections
+                .replaceChildren(...arrow_selections_list
                     .map(arrow => 
                         svg_arrow_selection_view.draw(
                             dom_io,
                             new_app.diagram.screen_frame_store, 
                             arrow)));
             dom_io.getElementById('arrow-selection-hitboxes')
-                .replaceChildren(...new_app.diagram.arrow_selections
+                .replaceChildren(...arrow_selections_list
                     .map(arrow => 
                         svg_arrow_selection_view.draw(
                             dom_io,
                             new_app.diagram.screen_frame_store, 
-                            arrow, 
+                            arrow,
                             (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, arrow, new_app, dom_io))));
         }
 
-        if (old_app == null || old_app.diagram.object_selections != new_app.diagram.object_selections) {
+
+        if (old_app == null || 
+            old_app.diagram.object_selections != new_app.diagram.object_selections || 
+            old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
+            const object_selections_list = [
+                ...new_app.diagram.object_selections
+                    .map(id => new_app.diagram.objects[id])
+                    .filter(object => object != null),
+                ...new_app.diagram.inferred_object_selections,
+            ];
             dom_io.getElementById('object-selections')
-                .replaceChildren(...new_app.diagram.object_selections
+                .replaceChildren(...object_selections_list
                     .map(object => 
                         svg_object_selection_view.draw(
                             dom_io,
                             new_app.diagram.screen_frame_store, 
                             object)));
             dom_io.getElementById('object-selection-hitboxes')
-                .replaceChildren(...new_app.diagram.object_selections
+                .replaceChildren(...object_selections_list
                     .map(object => 
                         svg_object_selection_view.draw(
                             dom_io,
                             new_app.diagram.screen_frame_store, 
-                            object, 
+                            object,
                             (event, arrow_drawing, object, dom2) => onevents.selection_click(event, drawing, object, new_app, dom_io))));
         }
 
         if (old_app == null || 
             old_app.diagram.objects != new_app.diagram.objects || 
             old_app.drag_type != new_app.drag_type) {
+            const inferred_objects = 
+                object_position_resource.post(
+                    resource_operations.delete(
+                        arrow_positions_resource.get(new_app.diagram.arrows),
+                        object_position_resource.get(new_app.diagram.objects)
+                    )
+                );
             dom_io.getElementById('objects')
-                .replaceChildren(...inferred_objects(new_app.diagram)
+                .replaceChildren(...[...new_app.diagram.objects, ...inferred_objects]
                     .map(object => 
                         svg_object_view.draw(
                             dom_io,

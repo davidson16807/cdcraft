@@ -20,22 +20,20 @@ function ObjectPositionResource(diagram_ids){
             const updated = [];
             for(let object of objects){
                 const position_hash = diagram_ids.cell_id_to_cell_hash(object.position);
-                const updated_position = position_map[position_hash];
+                const updated_position = position_map[position_hash] || object.position;
                 const updated_cell = diagram_ids.cell_position_to_cell_id(updated_position);
-                const is_snapped = (glm.distance(updated_position, updated_cell) < 0.25);  //(is_loop? max_loop_snap_distance : max_nonloop_snap_distance);
+                const is_snapped = glm.distance(updated_position, updated_cell) < 0.25; 
                 if(is_snapped || show_invalid)
                 {
-                    updated.push(new DiagramObject(
-                        is_snapped? updated_cell : updated_position,
-                        object.depiction,
-                        object.annotation,
-                        object.is_edited,
-                        is_snapped
-                    ));
+                    updated.push(object.with({
+                        position: is_snapped? updated_cell : updated_position, 
+                        is_valid: is_snapped
+                    }));
                 }
             }
             return updated;
         },
+
 
         delete: function(objects, position_map) {
             const filtered = [];
@@ -47,6 +45,10 @@ function ObjectPositionResource(diagram_ids){
             }
             return filtered;
         },
+
+        post: function(position_map) {
+            return Object.values(position_map).map(position => new DiagramObject(position));
+        }
 
     };
 }

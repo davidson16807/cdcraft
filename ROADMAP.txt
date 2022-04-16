@@ -7,7 +7,6 @@ functor arrows
 copy/paste
 
 circle cursor on rmb
-refactor so app operations return new app objects
 edit object text
 edit arrow text
 arrow popups
@@ -20,3 +19,9 @@ functor arrows
 refresh grids on window resize
 toggle "disabled" status on undo/redo buttons
 ctrl+A to select all
+
+store ids/hashes in arrow/object selections to support arrow/object settings menus and functors
+
+decouple state for model/view to support soft undo/redo
+
+refactor so app operations return new app objects

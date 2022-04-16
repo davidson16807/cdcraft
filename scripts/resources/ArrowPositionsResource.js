@@ -7,16 +7,20 @@ on source and target positions within a list of arrows.
 function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
     return {
 
-        get: function(arrows){
-            let position_map = {};
+        get: function(arrows, position_map){
+            let updated_position_map = {};
             for(let arrow of arrows){
                 const stored_arc = arrow.arc;
                 const source_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.source);
                 const target_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.target);
-                position_map[source_hash] = stored_arc.source;
-                position_map[target_hash] = stored_arc.target;
+                if (position_map == null || position_map[source_hash] != null) {
+                    updated_position_map[source_hash] = stored_arc.source;
+                }
+                if (position_map == null || position_map[target_hash] != null) {
+                    updated_position_map[target_hash] = stored_arc.target;
+                }
             }
-            return position_map;
+            return updated_position_map;
         },
 
         put: function(arrows, position_map, show_invalid) {
@@ -36,15 +40,7 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
                     old_users.min_length_clockwise);
                 const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users, old_stored.target_offset_id);
                 if(new_stored.is_valid || show_invalid){
-                    updated_arrows.push(new DiagramArrow(
-                            new_stored,
-                            arrow.is_edited,
-                            arrow.label,
-                            arrow.label_offset,
-                            arrow.source_style_id,
-                            arrow.end_style_id,
-                            arrow.line_style_id,
-                        ));
+                    updated_arrows.push(arrow.with({arc:new_stored}));
                 }
             }
             return updated_arrows;

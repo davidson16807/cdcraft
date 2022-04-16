@@ -15,13 +15,17 @@ The two functions within `DiagramObjectSetOperations` so far are:
 */
 function DiagramObjectSetOperations(diagram_ids){
     return {
+
         list_to_set: (object_list) => {
             const object_set = {};
             for(let object of object_list){
-                object_set[diagram_ids.cell_id_to_cell_hash(object.position.x, object.position.y)] = object;
+                object_set[
+                    diagram_ids.cell_id_to_cell_hash(
+                        diagram_ids.cell_position_to_cell_id(object.position))] = object;
             }
             return object_set;
         },
+
         set_to_list: (object_set) => {
             const object_list = [];
             for(let cell_hash in object_set){
@@ -29,6 +33,7 @@ function DiagramObjectSetOperations(diagram_ids){
             }
             return object_list;
         },
+
         infer: (arrows) => {
             const objects = {};
             for(let arrow of arrows){
@@ -37,6 +42,7 @@ function DiagramObjectSetOperations(diagram_ids){
             }
             return objects;
         },
+
         update: (updated, updates) => {
             const result = {};
             for(let hash in updated){
@@ -46,6 +52,17 @@ function DiagramObjectSetOperations(diagram_ids){
                 result[hash] = updates[hash];
             }
             return result;
-        }
+        },
+
+        delete: (source, deleted) => {
+            const result = {};
+            for(let hash in source){
+                if (deleted[hash] == null) {
+                    result[hash] = hash;
+                }
+            }
+            return result;
+        },
+
     };
 }

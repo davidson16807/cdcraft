@@ -46,13 +46,11 @@ function AppUpdater(
         deselect: function(app_io, event){
             if (!event.shiftKey && !event.ctrlKey) {
                 // rmb handles selections, cancel if nothing is selected
-                history.do(app_io, 
-                    new Diagram(
-                            app_io.diagram.arrows,
-                            app_io.diagram.objects,
-                            [], [],
-                            app_io.diagram.screen_frame_store,
-                        ), false);
+                history.do(app_io, app_io.diagram.with({
+                    arrow_selections: [], 
+                    object_selections: [],
+                    inferred_object_selections: [],
+                }), false);
             }
         }
     }
@@ -137,48 +135,41 @@ function AppUpdater(
         },
 
         objectclick: function(event, drawing, object_io, app_io, dom_io){
-            const selected_diagram = app_io.diagram.with({
-                arrow_selections:[], 
-                object_selections:[object_io]
-            });
+            const object_id = app_io.diagram.objects.indexOf(object_io);
+            const selected_diagram = object_id >= 0?
+                  app_io.diagram.with({ 
+                        arrow_selections:[], 
+                        object_selections: [...app_io.diagram.objects, object_id],
+                        inferred_object_selections: []
+                    })
+                : app_io.diagram.with({ 
+                        arrow_selections:[], 
+                        object_selections: [],
+                        inferred_object_selections: [...app_io.diagram.inferred_object_selections, object_io],
+                    });
             drag_ops.transition( selection_drags.move(selected_diagram), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         arrowselect: function(event, drawing, arrow_io, app_io, dom_io){
-            const id = app_io.diagram.arrows.indexOf(arrow_io);
-            const arrow_selections = event.ctrlKey? 
-                  app_io.diagram.arrow_selections.filter(arrow => arrow != arrow_io) 
-                : [...app_io.diagram.arrow_selections, arrow_io];
-            history.do(app_io, 
-                new Diagram(
-                        app_io.diagram.arrows,
-                        app_io.diagram.objects,
-                        arrow_selections,
-                        app_io.diagram.object_selections,
-                        app_io.diagram.screen_frame_store,
-                    ), true);
+            const arrow_id = app_io.diagram.arrows.indexOf(arrow_io);
+            const arrow_selections = [...app_io.diagram.arrow_selections, arrow_id];
+            history.do(app_io, app_io.diagram.with({arrow_selections: arrow_selections}), true);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         objectselect: function(event, drawing, object_io, app_io, dom_io){
-            const id = app_io.diagram.objects.indexOf(object_io);
-            const object_selections = event.ctrlKey? 
-                  app_io.diagram.object_selections.filter(object => object != object_io) 
-                : [...app_io.diagram.object_selections, object_io];
-            history.do(app_io, 
-                new Diagram(
-                        app_io.diagram.arrows,
-                        app_io.diagram.objects,
-                        app_io.diagram.arrow_selections,
-                        object_selections,
-                        app_io.diagram.screen_frame_store,
-                    ), true);
+            const object_id = app_io.diagram.objects.indexOf(object_io);
+            const selected_diagram = object_id >= 0?
+                  app_io.diagram.with({ 
+                        object_selections: [...app_io.diagram.objects, object_id] })
+                : app_io.diagram.with({ 
+                        inferred_object_selections: [...app_io.diagram.inferred_object_selections, object_io] });
+            history.do(app_io, selected_diagram, true);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         selection_click: function(event, drawing, arrow_io, app_io, dom_io){
-            if (event.ctrlKey) {}
             drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },

@@ -13,12 +13,13 @@ class DiagramObject {
         this.is_valid = is_valid || true;
     }
 
-    copy(attributes){
+    with(attributes){
         return new DiagramObject(
-            this.position    != null? this.position    : this.position, 
-            this.depiction   != null? this.depiction   : this.depiction, 
-            this.annotation  != null? this.annotation  : this.annotation, 
-            this.is_edited   != null? this.is_edited   : this.is_edited
+            attributes.position    != null? attributes.position    : this.position, 
+            attributes.depiction   != null? attributes.depiction   : this.depiction, 
+            attributes.annotation  != null? attributes.annotation  : this.annotation, 
+            attributes.is_edited   != null? attributes.is_edited   : this.is_edited,
+            attributes.is_valid    != null? attributes.is_valid    : this.is_valid,
         );
     }
 
