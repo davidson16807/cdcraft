@@ -525,7 +525,6 @@ is-desktop only displays when the horizontal axis is shortest
     }
 }
 
-
 .slider-label {
     font-size: 0.75rem;
     line-height: 1.5;
@@ -581,3 +580,13 @@ input[type="text"] {
     }
 }
 */
+
+/*
+".hidden-when-loading" indicates an element must not render when 
+ a new game or save file is loaded. 
+This may be used to avoid confusing the user, 
+ or to prevent invalid states from occuring due to user interaction.
+*/
+.hidden{
+    display: none;
+}

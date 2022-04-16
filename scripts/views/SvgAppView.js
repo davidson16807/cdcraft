@@ -78,21 +78,23 @@ function SvgAppView(dependencies, onevents) {
         if (old_app == null || 
             old_app.diagram.object_selections != new_app.diagram.object_selections || 
             old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
-            const object_selections_list = [
+            const object_selections = [
+                ...new_app.diagram.inferred_object_selections,
                 ...new_app.diagram.object_selections
                     .map(id => new_app.diagram.objects[id])
                     .filter(object => object != null),
-                ...new_app.diagram.inferred_object_selections,
             ];
+            dom_io.getElementById('object-toolbar')
+                .classList[object_selections.length == 1? 'remove' : 'add']('hidden');
             dom_io.getElementById('object-selections')
-                .replaceChildren(...object_selections_list
+                .replaceChildren(...object_selections
                     .map(object => 
                         svg_object_selection_view.draw(
                             dom_io,
                             new_app.diagram.screen_frame_store, 
                             object)));
             dom_io.getElementById('object-selection-hitboxes')
-                .replaceChildren(...object_selections_list
+                .replaceChildren(...object_selections
                     .map(object => 
                         svg_object_selection_view.draw(
                             dom_io,

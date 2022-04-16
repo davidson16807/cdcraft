@@ -224,13 +224,3 @@ They appear as a white box in the center of the screen,
     padding: 3.44%;
     border-radius: 1em;
 }
-
-/*
-".hidden-when-loading" indicates an element must not render when 
- a new game or save file is loaded. 
-This may be used to avoid confusing the user, 
- or to prevent invalid states from occuring due to user interaction.
-*/
-.hidden-when-loading{
-    display: none;
-}
