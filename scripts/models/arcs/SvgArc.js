@@ -5,11 +5,11 @@
 */
 class SvgArc{
     constructor(source, target, radius, is_large_arc, is_clockwise){
-        this.source = source;
-        this.target = target;
-        this.radius = radius;
-        this.is_large_arc = is_large_arc;
-        this.is_clockwise = is_clockwise;
+        Object.defineProperty(this, 'source',  {get: ()=> source});
+        Object.defineProperty(this, 'target',  {get: ()=> target});
+        Object.defineProperty(this, 'radius',  {get: ()=> radius});
+        Object.defineProperty(this, 'is_large_arc',  {get: ()=> is_large_arc});
+        Object.defineProperty(this, 'is_clockwise',  {get: ()=> is_clockwise});
     }
     with(attributes){
         return new SvgArc(

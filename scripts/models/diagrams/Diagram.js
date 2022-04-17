@@ -11,12 +11,12 @@ class Diagram {
         arrow_selections, object_selections, inferred_object_selections, 
         screen_frame_store
     ){
-        this.arrows = arrows;
-        this.objects = objects;
-        this.arrow_selections = arrow_selections || [];
-        this.object_selections = object_selections || [];
-        this.inferred_object_selections = inferred_object_selections || [];
-        this.screen_frame_store = screen_frame_store;
+        Object.defineProperty(this, 'arrows',  {get: ()=> arrows});
+        Object.defineProperty(this, 'objects', {get: ()=> objects});
+        Object.defineProperty(this, 'arrow_selections',  {get: ()=> arrow_selections || []});
+        Object.defineProperty(this, 'object_selections', {get: ()=> object_selections || []});
+        Object.defineProperty(this, 'inferred_object_selections', {get: ()=> inferred_object_selections || []});
+        Object.defineProperty(this, 'screen_frame_store', {get: ()=> screen_frame_store});
     }
 
     with(attributes){

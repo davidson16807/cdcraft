@@ -5,11 +5,10 @@
 */
 class DiagramObject {
     constructor(position, depiction, annotation, is_edited, is_valid){
-        this.position = position;
-        this.depiction = depiction || '';
-        // this.depiction = depiction || '\\( \\bullet \\)';
-        this.is_edited = is_edited || false;
-        this.is_valid = is_valid || true;
+        Object.defineProperty(this, 'position',  {get: ()=> position});
+        Object.defineProperty(this, 'depiction',  {get: ()=> depiction});
+        Object.defineProperty(this, 'is_edited',  {get: ()=> is_edited});
+        Object.defineProperty(this, 'is_valid',  {get: ()=> is_valid});
     }
 
     with(attributes){

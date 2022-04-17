@@ -5,8 +5,8 @@
 */
 class Arrow {
     constructor(source, target){
-        this.source = source;
-        this.target = target;
+        Object.defineProperty(this, 'source',  {get: ()=> source});
+        Object.defineProperty(this, 'target',  {get: ()=> target});
     }
     with(attributes){ 
         return new Arrow(

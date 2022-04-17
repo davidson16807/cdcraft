@@ -7,9 +7,9 @@
 */
 class UserArc {
     constructor(source, target, min_length_clockwise){
-        this.source = source;
-        this.target = target;
-        this.min_length_clockwise = min_length_clockwise;
+        Object.defineProperty(this, 'source',  {get: ()=> source});
+        Object.defineProperty(this, 'target',  {get: ()=> target});
+        Object.defineProperty(this, 'min_length_clockwise',  {get: ()=> min_length_clockwise});
     }
     with(attributes){
         return new UserArc(

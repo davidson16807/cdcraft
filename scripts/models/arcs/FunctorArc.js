@@ -10,10 +10,10 @@
 */
 class FunctorArc {
     constructor(source_id, target_id, min_length_clockwise, target_offset_id, is_valid){
-        this.source_id = source_id;
-        this.target_id = target_id;
-        this.min_length_clockwise = min_length_clockwise;
-        this.is_valid = is_valid;
+        Object.defineProperty(this, 'source_id',  {get: ()=> source_id});
+        Object.defineProperty(this, 'target_id',  {get: ()=> target_id});
+        Object.defineProperty(this, 'min_length_clockwise',  {get: ()=> min_length_clockwise});
+        Object.defineProperty(this, 'is_valid',  {get: ()=> is_valid});
     }
     with(attributes){
         return new FunctorArc(

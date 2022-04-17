@@ -6,9 +6,9 @@
 */
 class SamplerArc {
     constructor(origin, source_offset, length_clockwise){
-        this.origin = origin;
-        this.source_offset = source_offset;
-        this.length_clockwise = length_clockwise;
+        Object.defineProperty(this, 'origin',  {get: ()=> origin});
+        Object.defineProperty(this, 'source_offset',  {get: ()=> source_offset});
+        Object.defineProperty(this, 'length_clockwise',  {get: ()=> length_clockwise});
     }
     with(attributes){
         return new SamplerArc(
