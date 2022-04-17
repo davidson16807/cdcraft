@@ -24,7 +24,7 @@ function Html(){
         return result;
     };
 
-    const tags = ['body','div'];
+    const tags = ['body','div','span','button','input','h1','h2','h3','h4','h5',];
     const namespace = {node:node};
     for(let tag of tags){
         namespace[tag] = (attributes, children, textContent) => node(tag, attributes, children, textContent)

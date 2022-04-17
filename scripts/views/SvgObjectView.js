@@ -19,7 +19,7 @@ function SvgObjectView(dependencies) {
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onselect) {
         const object_screen_position = screen_position(screen_frame_store, object.position);
         const text_width = 80;
-        const div = html.div({},[],'\\[\\bullet\\]');
+        const div = html.div({},[], object.depiction || '\\[\\bullet\\]');
         render(div, {throwOnError: false});
         const g = svg.g(
             {

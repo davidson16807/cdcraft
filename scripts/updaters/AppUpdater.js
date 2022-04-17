@@ -19,23 +19,18 @@ function AppUpdater(
     const drag_ops = dependencies.drag_state_ops;
     const history = dependencies.app_history_traversal;
 
-    const actions = {
-        undo: (app_io, event) => {
-            drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
-            history.undo(app_io);
-        },
-        redo: (app_io, event) => {
-            drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
-            history.redo(app_io);
-        },
-        toggle_grid: (app_io, event) => {
-            app_io.is_grid_hidden = !app_io.is_grid_hidden;
-        },
+    /* 
+    functions mapping app×event→app 
+    where the event must represent the pressing of a mouse key
+    */
+    const mouse_actions = {
+
         pan: function(app_io, event){
             const screen_offset = glm.vec2(event.movementX, event.movementY);
             const screen_frame_store = app_io.diagram.screen_frame_store;
             drag_ops.transition( view_drags.pan(screen_frame_store), app_io);
         },
+
         arrow: function(app_io, event){
             const screen_position = glm.vec2(event.clientX, event.clientY);
             const screen_frame_store = app_io.diagram.screen_frame_store;
@@ -43,6 +38,85 @@ function AppUpdater(
             const model_position = position_shifting.leave(screen_position, screen_frame);
             drag_ops.transition( arrow_drags.create(app_io.diagram.arrows, model_position), app_io);
         },
+
+    };
+
+    /* 
+    functions mapping app×text→app 
+    where the event must represent a change in a text field
+    */
+    const text_actions = {
+
+        object_text: function(app_io, event) {
+            const diagram_in = app_io.diagram;
+            const objects_in = diagram_in.objects;
+            if (diagram_in.inferred_object_selections.length == 1) {
+                // promote the inferred object to a discrete object
+                const object_in = diagram_in.inferred_object_selections[0];
+                const object_out = object_in.with({ 
+                    depiction: event.currentTarget.value, 
+                });
+                const diagram_out = diagram_in.with({
+                    objects: [...objects_in, object_out],
+                    inferred_object_selections: [],
+                    object_selections: [objects_in.length],
+                });
+                history.do(app_io, diagram_out, true);
+            } else if (diagram_in.object_selections.length == 1) {
+                // change the inferred object in place
+                const object_id = diagram_in.object_selections[0];
+                const objects_before = objects_in.slice(0,object_id);
+                const objects_after = objects_in.slice(object_id+1);
+                const object_in = objects_in[object_id];
+                const object_out = object_in.with({ 
+                    depiction: event.currentTarget.value, 
+                });
+                const diagram_out = diagram_in.with({
+                    objects: [...objects_before, object_out, ...objects_after],
+                });
+                history.do(app_io, diagram_out, true);
+            }
+        },
+
+        arrow_text: function(app_io, event) {
+            const diagram_in = app_io.diagram;
+            const arrows_in = diagram_in.arrows;
+            if (diagram_in.arrow_selections.length == 1) {
+                const arrow_id = diagram_in.arrow_selections[0];
+                const arrow_in = diagram_in.arrows[arrow_id];
+                const arrows_before = arrows_in.slice(0,arrow_id);
+                const arrows_after = arrows_in.slice(arrow_id+1);
+                const arrow_out = arrow_in.with({ 
+                    label: event.currentTarget.value 
+                });
+                const diagram_out = diagram_in.with({
+                    arrows: [...arrows_before, arrow_out, ...arrows_after],
+                });
+                history.do(app_io, diagram_out, true);
+            }
+        }
+    };
+
+    /*
+    // functions mapping app×event→app 
+    where the event needs no specialization
+    */
+    const generic_actions = {
+
+        undo: (app_io, event) => {
+            drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
+            history.undo(app_io);
+        },
+
+        redo: (app_io, event) => {
+            drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
+            history.redo(app_io);
+        },
+
+        toggle_grid: (app_io, event) => {
+            app_io.is_grid_hidden = !app_io.is_grid_hidden;
+        },
+
         deselect: function(app_io, event){
             if (!event.shiftKey && !event.ctrlKey) {
                 // rmb handles selections, cancel if nothing is selected
@@ -54,21 +128,30 @@ function AppUpdater(
             }
         }
     }
-    const keydown = {
+
+    const key_bindings = {
         'ctrl+z': 'undo',
         'ctrl+y': 'redo',
         'ctrl+shift+z': 'redo',
     }
-    const buttonclick = {
+
+    const text_bindings = {
+        'object-text': 'object_text',
+        'arrow-text': 'arrow_text',
+    }
+
+    const button_bindings = {
         'undo': 'undo',
         'redo': 'redo',
         'toggle-grid': 'toggle_grid',
     }
-    const mousedown = [
+
+    const mouse_bindings = [
         'arrow',
         'pan',
         'deselect'
-    ]
+    ];
+
     return {
 
         contextmenu: function(event, drawing, app_io, dom_io){
@@ -80,7 +163,8 @@ function AppUpdater(
         },
 
         mousedown: function(event, drawing, app_io, dom_io){
-            actions[mousedown[event.button]](app_io, event);
+            const action_id = mouse_bindings[event.button];
+            (mouse_actions[action_id] || generic_actions[action_id])(app_io, event);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
@@ -104,23 +188,21 @@ function AppUpdater(
         touchmove: function(event, drawing, app_io, dom_io){
         },
 
-
         keydown: function(event, drawing, app_io, dom_io){
             const keycode = `${event.ctrlKey?'ctrl+':''}${event.shiftKey?'shift+':''}${event.key.toLowerCase()}`
-            const action_id = keydown[keycode];
+            const action_id = key_bindings[keycode];
             if (action_id!=null) {
-                const action = actions[action_id];
+                const action = generic_actions[action_id];
                 if (action!=null) {
                     action(app_io, event);
                     drawing.redraw(undefined, app_io, dom_io);
                 }
             }
         },
-
         buttonclick: function(event, drawing, app_io, dom_io){
-            const action_id = buttonclick[event.currentTarget.id];
+            const action_id = button_bindings[event.currentTarget.id];
             if (action_id!=null) {
-                const action = actions[action_id];
+                const action = generic_actions[action_id];
                 if (action!=null) {
                     action(app_io, event);
                     drawing.redraw(undefined, app_io, dom_io);
@@ -128,6 +210,16 @@ function AppUpdater(
             }
         },
 
+        textinput: function(event, drawing, app_io, dom_io){
+            const action_id = text_bindings[event.currentTarget.id];
+            if (action_id!=null) {
+                const action = text_actions[action_id];
+                if (action!=null) {
+                    action(app_io, event);
+                    drawing.redraw(undefined, app_io, dom_io);
+                }
+            }
+        },
 
         arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
             drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow_io), app_io);
@@ -139,7 +231,7 @@ function AppUpdater(
             const selected_diagram = object_id >= 0?
                   app_io.diagram.with({ 
                         arrow_selections:[], 
-                        object_selections: [...app_io.diagram.objects, object_id],
+                        object_selections: [...app_io.diagram.object_selections, object_id],
                         inferred_object_selections: []
                     })
                 : app_io.diagram.with({ 
@@ -162,7 +254,7 @@ function AppUpdater(
             const object_id = app_io.diagram.objects.indexOf(object_io);
             const selected_diagram = object_id >= 0?
                   app_io.diagram.with({ 
-                        object_selections: [...app_io.diagram.objects, object_id] })
+                        object_selections: [...app_io.diagram.object_selections, object_id] })
                 : app_io.diagram.with({ 
                         inferred_object_selections: [...app_io.diagram.inferred_object_selections, object_io] });
             history.do(app_io, selected_diagram, true);

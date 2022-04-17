@@ -15,7 +15,7 @@ function SelectionDrags(
                 initialize: () => {
                     return resource_operations.update(
                         arrow_positions_resource.get(initial_diagram.arrow_selections.map(id => initial_diagram.arrows[id])),
-                        object_position_resource.get(initial_diagram.objects.map(id => initial_diagram.objects[id])),
+                        object_position_resource.get(initial_diagram.object_selections.map(id => initial_diagram.objects[id])),
                         object_position_resource.get(initial_diagram.inferred_object_selections),
                     );
                 },

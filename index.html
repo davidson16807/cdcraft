@@ -46,6 +46,8 @@
     <script src="./scripts/views/SvgArrowAttributes.js"></script>
     <script src="./scripts/views/SvgArrowView.js"></script>
     <script src="./scripts/views/SvgArrowSelectionView.js"></script>
+    <script src="./scripts/views/HtmlObjectToolbarView.js"></script>
+    <!-- <script src="./scripts/views/HtmlArrowToolbarView.js"></script> -->
     <script src="./scripts/views/SvgGridView.js"></script>
     <script src="./scripts/views/SvgAppView.js"></script>
     <script src="./scripts/dom/Html.js"></script>
@@ -155,9 +157,10 @@
 
 <div id="object-toolbar" class="bottom right short-axis-group group-dark group-round control hidden">
 
+    <!-- 
     <div class="group-round">
         <h5>Object</h5>
-        <input type="text" class="form-control" placeholder="Object Text" />
+        <input id="object-text" type="text" class="form-control" placeholder="Object Text" />
         <div class="horizontal-axis-group maybe-slider">
             <button id="toggle-grid" type="button" class="btn btn-dark">
                 <img src="icons/lock.svg"/>
@@ -168,16 +171,17 @@
             </div>
         </div>
     </div>
+    -->
 
 </div>
 
-<!-- 
 
-<div id="arrow-toolbar" class="bottom right short-axis-group group-dark group-round control">
+<div id="arrow-toolbar" class="bottom right short-axis-group group-dark group-round control hidden">
 
     <div class="group-round">
         <h5>Arrow</h5>
-        <input type="text" class="form-control" placeholder="Arrow Text" />
+        <input id="arrow-text" type="text" class="form-control" placeholder="Arrow Text" />
+        <!-- 
         <div>&nbsp;</div>
         <div class="horizontal-axis-group maybe-slider">
             <button id="toggle-grid" type="button" class="btn btn-dark">
@@ -188,8 +192,10 @@
                 <input type="range" class="form-range" min="-5" max="5" id="range" disabled>
             </div>
         </div>
+        -->
     </div>
 
+    <!-- 
     <div class="group-round">
         <label>Curvature</label>
         <input type="range" class="form-range" min="-5" max="5" id="range">
@@ -293,10 +299,10 @@
             </button>
         </div>
     </div>
+    -->
 
 </div>
 
- -->
 
 
 <script type="text/javascript">
@@ -377,6 +383,11 @@ const object_selection_view =
         view_event_deferal         : view_event_deferal,
     });
 
+const object_toolbar_view = 
+    HtmlObjectToolbarView({
+        html                       : html,
+        view_event_deferal         : view_event_deferal,
+    });
 
 const arrow_positions_resource = 
     ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, true);
@@ -449,6 +460,7 @@ const app_view =
         svg_arrow_view               : arrow_view,
         svg_object_selection_view    : object_selection_view,
         svg_arrow_selection_view     : arrow_selection_view,
+        html_object_toolbar_view     : object_toolbar_view,
         view_event_deferal           : view_event_deferal,
     }, app_updater);
 

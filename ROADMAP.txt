@@ -25,3 +25,5 @@ store ids/hashes in arrow/object selections to support arrow/object settings men
 decouple state for model/view to support soft undo/redo
 
 refactor so app operations return new app objects
+
+refactor classes for state objects to use properties so that attributes are guaranteed readonly
