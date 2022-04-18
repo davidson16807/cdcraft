@@ -29,6 +29,7 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
         });
     };
 
+    const identity = state => state;
     return {
         create: function(arrows, initial_model_position) {
             const original_length = arrows.length;
@@ -48,6 +49,8 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                     ),
                 move: move,
                 wheel: wheel,
+                arrowenter: (replacement_arrow, arrow) => replacement_arrow,
+                objectenter: (replacement_arrow, object) => replacement_arrow,
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
@@ -78,6 +81,8 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                 initialize: () => replaced_arrow.with({is_edited: true}),
                 move: move,
                 wheel: wheel,
+                arrowenter: (replacement_arrow, arrow) => replacement_arrow,
+                objectenter: (replacement_arrow, object) => replacement_arrow,
                 // delete the arrow if canceled or not snapped, otherwise edit the arrow
                 command: (replacement_arrow, is_released, is_canceled) => diagram => 
                     is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 

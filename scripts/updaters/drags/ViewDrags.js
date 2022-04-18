@@ -19,6 +19,8 @@ function ViewDrags(screen_frame_storage, position_shifting, offset_shifting,
                         topleft_cell_position: screen_frame_store.topleft_cell_position.sub(model_offset), 
                     }),
                 wheel: (screen_frame_store, screen_focus, scroll_count) => screen_frame_store,
+                arrowenter: (replacement_arrow, arrow) => replacement_arrow,
+                objectenter: (replacement_arrow, object) => replacement_arrow,
                 command: (screen_frame_store, is_released, is_canceled) => 
                     diagram => diagram.with({screen_frame_store: screen_frame_store})
             };
@@ -55,6 +57,8 @@ function ViewDrags(screen_frame_storage, position_shifting, offset_shifting,
                             updated_log2_cell_width
                         );
                 },
+                arrowenter: (replacement_arrow, arrow) => replacement_arrow,
+                objectenter: (replacement_arrow, object) => replacement_arrow,
                 command: (screen_frame_store, is_released, is_canceled) => 
                     diagram => diagram.with({screen_frame_store: screen_frame_store})
             };

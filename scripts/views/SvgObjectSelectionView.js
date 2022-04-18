@@ -13,14 +13,6 @@ function SvgObjectSelectionView(dependencies) {
         return position_shifting.enter(position, screen_frame);
     };
 
-    function object_selection_click (object, event) {
-        if (!object.is_edited && event.button == 0) {
-            event.preventDefault(); 
-            event.stopPropagation();
-            // application_updater.objectclick(this.state, object, this.state);
-        }
-    };
-
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, onclick) {
         const g = svg.g(
@@ -29,8 +21,8 @@ function SvgObjectSelectionView(dependencies) {
                 svg.circle({class:"object-highlight", r:23}, screen_position(screen_frame_store, object.position)),
             ]);
         const deferal = view_event_deferal(drawing, object, dom);
-        if (onclick) {
-            g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        if (onclick != null) {
+            g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
         }
         return g;
     }

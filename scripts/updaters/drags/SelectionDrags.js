@@ -22,6 +22,8 @@ function SelectionDrags(
                 move: (cell_positions, model_position, model_offset) => 
                     position_map_operations.offset(cell_positions, model_offset),
                 wheel: (cell_positions, screen_focus, scroll_count) => cell_positions,
+                arrowenter: (replacement_arrow, arrow) => replacement_arrow,
+                objectenter: (replacement_arrow, object) => replacement_arrow,
                 // delete the object and its arrows if canceled, otherwise move the object and its arrows
                 command: (cell_positions, is_released, is_canceled) => diagram => 
                     (is_canceled? 

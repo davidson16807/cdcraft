@@ -126,7 +126,7 @@ function AppUpdater(
                     inferred_object_selections: [],
                 }), false);
             }
-        }
+        },
     }
 
     const key_bindings = {
@@ -146,7 +146,7 @@ function AppUpdater(
         'toggle-grid': 'toggle_grid',
     }
 
-    const mouse_bindings = [
+    const mouse_click_bindings = [
         'arrow',
         'pan',
         'deselect'
@@ -163,7 +163,7 @@ function AppUpdater(
         },
 
         mousedown: function(event, drawing, app_io, dom_io){
-            const action_id = mouse_bindings[event.button];
+            const action_id = mouse_click_bindings[event.button];
             (mouse_actions[action_id] || generic_actions[action_id])(app_io, event);
             drawing.redraw(undefined, app_io, dom_io);
         },
@@ -199,6 +199,7 @@ function AppUpdater(
                 }
             }
         },
+
         buttonclick: function(event, drawing, app_io, dom_io){
             const action_id = button_bindings[event.currentTarget.id];
             if (action_id!=null) {
@@ -221,49 +222,63 @@ function AppUpdater(
             }
         },
 
-        arrowclick: function(event, drawing, arrow_io, app_io, dom_io){
-            drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow_io), app_io);
-            drawing.redraw(undefined, app_io, dom_io);
+        objectdown: function(event, drawing, object_, app_io, dom_io){
+            if (!object_.is_edited) {
+                event.stopPropagation();
+                const object_id = app_io.diagram.objects.indexOf(object_);
+                const selected_diagram = object_id >= 0?
+                      app_io.diagram.with({ 
+                            arrow_selections:[], 
+                            object_selections: [...app_io.diagram.object_selections, object_id],
+                            inferred_object_selections: []
+                        })
+                    : app_io.diagram.with({ 
+                            arrow_selections:[], 
+                            object_selections: [],
+                            inferred_object_selections: [...app_io.diagram.inferred_object_selections, object_],
+                        });
+                drag_ops.transition( selection_drags.move(selected_diagram), app_io);
+                drawing.redraw(undefined, app_io, dom_io);
+            }
         },
 
-        objectclick: function(event, drawing, object_io, app_io, dom_io){
-            const object_id = app_io.diagram.objects.indexOf(object_io);
-            const selected_diagram = object_id >= 0?
-                  app_io.diagram.with({ 
-                        arrow_selections:[], 
-                        object_selections: [...app_io.diagram.object_selections, object_id],
-                        inferred_object_selections: []
-                    })
-                : app_io.diagram.with({ 
-                        arrow_selections:[], 
-                        object_selections: [],
-                        inferred_object_selections: [...app_io.diagram.inferred_object_selections, object_io],
-                    });
-            drag_ops.transition( selection_drags.move(selected_diagram), app_io);
-            drawing.redraw(undefined, app_io, dom_io);
+        arrowdown: function(event, drawing, arrow, app_io, dom_io){
+            if (!arrow.is_edited) {
+                event.stopPropagation();
+                drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow), app_io);
+                drawing.redraw(undefined, app_io, dom_io);
+            }
         },
 
-        arrowselect: function(event, drawing, arrow_io, app_io, dom_io){
-            const arrow_id = app_io.diagram.arrows.indexOf(arrow_io);
-            const arrow_selections = [...app_io.diagram.arrow_selections, arrow_id];
-            history.do(app_io, app_io.diagram.with({arrow_selections: arrow_selections}), true);
-            drawing.redraw(undefined, app_io, dom_io);
+        arrowenter: function(event, drawing, arrow, app_io, dom_io){
+            if (event.buttons == 2 && !arrow.is_edited) {
+                event.stopPropagation();
+                const arrow_id = app_io.diagram.arrows.indexOf(arrow);
+                history.do(app_io, app_io.diagram.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]}), true);
+                drawing.redraw(undefined, app_io, dom_io);
+            }
         },
 
-        objectselect: function(event, drawing, object_io, app_io, dom_io){
-            const object_id = app_io.diagram.objects.indexOf(object_io);
-            const selected_diagram = object_id >= 0?
-                  app_io.diagram.with({ 
-                        object_selections: [...app_io.diagram.object_selections, object_id] })
-                : app_io.diagram.with({ 
-                        inferred_object_selections: [...app_io.diagram.inferred_object_selections, object_io] });
-            history.do(app_io, selected_diagram, true);
-            drawing.redraw(undefined, app_io, dom_io);
+        objectenter: function(event, drawing, object_, app_io, dom_io){
+            if (event.buttons == 2 && !object_.is_edited) {
+                event.stopPropagation();
+                const object_id = app_io.diagram.objects.indexOf(object_);
+                const selected_diagram = object_id >= 0?
+                      app_io.diagram.with({ 
+                            object_selections: [...app_io.diagram.object_selections, object_id] })
+                    : app_io.diagram.with({ 
+                            inferred_object_selections: [...app_io.diagram.inferred_object_selections, object_] });
+                history.do(app_io, selected_diagram, true);
+                drawing.redraw(undefined, app_io, dom_io);
+            }
         },
 
-        selection_click: function(event, drawing, arrow_io, app_io, dom_io){
-            drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
-            drawing.redraw(undefined, app_io, dom_io);
+        selection_click: function(event, drawing, app_io, dom_io){
+            if (event.button == 0) {
+                event.stopPropagation();
+                drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
+                drawing.redraw(undefined, app_io, dom_io);
+            }
         },
 
     }

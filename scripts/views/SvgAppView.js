@@ -80,7 +80,7 @@ function SvgAppView(dependencies, onevents) {
                             dom_io,
                             new_app.diagram.screen_frame_store, 
                             arrow,
-                            (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, arrow, new_app, dom_io))));
+                            (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, new_app, dom_io))));
         }
 
 
@@ -114,7 +114,7 @@ function SvgAppView(dependencies, onevents) {
                             dom_io,
                             new_app.diagram.screen_frame_store, 
                             object,
-                            (event, arrow_drawing, object, dom2) => onevents.selection_click(event, drawing, object, new_app, dom_io))));
+                            (event, arrow_drawing, object, dom2) => onevents.selection_click(event, drawing, new_app, dom_io))));
         }
 
         if (old_app == null || 
@@ -135,8 +135,8 @@ function SvgAppView(dependencies, onevents) {
                             new_app.diagram.screen_frame_store, 
                             object, 
                             new_app.drag_type, 
-                            (event, arrow_drawing, object, dom2) => onevents.objectclick(event, drawing, object, new_app, dom_io),
-                            (event, arrow_drawing, object, dom2) => onevents.objectselect(event, drawing, object, new_app, dom_io))));
+                            (event, arrow_drawing, object, dom2) => onevents.objectdown(event, drawing, object, new_app, dom_io),
+                            (event, arrow_drawing, object, dom2) => onevents.objectenter(event, drawing, object, new_app, dom_io))));
         }
 
         if (old_app == null || 
@@ -150,8 +150,8 @@ function SvgAppView(dependencies, onevents) {
                             new_app.diagram.screen_frame_store, 
                             arrow, 
                             new_app.drag_type, 
-                            (event, arrow_drawing, arrow, dom2) => onevents.arrowclick(event, drawing, arrow, new_app, dom_io),
-                            (event, arrow_drawing, arrow, dom2) => onevents.arrowselect(event, drawing, arrow, new_app, dom_io))));
+                            (event, arrow_drawing, arrow, dom2) => onevents.arrowdown(event, drawing, arrow, new_app, dom_io),
+                            (event, arrow_drawing, arrow, dom2) => onevents.arrowenter(event, drawing, arrow, new_app, dom_io))));
         }
 
     }

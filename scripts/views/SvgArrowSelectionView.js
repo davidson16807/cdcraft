@@ -14,17 +14,15 @@ function SvgArrowSelectionView(svg, svg_arrow_attributes, view_event_deferal) {
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, arrow, onclick) {
         const g = svg.g(
-            {
-                onmousedown: event => event.button == 0 && deferal.callbackPreventStop(onclick)(event),
-            },
+            {},
             [
                 svg.path({class:"arrow-highlight", d: arrows.path(screen_frame_store, arrow.arc)}),
                 svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(screen_frame_store, arrow.arc,0)),
                 svg.circle({class:"arrow-tip-highlight", r:10}, arrows.sample(screen_frame_store, arrow.arc,1)),
             ]);
         const deferal = view_event_deferal(drawing, arrow, dom);
-        if (onclick) {
-            g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        if (onclick != null) {
+            g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
         }
         return g;
     }

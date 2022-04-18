@@ -16,7 +16,7 @@ function SvgObjectView(dependencies) {
     };
 
     const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onselect) {
+    drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onenter) {
         const object_screen_position = screen_position(screen_frame_store, object.position);
         const text_width = 80;
         const div = html.div({},[], object.depiction || '\\[\\bullet\\]');
@@ -34,12 +34,11 @@ function SvgObjectView(dependencies) {
                     object_screen_position.sub(glm.vec2(text_width/2, 0)))
             ]);
         const deferal = view_event_deferal(drawing, object, dom);
-        if (onclick) {
-            g.addEventListener('mousedown',  event => event.button == 0 && deferal.callbackPreventStop(onclick)(event));
+        if (onclick != null) {
+            g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
         }
-        if (onselect) {
-            g.addEventListener('mousedown',  event => event.button == 2 && deferal.callbackPreventStop(onselect)(event));
-            g.addEventListener('mouseenter', event => (!object.is_edited && event.buttons == 2) && deferal.callbackPreventStop(onselect)(event));
+        if (onenter != null) {
+            g.addEventListener('mouseenter', deferal.callbackPrevent(onenter));
         }
         return g;
     }
