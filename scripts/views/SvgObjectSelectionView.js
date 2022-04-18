@@ -1,6 +1,6 @@
 'use strict';
 
-function SvgObjectSelectionView(dependencies) {
+function SvgObjectSelectionView(dependencies, highlight_width) {
 
     const svg                        = dependencies.svg;
     const screen_frame_storage       = dependencies.screen_frame_storage;
@@ -12,13 +12,14 @@ function SvgObjectSelectionView(dependencies) {
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, onclick) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+        const screen_highlight_width = distance_shifting.enter(0.4, screen_frame);
         const g = svg.g(
             {},
             [
                 svg.circle(
                     {
                         class: "object-highlight", 
-                        r: distance_shifting.enter(0.25, screen_frame)
+                        r: screen_highlight_width/2.0
                     }, 
                     position_shifting.enter(object.position, screen_frame)
                 ),

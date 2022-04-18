@@ -366,7 +366,7 @@ const arrow_view = SvgArrowView({
         svg_arrow_attributes       : svg_arrow_attributes,
         distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
-    });
+    }, 0.3);
 
 const arrow_selection_view = 
     SvgArrowSelectionView({
@@ -374,7 +374,7 @@ const arrow_selection_view =
         svg_arrow_attributes       : svg_arrow_attributes,
         distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
-    });
+    }, 0.3);
 
 const object_view = 
     SvgObjectView({
@@ -386,7 +386,7 @@ const object_view =
         distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
         render                     : renderMathInElement,
-    });
+    }, 0.5);
 
 const object_selection_view = 
     SvgObjectSelectionView({
@@ -396,7 +396,7 @@ const object_selection_view =
         position_shifting          : position_shifting,
         distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
-    });
+    }, 0.5);
 
 const object_toolbar_view = 
     HtmlObjectToolbarView({
