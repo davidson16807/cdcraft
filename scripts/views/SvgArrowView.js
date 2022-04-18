@@ -9,7 +9,7 @@ function SvgArrowView(dependencies, highlight_width) {
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, arrow, drag_type, onclick, onenter) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const screen_highlight_width = distance_shifting.enter(0.3, screen_frame);
+        const screen_highlight_width = distance_shifting.enter(highlight_width, screen_frame);
         const text_width = 80;
         const g = svg.g(
             {
@@ -29,7 +29,8 @@ function SvgArrowView(dependencies, highlight_width) {
             g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
         }
         if (onclick != null) {
-            g.addEventListener('mouseenter', deferal.callbackPrevent(onenter));
+            g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
+            g.addEventListener('mouseover', deferal.callbackPrevent(onenter));
         }
         return g;
     }

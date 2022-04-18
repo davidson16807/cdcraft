@@ -222,7 +222,7 @@ function AppUpdater(
         },
 
         objectdown: function(event, drawing, object_, app_io, dom_io){
-            if (!object_.is_edited) {
+            if (event.buttons == 1 && !object_.is_edited) {
                 event.stopPropagation();
                 const object_id = app_io.diagram.objects.indexOf(object_);
                 const selected_diagram = object_id >= 0?
@@ -242,7 +242,7 @@ function AppUpdater(
         },
 
         arrowdown: function(event, drawing, arrow, app_io, dom_io){
-            if (!arrow.is_edited) {
+            if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow), app_io);
                 drawing.redraw(undefined, app_io, dom_io);

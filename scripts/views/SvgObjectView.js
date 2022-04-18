@@ -13,7 +13,7 @@ function SvgObjectView(dependencies, highlight_width) {
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onenter) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const screen_highlight_width = distance_shifting.enter(0.4, screen_frame);
+        const screen_highlight_width = distance_shifting.enter(highlight_width, screen_frame);
         const text_width = 80;
         const object_screen_position = position_shifting.enter(object.position, screen_frame);
         const div = html.div({},[], object.depiction || '\\[\\bullet\\]');
@@ -35,7 +35,8 @@ function SvgObjectView(dependencies, highlight_width) {
             g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
         }
         if (onenter != null) {
-            g.addEventListener('mouseenter', deferal.callbackPrevent(onenter));
+            g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
+            g.addEventListener('mouseover', deferal.callbackPrevent(onenter));
         }
         return g;
     }

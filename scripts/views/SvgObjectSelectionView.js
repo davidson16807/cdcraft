@@ -11,7 +11,7 @@ function SvgObjectSelectionView(dependencies, highlight_width) {
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, onclick) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const screen_highlight_width = distance_shifting.enter(0.4, screen_frame);
+        const screen_highlight_width = distance_shifting.enter(highlight_width, screen_frame);
         const g = svg.g(
             {},
             [
