@@ -15,7 +15,6 @@ function AppUpdater(
     const screen_frame_storage = dependencies.screen_frame_storage;
     const position_shifting = dependencies.position_shifting;
     const object_position_resources = dependencies.object_position_resources;
-    const diagram_ids = dependencies.diagram_ids;
     const drag_ops = dependencies.drag_state_ops;
     const history = dependencies.app_history_traversal;
 

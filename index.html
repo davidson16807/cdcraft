@@ -366,7 +366,7 @@ const arrow_view = SvgArrowView({
         svg_arrow_attributes       : svg_arrow_attributes,
         distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
-    }, 0.3);
+    }, 0.2);
 
 const arrow_selection_view = 
     SvgArrowSelectionView({
@@ -374,14 +374,13 @@ const arrow_selection_view =
         svg_arrow_attributes       : svg_arrow_attributes,
         distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
-    }, 0.3);
+    }, 0.2);
 
 const object_view = 
     SvgObjectView({
         svg                        : svg,
         html                       : html,
         screen_frame_storage       : screen_frame_storage,
-        diagram_ids                : diagram_ids,
         position_shifting          : position_shifting,
         distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
@@ -392,7 +391,6 @@ const object_selection_view =
     SvgObjectSelectionView({
         svg                        : svg,
         screen_frame_storage       : screen_frame_storage,
-        diagram_ids                : diagram_ids,
         position_shifting          : position_shifting,
         distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
@@ -458,7 +456,6 @@ const app_updater =
         screen_frame_storage      : screen_frame_storage,
         position_shifting         : position_shifting,
         object_position_resource  : object_position_resource,
-        diagram_ids               : diagram_ids,
         drag_state_ops            : drag_state_ops,
         app_history_traversal     : app_history_traversal,
     });
@@ -469,7 +466,6 @@ const app_view =
         arrow_positions_resource     : arrow_positions_resource, 
         object_position_resource     : object_position_resource,
         resource_operations          : resource_operations,
-        diagram_ids                  : diagram_ids,
         svg_grid_view                : grid_view,
         svg_object_view              : object_view,
         svg_arrow_view               : arrow_view,

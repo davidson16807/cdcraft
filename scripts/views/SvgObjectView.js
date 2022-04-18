@@ -5,7 +5,6 @@ function SvgObjectView(dependencies, highlight_width) {
     const svg                        = dependencies.svg;
     const html                       = dependencies.html;
     const screen_frame_storage       = dependencies.screen_frame_storage;
-    const diagram_ids                = dependencies.diagram_ids;
     const position_shifting          = dependencies.position_shifting;
     const distance_shifting          = dependencies.distance_shifting;
     const view_event_deferal         = dependencies.view_event_deferal;
