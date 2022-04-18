@@ -319,6 +319,7 @@ const user_arcs_and_sampler_arcs = UserArcsAndSamplerArcs(ArcGeometry());
 
 const offset_shifting = OffsetFrameShifting();
 const position_shifting = PositionFrameShifting();
+const distance_shifting = DistanceFrameShifting();
 
 const sampler_arc_properties = SamplerArcProperties();
 const sampler_arc_resizing = SamplerArcResizing(sampler_arc_properties);
@@ -353,14 +354,27 @@ const svg_arrow_attributes =
         sampler_arc_rendering      : sampler_arc_rendering,
         position_shifting          : position_shifting,
         offset_shifting            : offset_shifting,
+        distance_shifting          : distance_shifting,
     }, 
     { 
         source_trim_length: 0.12,
         target_trim_length: 0.10,
     });
 
-const arrow_view = SvgArrowView(svg, svg_arrow_attributes, view_event_deferal);
-const arrow_selection_view = SvgArrowSelectionView(svg, svg_arrow_attributes, view_event_deferal);
+const arrow_view = SvgArrowView({
+        svg                        : svg,
+        svg_arrow_attributes       : svg_arrow_attributes,
+        distance_shifting          : distance_shifting,
+        view_event_deferal         : view_event_deferal,
+    });
+
+const arrow_selection_view = 
+    SvgArrowSelectionView({
+        svg                        : svg,
+        svg_arrow_attributes       : svg_arrow_attributes,
+        distance_shifting          : distance_shifting,
+        view_event_deferal         : view_event_deferal,
+    });
 
 const object_view = 
     SvgObjectView({
@@ -369,6 +383,7 @@ const object_view =
         screen_frame_storage       : screen_frame_storage,
         diagram_ids                : diagram_ids,
         position_shifting          : position_shifting,
+        distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
         render                     : renderMathInElement,
     });
@@ -379,6 +394,7 @@ const object_selection_view =
         screen_frame_storage       : screen_frame_storage,
         diagram_ids                : diagram_ids,
         position_shifting          : position_shifting,
+        distance_shifting          : distance_shifting,
         view_event_deferal         : view_event_deferal,
     });
 

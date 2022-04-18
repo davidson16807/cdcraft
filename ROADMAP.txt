@@ -17,13 +17,18 @@ url links
 arrow decorations
 functor arrows
 refresh grids on window resize
-toggle "disabled" status on undo/redo buttons
 ctrl+A to select all
 
-store ids/hashes in arrow/object selections to support arrow/object settings menus and functors
 
 decouple state for model/view to support soft undo/redo
 
 refactor so app operations return new app objects
 
+
+
+DONE:
+toggle "disabled" status on undo/redo buttons
+store ids/hashes in arrow/object selections to support arrow/object settings menus and functors
 refactor classes for state objects to use properties so that attributes are guaranteed readonly
+scale arrows on zoom in/out
+

@@ -1,22 +1,23 @@
 'use strict';
 
+/*
+`*FrameShifting` functions return a namespace of pure functions that describe an isomorphism.
+`enter` accepts an object and reference frame, both expressed in terms of an implicit user defined reference frame,
+and returns an object that is defined in terms of the reference frame. `leave` is inverse to `enter`.
+*/
 
 /*
-`OffsetFrameShifting` returns a namespace of pure functions that describe an isomorphism.
-`enter` accepts a offset and reference frame, both expressed in terms of an implicit user defined reference frame,
-and returns a offset that is defined in terms of the reference frame. `leave` is inverse to `enter`.
+`OffsetFrameShifting` operates on "offsets": differences between vectors that are not subject to translation across frame shifts.
 */
 function OffsetFrameShifting(){
     return {
-        enter: (position, frame) => position.div(frame.unit_length),
-        leave: (position, frame) => position.mul(frame.unit_length),
+        enter: (offset, frame) => offset.div(frame.unit_length),
+        leave: (offset, frame) => offset.mul(frame.unit_length),
     };
 }
 
 /*
-`PositionFrameShifting` returns a namespace of pure functions that describe an isomorphism.
-`enter` accepts a position and reference frame, both expressed in terms of an implicit user defined reference frame,
-and returns a position that is defined in terms of the reference frame. `leave` is inverse to `enter`.
+`PositionFrameShifting` operates on "positions": vectors that are translated and scaled across frame shifts.
 */
 function PositionFrameShifting(){
     return {
@@ -25,11 +26,18 @@ function PositionFrameShifting(){
     };
 }
 
+/*
+`DistanceFrameShifting` operates on "distances": the magntudes of offsets are are only subject to scaling across frame shifts
+*/
+function DistanceFrameShifting(){
+    return {
+        enter: (distance, frame) => distance/frame.unit_length,
+        leave: (distance, frame) => distance*frame.unit_length,
+    };
+}
 
 /*
-`ReferenceFrameShifting` returns a namespace of pure functions that describe an isomorphism
-`enter` accepts two reference frames, both expressed in terms of an implicit user defined reference frame,
-and returns a new reference frame that is the first defined in terms of the second. `leave` is inverse to `enter`.
+`ReferenceFrameShifting` operates on reference frames themselves.
 */
 function ReferenceFrameShifting(position_frame_shifting){
     const shifting = position_frame_shifting;

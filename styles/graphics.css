@@ -53,7 +53,6 @@ body{
 .arrow-highlight {
     fill: none;
     stroke: darkgrey;
-    stroke-width:20;
     pointer-events: all;
 }
 
