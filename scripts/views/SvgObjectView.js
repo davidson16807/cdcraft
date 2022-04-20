@@ -27,8 +27,9 @@ function SvgObjectView(dependencies, highlight_width) {
                     {class:"object-highlight", r:screen_highlight_width/2.0}, 
                     object_screen_position),
                 svg.foreignObject(
-                    {class:"object", width:text_width, height:40}, [div], 
-                    object_screen_position.sub(glm.vec2(text_width/2, 0)))
+                    {class:"object"}, [div], 
+                    object_screen_position.sub(glm.vec2(5, 14)),
+                    glm.vec2(1, 1))
             ]);
         const deferal = view_event_deferal(drawing, object, dom);
         if (onclick != null) {

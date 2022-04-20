@@ -104,8 +104,11 @@ body{
 .object {
     color: black;
     text-align: center;
-    /*NOTE: I have found no better way to align a <foreignObject> component than through manual adjustment.*/
-    transform: translate(0px, -29px);
+    overflow: visible;
+}
+
+.katex-display {
+    margin: 0;
 }
 
 @media (prefers-color-scheme: dark){
