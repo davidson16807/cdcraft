@@ -9,13 +9,13 @@ class DiagramArrow {
         arc, is_edited, label, label_offset, 
         source_style_id, end_style_id, line_style_id, 
     ){
-        Object.defineProperty(this, 'arc',  {get: ()=> arc});
-        Object.defineProperty(this, 'is_edited',  {get: ()=> is_edited});
-        Object.defineProperty(this, 'label',  {get: ()=> label});
-        Object.defineProperty(this, 'label_offset',  {get: ()=> label_offset});
-        Object.defineProperty(this, 'source_style_id',  {get: ()=> source_style_id});
-        Object.defineProperty(this, 'end_style_id',  {get: ()=> end_style_id});
-        Object.defineProperty(this, 'line_style_id',  {get: ()=> line_style_id});
+        Object.defineProperty(this, 'arc',              {get: ()=> arc});
+        Object.defineProperty(this, 'is_edited',        {get: ()=> is_edited || false});
+        Object.defineProperty(this, 'label',            {get: ()=> label || ''});
+        Object.defineProperty(this, 'label_offset',     {get: ()=> label_offset || glm.vec2()});
+        Object.defineProperty(this, 'source_style_id',  {get: ()=> source_style_id || 0});
+        Object.defineProperty(this, 'end_style_id',     {get: ()=> end_style_id || 0});
+        Object.defineProperty(this, 'line_style_id',    {get: ()=> line_style_id || 0});
     }
 
     with(attributes){

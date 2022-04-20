@@ -4,11 +4,11 @@
 `DiagramObject` is a data structure that represents every property of an object that can be depicted within the application.
 */
 class DiagramObject {
-    constructor(position, depiction, annotation, is_edited, is_valid){
+    constructor(position, depiction, is_edited, is_valid){
         Object.defineProperty(this, 'position',  {get: ()=> position});
-        Object.defineProperty(this, 'depiction',  {get: ()=> depiction});
-        Object.defineProperty(this, 'is_edited',  {get: ()=> is_edited});
-        Object.defineProperty(this, 'is_valid',  {get: ()=> is_valid});
+        Object.defineProperty(this, 'depiction', {get: ()=> depiction || ''});
+        Object.defineProperty(this, 'is_edited', {get: ()=> is_edited || false});
+        Object.defineProperty(this, 'is_valid',  {get: ()=> is_valid  || true});
     }
 
     with(attributes){
