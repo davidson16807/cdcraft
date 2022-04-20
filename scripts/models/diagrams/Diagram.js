@@ -13,9 +13,9 @@ class Diagram {
     ){
         Object.defineProperty(this, 'arrows',  {get: ()=> arrows});
         Object.defineProperty(this, 'objects', {get: ()=> objects});
-        Object.defineProperty(this, 'arrow_selections',  {get: ()=> arrow_selections || []});
-        Object.defineProperty(this, 'object_selections', {get: ()=> object_selections || []});
-        Object.defineProperty(this, 'inferred_object_selections', {get: ()=> inferred_object_selections || []});
+        Object.defineProperty(this, 'arrow_selections',  {get: ()=> arrow_selections});
+        Object.defineProperty(this, 'object_selections', {get: ()=> object_selections});
+        Object.defineProperty(this, 'inferred_object_selections', {get: ()=> inferred_object_selections});
         Object.defineProperty(this, 'screen_frame_store', {get: ()=> screen_frame_store});
     }
 

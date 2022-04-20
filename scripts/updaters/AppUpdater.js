@@ -245,14 +245,15 @@ function AppUpdater(
                 const selected_diagram = object_id >= 0?
                       app_io.diagram.with({ 
                             arrow_selections:[], 
-                            object_selections: [...app_io.diagram.object_selections, object_id],
+                            object_selections: [object_id],
                             inferred_object_selections: []
                         })
                     : app_io.diagram.with({ 
                             arrow_selections:[], 
                             object_selections: [],
-                            inferred_object_selections: [...app_io.diagram.inferred_object_selections, object_],
+                            inferred_object_selections: [object_],
                         });
+                history.do(app_io, selected_diagram, false);
                 drag_ops.transition( selection_drags.move(selected_diagram), app_io);
                 drawing.redraw(undefined, app_io, dom_io);
             }
