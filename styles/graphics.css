@@ -74,6 +74,11 @@ body{
     pointer-events: all;
 }
 
+.arrow-label {
+    color: black;
+    text-align: center;
+}
+
 @media (prefers-color-scheme: dark){
 
     .arrow {
@@ -90,6 +95,9 @@ body{
     }
     .arrow-handle:hover {
         fill: lightgrey;
+    }
+    .arrow-label {
+        color: white;
     }
 
 }
