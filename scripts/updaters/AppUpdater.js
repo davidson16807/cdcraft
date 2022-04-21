@@ -216,7 +216,7 @@ function AppUpdater(
                 const action = text_actions[action_id];
                 if (action!=null) {
                     action(app_io, event);
-                    drawing.redraw(undefined, app_io, dom_io);
+                    drawing.redraw(undefined, app_io, dom_io, event.currentTarget.id);
                 }
             }
         },

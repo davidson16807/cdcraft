@@ -19,16 +19,8 @@ functor arrows
 refresh grids on window resize
 ctrl+A to select all
 
-
 decouple state for model/view to support soft undo/redo
-
 refactor so app operations return new app objects
 
-
-
-DONE:
-toggle "disabled" status on undo/redo buttons
-store ids/hashes in arrow/object selections to support arrow/object settings menus and functors
-refactor classes for state objects to use properties so that attributes are guaranteed readonly
-scale arrows on zoom in/out
-
+fix bug where dragging one named object on top of another causes overlap
+	we likely need to store objects in a structure indexed by cell hash, so this problem could not fundamentally occur

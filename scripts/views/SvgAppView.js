@@ -23,7 +23,8 @@ function SvgAppView(dependencies, onevents) {
 
     const drawing = {};
 
-    function _redraw(old_app, new_app, dom_io) {
+    function _redraw(old_app, new_app, dom_io, trigger) {
+
         if (old_app == null || old_app.drag_type != new_app.drag_type){
             dom_io
                 .getElementById('graphics')
@@ -83,16 +84,17 @@ function SvgAppView(dependencies, onevents) {
                             (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, new_app, dom_io))));
         }
 
-
         if (old_app == null || 
             old_app.diagram.object_selections != new_app.diagram.object_selections || 
             old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
 
-            dom_io.getElementById('object-toolbar')
-                .replaceWith(html_object_toolbar_view.draw(dom_io, new_app, 
-                    (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
-                    (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
-                ));
+            if (trigger != 'object-text'){
+                dom_io.getElementById('object-toolbar')
+                    .replaceWith(html_object_toolbar_view.draw(dom_io, new_app, 
+                        (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
+                        (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
+                    ));
+            }
 
             const object_selections = [
                 ...new_app.diagram.inferred_object_selections,
@@ -177,9 +179,9 @@ function SvgAppView(dependencies, onevents) {
         _redraw(undefined, app, dom_io);
     };
 
-    drawing.redraw = function(old_app, new_app, dom_io)
+    drawing.redraw = function(old_app, new_app, dom_io, trigger)
     {
-        _redraw(old_app, new_app, dom_io);
+        _redraw(old_app, new_app, dom_io, trigger);
     }
 
     return drawing;
