@@ -11,6 +11,7 @@ function SvgAppView(dependencies, onevents) {
     const svg_arrow_view             = dependencies.svg_arrow_view;
     const svg_object_selection_view  = dependencies.svg_object_selection_view;
     const html_object_toolbar_view   = dependencies.html_object_toolbar_view;
+    const html_arrow_toolbar_view   = dependencies.html_arrow_toolbar_view;
     const svg_arrow_selection_view   = dependencies.svg_arrow_selection_view;
     const view_event_deferal         = dependencies.view_event_deferal;
 
@@ -55,14 +56,16 @@ function SvgAppView(dependencies, onevents) {
         }
 
         if (old_app == null || 
+            old_app.diagram.arrows != new_app.diagram.arrows ||
             old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
 
-            const is_single_arrow_selected = (
-                new_app.diagram.inferred_object_selections.length < 1 &&
-                new_app.diagram.object_selections.length < 1 &&
-                new_app.diagram.arrow_selections.length == 1);
-            dom_io.getElementById('arrow-toolbar')
-                .classList[is_single_arrow_selected? 'remove' : 'add']('hidden');
+            if (trigger != 'arrow-text'){
+                dom_io.getElementById('arrow-toolbar')
+                    .replaceWith(html_arrow_toolbar_view.draw(dom_io, new_app, 
+                        (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
+                        (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
+                    ));
+            }
 
             const arrow_selections_list = new_app.diagram.arrow_selections
                     .map(id => new_app.diagram.arrows[id])
@@ -85,6 +88,7 @@ function SvgAppView(dependencies, onevents) {
         }
 
         if (old_app == null || 
+            old_app.diagram.objects != new_app.diagram.objects ||
             old_app.diagram.object_selections != new_app.diagram.object_selections || 
             old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
 

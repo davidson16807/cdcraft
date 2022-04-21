@@ -1,5 +1,21 @@
 'use strict';
 
+
+`
+<div class="group-round">
+    <h5>Object</h5>
+    <input id="object-text" type="text" class="form-control" placeholder="Object Text" />
+    <div class="horizontal-axis-group maybe-slider">
+        <button id="toggle-grid" type="button" class="btn btn-dark">
+            <img src="icons/lock.svg"/>
+        </button>
+        <div class="vertical-axis-group">
+            <label>Position</label>
+            <input type="range" class="form-range" min="-5" max="5" id="range" disabled>
+        </div>
+    </div>
+</div>
+`
 function HtmlObjectToolbarView(dependencies) {
 
     const html                       = dependencies.html;
@@ -17,7 +33,7 @@ function HtmlObjectToolbarView(dependencies) {
 
         if (is_single_object_selected) {
             const object = (
-                diagram.objects[diagram.object_selections] || 
+                diagram.objects[diagram.object_selections[0]] || 
                 diagram.inferred_object_selections[0]);
             const deferal = view_event_deferal(drawing, object, dom);
 
