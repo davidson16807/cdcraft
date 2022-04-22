@@ -5,17 +5,17 @@ function SvgObjectView(dependencies, highlight_width) {
     const svg                        = dependencies.svg;
     const html                       = dependencies.html;
     const screen_frame_storage       = dependencies.screen_frame_storage;
-    const position_shifting          = dependencies.position_shifting;
-    const distance_shifting          = dependencies.distance_shifting;
+    const position_framing           = dependencies.position_framing;
+    const distance_framing           = dependencies.distance_framing;
     const view_event_deferal         = dependencies.view_event_deferal;
     const render                     = dependencies.render;
 
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onenter) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const screen_highlight_width = distance_shifting.enter(highlight_width, screen_frame);
+        const screen_highlight_width = distance_framing.enter(highlight_width, screen_frame);
         const text_width = 80;
-        const object_screen_position = position_shifting.enter(object.position, screen_frame);
+        const object_screen_position = position_framing.enter(object.position, screen_frame);
         const div = html.div({},[], object.depiction || '\\[\\bullet\\]');
         render(div, {throwOnError: false});
         const g = svg.g(

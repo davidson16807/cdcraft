@@ -21,7 +21,7 @@ function SamplerArcProperties(){
         tangent: function (sampler_arc, distance) {
             const v = glm.normalize(sampler_arc.source_offset);
             const radius = glm.length(sampler_arc.source_offset);
-            const theta = (distance / radius + pi/2.0* sign(sampler_arc.length_clockwise)) ;
+            const theta = (distance / radius) + pi/2.0* sign(sampler_arc.length_clockwise) ;
             return glm.vec2(
                 v.x * cos(theta) - v.y * sin(theta),
                 v.x * sin(theta) + v.y * cos(theta),
@@ -38,5 +38,24 @@ function SamplerArcProperties(){
                     v.x * sin(theta) + v.y * cos(theta),
                 ).add(sampler_arc.origin);
         },
-    }
+        transform: function(sampler_arc, distance) {
+            const v = glm.normalize(sampler_arc.source_offset);
+            const radius = glm.length(sampler_arc.source_offset);
+            const theta = distance / radius;
+            const theta_offset = theta + pi/2.0* sign(sampler_arc.length_clockwise);
+            return glm.mat3(
+                v.x * cos(theta) - v.y * sin(theta),
+                v.x * sin(theta) + v.y * cos(theta),
+                0.0,
+
+                v.x * cos(theta_offset) - v.y * sin(theta_offset),
+                v.x * sin(theta_offset) + v.y * cos(theta_offset),
+                0.0,
+
+                v.x * cos(theta) - v.y * sin(theta) + sampler_arc.origin.x,
+                v.x * sin(theta) + v.y * cos(theta) + sampler_arc.origin.y,
+                1.0
+            );
+        }
+    };
 }

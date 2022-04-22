@@ -4,13 +4,13 @@ function SvgArrowView(dependencies, highlight_width) {
     const svg = dependencies.svg;
     const html = dependencies.html;
     const arrows = dependencies.svg_arrow_attributes;
-    const distance_shifting = dependencies.distance_shifting;
+    const distance_framing = dependencies.distance_framing;
     const view_event_deferal = dependencies.view_event_deferal;
 
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, arrow, drag_type, onclick, onenter) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const screen_highlight_width = distance_shifting.enter(highlight_width, screen_frame);
+        const screen_highlight_width = distance_framing.enter(highlight_width, screen_frame);
         const text_width = 80;
         const arrow_screen_midpoint = arrows.sample(screen_frame_store, arrow.arc, 0.5);
         const div = html.div({},[], arrow.label);

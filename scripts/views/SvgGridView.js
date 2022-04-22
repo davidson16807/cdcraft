@@ -5,7 +5,7 @@ function SvgGridView(dependencies) {
     const svg                        = dependencies.svg;
     const screen_frame_storage       = dependencies.screen_frame_storage;
     const diagram_ids                = dependencies.diagram_ids;
-    const position_shifting          = dependencies.position_shifting;
+    const position_framing           = dependencies.position_framing;
 
     function cell_count(screen_frame_store) {
         return Math.ceil(Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / Math.pow(2.0, screen_frame_store.log2_cell_width))+1;
@@ -17,7 +17,7 @@ function SvgGridView(dependencies) {
             function cell_border_position(x,y) {
                 const screen_frame = screen_frame_storage.unpack(screen_frame_store);
                 const model_border_position = diagram_ids.border_id_to_cell_position( diagram_ids.cell_position_to_border_id(screen_frame.origin).add(glm.ivec2(x-1,y-1)) );
-                return position_shifting.enter(model_border_position, screen_frame);
+                return position_framing.enter(model_border_position, screen_frame);
             };
             const lines = [];
             if (!is_grid_hidden) {
