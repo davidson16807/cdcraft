@@ -4,13 +4,13 @@ function SvgArrowSelectionView(dependencies, highlight_width) {
 
     const svg = dependencies.svg;
     const arrows = dependencies.svg_arrow_attributes;
-    const distance_framing = dependencies.distance_framing;
+    const distance_transformation = dependencies.distance_transformation;
     const view_event_deferal = dependencies.view_event_deferal;
 
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, arrow, onclick) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const screen_highlight_width = distance_framing.enter(highlight_width, screen_frame);
+        const screen_highlight_width = distance_transformation.enter(highlight_width, screen_frame);
         const g = svg.g(
             {},
             [

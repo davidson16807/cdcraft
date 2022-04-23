@@ -4,14 +4,14 @@ function SvgObjectSelectionView(dependencies, highlight_width) {
 
     const svg                        = dependencies.svg;
     const screen_frame_storage       = dependencies.screen_frame_storage;
-    const position_framing          = dependencies.position_framing;
-    const distance_framing          = dependencies.distance_framing;
+    const position_transformation          = dependencies.position_transformation;
+    const distance_transformation          = dependencies.distance_transformation;
     const view_event_deferal         = dependencies.view_event_deferal;
 
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, onclick) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const screen_highlight_width = distance_framing.enter(highlight_width, screen_frame);
+        const screen_highlight_width = distance_transformation.enter(highlight_width, screen_frame);
         const g = svg.g(
             {},
             [
@@ -20,7 +20,7 @@ function SvgObjectSelectionView(dependencies, highlight_width) {
                         class: "object-highlight", 
                         r: screen_highlight_width/2.0
                     }, 
-                    position_framing.enter(object.position, screen_frame)
+                    position_transformation.enter(object.position, screen_frame)
                 ),
             ]);
         const deferal = view_event_deferal(drawing, object, dom);

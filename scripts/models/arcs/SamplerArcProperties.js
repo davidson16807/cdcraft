@@ -38,23 +38,29 @@ function SamplerArcProperties(){
                     v.x * sin(theta) + v.y * cos(theta),
                 ).add(sampler_arc.origin);
         },
-        transform: function(sampler_arc, distance) {
-            const v = glm.normalize(sampler_arc.source_offset);
+        frame: function(sampler_arc, distance) {
+            const v = sampler_arc.source_offset;
+            const vhat = glm.normalize(v);
             const radius = glm.length(sampler_arc.source_offset);
             const theta = distance / radius;
             const theta_offset = theta + pi/2.0* sign(sampler_arc.length_clockwise);
-            return glm.mat3(
-                v.x * cos(theta) - v.y * sin(theta),
-                v.x * sin(theta) + v.y * cos(theta),
-                0.0,
+            return new AffineFrame(
+                glm.vec2(
+                    vhat.x * cos(theta) - vhat.y * sin(theta),
+                    vhat.x * sin(theta) + vhat.y * cos(theta),
+                ),
 
-                v.x * cos(theta_offset) - v.y * sin(theta_offset),
-                v.x * sin(theta_offset) + v.y * cos(theta_offset),
-                0.0,
+                glm.vec2(
+                    vhat.x * cos(theta_offset) - vhat.y * sin(theta_offset),
+                    vhat.x * sin(theta_offset) + vhat.y * cos(theta_offset),
+                ),
 
-                v.x * cos(theta) - v.y * sin(theta) + sampler_arc.origin.x,
-                v.x * sin(theta) + v.y * cos(theta) + sampler_arc.origin.y,
-                1.0
+                radius == 0? 
+                  sampler_arc.origin 
+                : glm.vec2(
+                    v.x * cos(theta) - v.y * sin(theta),
+                    v.x * sin(theta) + v.y * cos(theta),
+                ).add(sampler_arc.origin),
             );
         }
     };
