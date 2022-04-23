@@ -35,8 +35,6 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
             const original_length = arrows.length;
             return {
                 id: DragState.arrow,
-                is_model_drag: true,
-                is_view_drag: false,
                 initialize: () => new DiagramArrow(
                         user_arcs_and_stored_arcs.user_arc_to_stored_arc(
                             new UserArc(

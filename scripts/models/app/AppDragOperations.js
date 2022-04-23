@@ -7,21 +7,19 @@ its modifications to the ModelView, its transitions in drag state, and its updat
 as drags are initialized, transformed, and released.
 */
 function AppDragOperations(
+        PanZoomMapping,
         screen_frame_storage,  
-        offset_frame_shifting, 
-        position_frame_shifting, 
         application_history_traversal,
     ) {
     const storage = screen_frame_storage;
-    const offset_shifting = offset_frame_shifting;
-    const position_shifting = position_frame_shifting;
     const history = application_history_traversal;
     return {
 
         wheel: function(screen_focus, scroll_count, app_io) {
             const screen_frame_store = app_io.diagram.screen_frame_store;
             const screen_frame = storage.unpack(screen_frame_store);
-            const model_focus = position_shifting.leave(screen_focus, screen_frame);
+            const screen_mapping = PanZoomMapping(screen_frame);
+            const model_focus = screen_mapping.position.revert(screen_focus);
 
             app_io.drag_state = app_io.drag_type.wheel(app_io.drag_state, model_focus, scroll_count);
             history.do(app_io, 
@@ -31,8 +29,9 @@ function AppDragOperations(
         move: function (screen_position, screen_offset, app_io) {
             const screen_frame_store = app_io.diagram.screen_frame_store;
             const screen_frame = storage.unpack(screen_frame_store);
-            const model_position = position_shifting.leave(screen_position, screen_frame);
-            const model_offset = offset_shifting.leave(screen_offset, screen_frame);
+            const screen_mapping = PanZoomMapping(screen_frame);
+            const model_position = screen_mapping.position.revert(screen_position);
+            const model_offset = screen_mapping.offset.revert(screen_offset);
 
             app_io.drag_state = app_io.drag_type.move(app_io.drag_state, model_position, model_offset);
             history.do(app_io, 

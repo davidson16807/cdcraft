@@ -38,13 +38,13 @@ function SamplerArcProperties(){
                     v.x * sin(theta) + v.y * cos(theta),
                 ).add(sampler_arc.origin);
         },
-        frame: function(sampler_arc, distance) {
+        map: function(sampler_arc, distance) {
             const v = sampler_arc.source_offset;
             const vhat = glm.normalize(v);
             const radius = glm.length(sampler_arc.source_offset);
             const theta = distance / radius;
             const theta_offset = theta + pi/2.0* sign(sampler_arc.length_clockwise);
-            return new AffineFrame(
+            return new AffineMap(
                 glm.vec2(
                     vhat.x * cos(theta) - vhat.y * sin(theta),
                     vhat.x * sin(theta) + vhat.y * cos(theta),

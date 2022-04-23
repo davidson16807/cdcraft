@@ -1,16 +1,16 @@
 'use strict';
 
 function SvgArrowView(dependencies, highlight_width) {
+    const PanZoomMapping = dependencies.PanZoomMapping;
     const svg = dependencies.svg;
     const html = dependencies.html;
     const arrows = dependencies.svg_arrow_attributes;
-    const distance_transformation = dependencies.distance_transformation;
     const view_event_deferal = dependencies.view_event_deferal;
 
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, arrow, drag_type, onclick, onenter) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const screen_highlight_width = distance_transformation.enter(highlight_width, screen_frame);
+        const screen_highlight_width = PanZoomMapping(screen_frame).distance.apply(highlight_width);
         const text_width = 80;
         const arrow_screen_midpoint = arrows.sample(screen_frame_store, arrow.arc, 0.5);
         const div = html.div({},[], arrow.label);

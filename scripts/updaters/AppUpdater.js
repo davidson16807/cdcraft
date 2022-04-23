@@ -9,14 +9,14 @@ Its name is in reference to the "Updater" within the "Model-View-Updater" patter
 function AppUpdater(
         dependencies
     ){
-    const selection_drags = dependencies.selection_drags;
-    const arrow_drags = dependencies.arrow_drags;
-    const view_drags = dependencies.view_drags;
-    const screen_frame_storage = dependencies.screen_frame_storage;
-    const position_transformation = dependencies.position_transformation;
+    const PanZoomMapping            = dependencies.PanZoomMapping;
+    const selection_drags           = dependencies.selection_drags;
+    const arrow_drags               = dependencies.arrow_drags;
+    const view_drags                = dependencies.view_drags;
+    const screen_frame_storage      = dependencies.screen_frame_storage;
     const object_position_resources = dependencies.object_position_resources;
-    const drag_ops = dependencies.drag_state_ops;
-    const history = dependencies.app_history_traversal;
+    const drag_ops                  = dependencies.drag_state_ops;
+    const history                   = dependencies.app_history_traversal;
 
     /* 
     functions mapping app×event→app 
@@ -34,7 +34,7 @@ function AppUpdater(
             const screen_position = glm.vec2(event.clientX, event.clientY);
             const screen_frame_store = app_io.diagram.screen_frame_store;
             const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-            const model_position = position_transformation.leave(screen_position, screen_frame);
+            const model_position = PanZoomMapping(screen_frame).position.revert(screen_position);
             drag_ops.transition( arrow_drags.create(app_io.diagram.arrows, model_position), app_io);
         },
 

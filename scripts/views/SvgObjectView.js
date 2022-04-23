@@ -2,20 +2,19 @@
 
 function SvgObjectView(dependencies, highlight_width) {
 
+    const PanZoomMapping             = dependencies.PanZoomMapping;
     const svg                        = dependencies.svg;
     const html                       = dependencies.html;
     const screen_frame_storage       = dependencies.screen_frame_storage;
-    const position_transformation    = dependencies.position_transformation;
-    const distance_transformation    = dependencies.distance_transformation;
     const view_event_deferal         = dependencies.view_event_deferal;
     const render                     = dependencies.render;
 
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onenter) {
         const screen_frame = screen_frame_storage.unpack(screen_frame_store);
-        const screen_highlight_width = distance_transformation.enter(highlight_width, screen_frame);
-        const text_width = 80;
-        const object_screen_position = position_transformation.enter(object.position, screen_frame);
+        const screen_mapping = PanZoomMapping(screen_frame);
+        const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
+        const object_screen_position = screen_mapping.position.apply(object.position);
         const div = html.div({},[], object.depiction || '\\[\\bullet\\]');
         render(div, {throwOnError: false});
         const g = svg.g(

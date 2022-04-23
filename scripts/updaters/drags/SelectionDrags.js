@@ -10,8 +10,6 @@ function SelectionDrags(
         move: function(initial_diagram) {
             return {
                 id: DragState.object,
-                is_model_drag: true,
-                is_view_drag: false,
                 initialize: () => {
                     return resource_operations.update(
                         arrow_positions_resource.get(initial_diagram.arrow_selections.map(id => initial_diagram.arrows[id])),
