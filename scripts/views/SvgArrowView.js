@@ -9,10 +9,11 @@ function SvgArrowView(dependencies, highlight_width) {
     const screen_state_storage = dependencies.screen_state_storage;
 
     const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, arrow, drag_type, onclick, onenter) {
-        const screen_frame = screen_state_storage.unpack(screen_frame_store);
-        const screen_arc = svg_arrow_attributes.stored_arc_to_screen_arc(screen_frame_store, arrow.arc);
-        const screen_highlight_width = PanZoomMapping(screen_frame).distance.apply(highlight_width);
+    drawing.draw = function(dom, screen_state_store, arrow, drag_type, onclick, onenter) {
+        const screen_state = screen_state_storage.unpack(screen_state_store);
+        const trimmed_arc = svg_arrow_attributes.stored_arc_to_trimmed_arc(arrow.arc, screen_state_store);
+        const screen_arc = svg_arrow_attributes.trimmed_arc_to_stored_arc(trimmed_arc, screen_state_store);
+        const screen_highlight_width = PanZoomMapping(screen_state).distance.apply(highlight_width);
         const text_width = 80;
         const arrow_screen_midpoint = svg_arrow_attributes.sample(screen_arc, 0.5);
         const div = html.div({},[], arrow.label);
@@ -26,7 +27,7 @@ function SvgArrowView(dependencies, highlight_width) {
                 svg.circle({class:"arrow-tip-highlight", r:screen_highlight_width/2.0}, svg_arrow_attributes.sample(screen_arc,1)),
                 // svg.circle({class:"arrow-handle", r:13} svg_arrow_attributes.sample(screen_arc,0)),
                 // svg.circle({class:"arrow-handle", r:13} svg_arrow_attributes.sample(screen_arc,1)),
-                svg.path({class:"arrow", d: svg_arrow_attributes.head(screen_frame_store, arrow.arc)}),
+                svg.path({class:"arrow", d: svg_arrow_attributes.head(trimmed_arc, screen_state_store)}),
                 svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc)}),
                 svg.foreignObject(
                     {class:"object"}, [div], 

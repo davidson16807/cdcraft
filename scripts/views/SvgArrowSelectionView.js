@@ -10,7 +10,8 @@ function SvgArrowSelectionView(dependencies, highlight_width) {
     const drawing = {};
     drawing.draw = function(dom, screen_state_store, arrow, onclick) {
         const screen_frame = screen_state_storage.unpack(screen_state_store);
-        const screen_arc = svg_arrow_attributes.stored_arc_to_screen_arc(screen_state_store, arrow.arc);
+        const trimmed_arc = svg_arrow_attributes.stored_arc_to_trimmed_arc(arrow.arc, screen_state_store);
+        const screen_arc = svg_arrow_attributes.trimmed_arc_to_stored_arc(trimmed_arc, screen_state_store);
         const screen_highlight_width = PanZoomMapping(screen_frame).distance.apply(highlight_width);
         const g = svg.g(
             {},
