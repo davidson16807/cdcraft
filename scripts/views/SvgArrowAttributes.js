@@ -36,7 +36,7 @@ function SvgArrowAttributes(dependencies, settings) {
             return trimmed_arc;
         },
 
-        trimmed_arc_to_stored_arc: function(trimmed_arc, screen_state_store) {
+        trimmed_arc_to_screen_arc: function(trimmed_arc, screen_state_store) {
             const screen_state = screen_state_storage.unpack(screen_state_store);
             const screen_arc = SamplerArcMapping(PanZoomMapping(screen_state)).apply(trimmed_arc);
             return screen_arc;
@@ -50,8 +50,7 @@ function SvgArrowAttributes(dependencies, settings) {
                         sampler_arc_properties.map(trimmed_arc, trimmed_arc.length_clockwise)));
 
             const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
-            const screen_points = 
-                cell_points.map(point => arrowhead_mapping.position.revert(point));
+            const screen_points = cell_points.map(point => arrowhead_mapping.position.revert(point));
             return 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
         },
 

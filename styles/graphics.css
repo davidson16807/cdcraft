@@ -112,6 +112,7 @@ body{
 .object {
     color: black;
     text-align: center;
+    font-size: 161%;
     overflow: visible;
 }
 

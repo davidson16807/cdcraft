@@ -13,10 +13,14 @@ function SvgArrowView(dependencies, highlight_width) {
     drawing.draw = function(dom, screen_state_store, arrow, drag_type, onclick, onenter) {
         const screen_state = screen_state_storage.unpack(screen_state_store);
         const trimmed_arc = svg_arrow_attributes.stored_arc_to_trimmed_arc(arrow.arc, screen_state_store);
-        const screen_arc = svg_arrow_attributes.trimmed_arc_to_stored_arc(trimmed_arc, screen_state_store);
+        const screen_arc = svg_arrow_attributes.trimmed_arc_to_screen_arc(trimmed_arc, screen_state_store);
         const screen_highlight_width = PanZoomMapping(screen_state).distance.apply(highlight_width);
         const text_width = 80;
-        const arrow_screen_midpoint = svg_arrow_attributes.sample(screen_arc, 0.5);
+        const arc_midpoint = svg_arrow_attributes.sample(screen_arc, 0.5);
+        const arc_midpoint_offset_from_origin = arc_midpoint.sub(screen_arc.origin);
+        const arc_midpoint_direction_from_origin = 
+            glm.length(arc_midpoint_offset_from_origin) > 1? 
+            glm.normalize(arc_midpoint_offset_from_origin) : glm.vec2(0,1);
         const div = html.div({},[], arrow.label);
         render(div, {throwOnError: false});
         const g = svg.g(
@@ -33,7 +37,7 @@ function SvgArrowView(dependencies, highlight_width) {
                 svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc)}),
                 svg.foreignObject(
                     {class:"object"}, [div], 
-                    arrow_screen_midpoint.sub(glm.vec2(5, 14)),
+                    arc_midpoint.add(arc_midpoint_direction_from_origin.mul(50)),
                     glm.vec2(1, 1)),
             ]);
         const deferal = view_event_deferal(drawing, arrow, dom);
