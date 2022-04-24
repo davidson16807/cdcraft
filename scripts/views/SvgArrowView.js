@@ -4,9 +4,10 @@ function SvgArrowView(dependencies, highlight_width) {
     const PanZoomMapping = dependencies.PanZoomMapping;
     const svg = dependencies.svg;
     const html = dependencies.html;
+    const screen_state_storage = dependencies.screen_state_storage;
     const svg_arrow_attributes = dependencies.svg_arrow_attributes;
     const view_event_deferal = dependencies.view_event_deferal;
-    const screen_state_storage = dependencies.screen_state_storage;
+    const render = dependencies.render;
 
     const drawing = {};
     drawing.draw = function(dom, screen_state_store, arrow, drag_type, onclick, onenter) {
@@ -17,6 +18,7 @@ function SvgArrowView(dependencies, highlight_width) {
         const text_width = 80;
         const arrow_screen_midpoint = svg_arrow_attributes.sample(screen_arc, 0.5);
         const div = html.div({},[], arrow.label);
+        render(div, {throwOnError: false});
         const g = svg.g(
             {
                 class: 'arrow-group ' + (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
