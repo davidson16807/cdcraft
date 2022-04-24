@@ -76,7 +76,9 @@ body{
 
 .arrow-label {
     color: black;
-    text-align: center;
+    font-size: 161%;
+    overflow: visible;
+    visibility: visible;
 }
 
 @media (prefers-color-scheme: dark){
@@ -111,9 +113,9 @@ body{
 
 .object {
     color: black;
-    text-align: center;
     font-size: 161%;
     overflow: visible;
+    visibility: visible;
 }
 
 .katex-display {

@@ -1,0 +1,3 @@
+A "view" is a pure function, model×parameters→dom, that reflects how components of application state (arrows, objects, etc.) are represented by dom elements. The name "view" is in reference to the "Model-View-Updater" pattern (A.K.A. "MVU" or "Elm" architecture)
+
+Views may require callbacks as part of their parameters, which will be called to handle events from the user. These callbacks are known as "updaters". 

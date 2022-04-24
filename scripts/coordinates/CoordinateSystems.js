@@ -83,9 +83,14 @@ function PanZoomRotateFlipMapping(map) {
     };
 
     namespace.offset = {
-        apply:  (position) => Ainv.mul(position),
-        revert: (offset) => A.mul(position),
+        apply:  (offset) => Ainv.mul(offset),
+        revert: (offset)   => A.mul(offset),
     };
+
+    namespace.distance = {
+        apply:  (distance) => distance / glm.length(ihat),
+        revert: (distance) => distance * glm.length(ihat),
+    }
 
     return namespace;
 }
@@ -121,6 +126,11 @@ function PanZoomRotateMapping(map) {
         apply:  (position) => Ainv.mul(position),
         revert: (offset) => A.mul(position),
     };
+
+    namespace.distance = {
+        apply:  (distance) => distance / glm.length(ihat),
+        revert: (distance) => distance * glm.length(ihat),
+    }
 
     return namespace;
 }

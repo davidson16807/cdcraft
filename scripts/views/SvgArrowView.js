@@ -36,8 +36,10 @@ function SvgArrowView(dependencies, highlight_width) {
                 svg.path({class:"arrow", d: svg_arrow_attributes.head(trimmed_arc, screen_state_store)}),
                 svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc)}),
                 svg.foreignObject(
-                    {class:"object"}, [div], 
-                    arc_midpoint.add(arc_midpoint_direction_from_origin.mul(50)),
+                    {class:"arrow-label"}, [div], 
+                    arc_midpoint
+                        .add(arc_midpoint_direction_from_origin.mul(15))
+                        .sub(glm.vec2(5,20)),
                     glm.vec2(1, 1)),
             ]);
         const deferal = view_event_deferal(drawing, arrow, dom);

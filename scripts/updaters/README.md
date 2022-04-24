@@ -1,5 +1,3 @@
-An "updater" is function returning a namespace of functions that reflect how events map to state operations.
-All functions within the namespace represent the transformation of state in reponse to controller events. 
-
-The name "updater" is in reference to the "Updater" 
-within the "Model-View-Updater" pattern (A.K.A. "MVU" or "Elm" architecture)
+An "updater" is a pure function, model×event→model, that reflects how application state modifies in response 
+to user events (e.g. mouse clicks, button presses, key presses, modifying text, etc.)
+The name "updater" is in reference to the "Model-View-Updater" pattern (A.K.A. "MVU" or "Elm" architecture)
