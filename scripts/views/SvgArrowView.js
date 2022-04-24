@@ -26,7 +26,7 @@ function SvgArrowView(dependencies, highlight_width) {
                 svg.circle({class:"arrow-tip-highlight", r:screen_highlight_width/2.0}, svg_arrow_attributes.sample(screen_arc,1)),
                 // svg.circle({class:"arrow-handle", r:13} svg_arrow_attributes.sample(screen_arc,0)),
                 // svg.circle({class:"arrow-handle", r:13} svg_arrow_attributes.sample(screen_arc,1)),
-                svg.path({class:"arrow", d: svg_arrow_attributes.head(screen_frame_store, screen_arc)}),
+                svg.path({class:"arrow", d: svg_arrow_attributes.head(screen_frame_store, arrow.arc)}),
                 svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc)}),
                 svg.foreignObject(
                     {class:"object"}, [div], 
