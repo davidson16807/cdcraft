@@ -5,13 +5,13 @@ function SvgObjectView(dependencies, highlight_width) {
     const PanZoomMapping             = dependencies.PanZoomMapping;
     const svg                        = dependencies.svg;
     const html                       = dependencies.html;
-    const screen_frame_storage       = dependencies.screen_frame_storage;
+    const screen_state_storage       = dependencies.screen_state_storage;
     const view_event_deferal         = dependencies.view_event_deferal;
     const render                     = dependencies.render;
 
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onenter) {
-        const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+        const screen_frame = screen_state_storage.unpack(screen_frame_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
         const object_screen_position = screen_mapping.position.apply(object.position);

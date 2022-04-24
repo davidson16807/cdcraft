@@ -180,7 +180,7 @@ const sampler_arc_properties = SamplerArcProperties();
 const sampler_arc_resizing = SamplerArcResizing(sampler_arc_properties);
 const sampler_arc_rendering = SamplerArcRendering(sampler_arc_properties);
 
-const screen_frame_storage = ScreenStateStorage();
+const screen_state_storage = ScreenStateStorage();
 
 const diagram_object_set_ops = DiagramObjectSetOperations(diagram_ids);
 
@@ -191,7 +191,7 @@ const view_event_deferal = ViewEventDeferal;
 const svg_grid_view = 
     SvgGridView({
         svg                  : svg,
-        screen_frame_storage : screen_frame_storage,
+        screen_state_storage : screen_state_storage,
         diagram_ids          : diagram_ids,
         PanZoomMapping       : PanZoomMapping,
     });
@@ -202,7 +202,7 @@ const svg_arrow_attributes =
         AffineMapping              : AffineMapping,
         AffineRemapping            : AffineRemapping,
         SamplerArcMapping          : SamplerArcMapping,
-        screen_frame_storage       : screen_frame_storage,
+        screen_state_storage       : screen_state_storage,
         user_arcs_and_stored_arcs  : user_arcs_and_stored_arcs,
         user_arcs_and_sampler_arcs : user_arcs_and_sampler_arcs,
         sampler_arc_resizing       : sampler_arc_resizing,
@@ -220,12 +220,14 @@ const svg_arrow_view = SvgArrowView({
         html                       : html,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
+        screen_state_storage       : screen_state_storage,
     }, 0.2);
 
 const svg_arrow_selection_view = 
     SvgArrowSelectionView({
         PanZoomMapping             : PanZoomMapping,
         svg                        : svg,
+        screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
     }, 0.2);
@@ -235,7 +237,7 @@ const svg_object_view =
         PanZoomMapping             : PanZoomMapping,
         svg                        : svg,
         html                       : html,
-        screen_frame_storage       : screen_frame_storage,
+        screen_state_storage       : screen_state_storage,
         view_event_deferal         : view_event_deferal,
         render                     : renderMathInElement,
     }, 0.5);
@@ -244,7 +246,7 @@ const svg_object_selection_view =
     SvgObjectSelectionView({
         PanZoomMapping             : PanZoomMapping,
         svg                        : svg,
-        screen_frame_storage       : screen_frame_storage,
+        screen_state_storage       : screen_state_storage,
         view_event_deferal         : view_event_deferal,
     }, 0.5);
 
@@ -288,7 +290,7 @@ const arrow_drags =
 const view_drags = 
     ViewDrags(
         PanZoomMapping,
-        screen_frame_storage,
+        screen_state_storage,
         -0.001, // log2_cell_width_change_per_scroll
         Math.log2(50), // log2_cell_width_min
         Math.log2(500) // log2_cell_width_max
@@ -300,7 +302,7 @@ const app_history_traversal =
 const drag_state_ops = 
     AppDragOperations(
         PanZoomMapping,
-        screen_frame_storage,
+        screen_state_storage,
         app_history_traversal,
     );
 
@@ -310,7 +312,7 @@ const app_updater =
         selection_drags              : selection_drags,
         arrow_drags                  : arrow_drags,
         view_drags                   : view_drags,
-        screen_frame_storage         : screen_frame_storage,
+        screen_state_storage         : screen_state_storage,
         object_position_resource     : object_position_resource,
         drag_state_ops               : drag_state_ops,
         app_history_traversal        : app_history_traversal,
@@ -318,7 +320,7 @@ const app_updater =
 
 const app_view = 
     SvgAppView({
-        screen_frame_storage         : screen_frame_storage,
+        screen_state_storage         : screen_state_storage,
         arrow_positions_resource     : arrow_positions_resource, 
         object_position_resource     : object_position_resource,
         resource_operations          : resource_operations,

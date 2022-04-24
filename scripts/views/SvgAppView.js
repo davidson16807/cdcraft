@@ -2,7 +2,7 @@
 
 function SvgAppView(dependencies, onevents) {
 
-    const screen_frame_storage       = dependencies.screen_frame_storage;
+    const screen_state_storage       = dependencies.screen_state_storage;
     const arrow_positions_resource   = dependencies.arrow_positions_resource;
     const object_position_resource   = dependencies.object_position_resource;
     const resource_operations        = dependencies.resource_operations;
@@ -18,7 +18,7 @@ function SvgAppView(dependencies, onevents) {
     onevents = onevents || {};
 
     function frame_transform(screen_frame_store) {
-        const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+        const screen_frame = screen_state_storage.unpack(screen_frame_store);
         return `translate(${-screen_frame.origin.x} ${-screen_frame.origin.y})`;
     };
 

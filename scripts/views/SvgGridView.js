@@ -3,7 +3,7 @@
 function SvgGridView(dependencies) {
 
     const svg                  = dependencies.svg;
-    const screen_frame_storage = dependencies.screen_frame_storage;
+    const screen_state_storage = dependencies.screen_state_storage;
     const diagram_ids          = dependencies.diagram_ids;
     const PanZoomMapping       = dependencies.PanZoomMapping;
 
@@ -15,7 +15,7 @@ function SvgGridView(dependencies) {
         draw: function(screen_frame_store, is_grid_hidden) {
             const count = cell_count(screen_frame_store);
             function cell_border_position(x,y) {
-                const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+                const screen_frame = screen_state_storage.unpack(screen_frame_store);
                 const model_border_position = diagram_ids.border_id_to_cell_position( diagram_ids.cell_position_to_border_id(screen_frame.origin).add(glm.ivec2(x-1,y-1)) );
                 return PanZoomMapping(screen_frame).position.apply(model_border_position);
             };

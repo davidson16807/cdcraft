@@ -13,7 +13,7 @@ function AppUpdater(
     const selection_drags           = dependencies.selection_drags;
     const arrow_drags               = dependencies.arrow_drags;
     const view_drags                = dependencies.view_drags;
-    const screen_frame_storage      = dependencies.screen_frame_storage;
+    const screen_state_storage      = dependencies.screen_state_storage;
     const object_position_resources = dependencies.object_position_resources;
     const drag_ops                  = dependencies.drag_state_ops;
     const history                   = dependencies.app_history_traversal;
@@ -33,7 +33,7 @@ function AppUpdater(
         arrow: function(app_io, event){
             const screen_position = glm.vec2(event.clientX, event.clientY);
             const screen_frame_store = app_io.diagram.screen_frame_store;
-            const screen_frame = screen_frame_storage.unpack(screen_frame_store);
+            const screen_frame = screen_state_storage.unpack(screen_frame_store);
             const model_position = PanZoomMapping(screen_frame).position.revert(screen_position);
             drag_ops.transition( arrow_drags.create(app_io.diagram.arrows, model_position), app_io);
         },
