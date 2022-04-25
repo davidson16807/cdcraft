@@ -74,11 +74,15 @@ body{
     pointer-events: all;
 }
 
-.arrow-label {
+.arrow-label-wrapper {
     color: black;
-    font-size: 161%;
     overflow: visible;
     visibility: visible;
+}
+
+.arrow-label{
+    font-size: 161%;
+    width: fit-content; /*needed for js to find width using offsetWidth*/
 }
 
 @media (prefers-color-scheme: dark){
