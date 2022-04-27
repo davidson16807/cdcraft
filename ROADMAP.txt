@@ -1,26 +1,34 @@
 TODO:
-arrow editor
-object editor
-export/import
+
+HIGH PRIORITY:
 touchpad support
 functor arrows
-copy/paste
+latex export/import 
 
+MEDIUM PRIORITY:
+svg export
+arrow/object label toggle for latex/plaintext
+object labels should float over bullet point when they are too big to fit where the bullet point is
 circle cursor on rmb
-edit object text
-edit arrow text
-arrow popups
-arrow colors
-latex export
+object label positioning
+arrow label positioning
+arrow curvature slider
+arrow color select
+arrow decorations
+
+LOW PRIORITY:
+arrow trim slider
+arrow offset slider
+arrow flip/reverse operations
 json export
 url links
-arrow decorations
-functor arrows
 refresh grids on window resize
 ctrl+A to select all
+copy/paste
 
 decouple state for model/view to support soft undo/redo
 refactor so app operations return new app objects
 
 fix bug where dragging one named object on top of another causes overlap
 	we likely need to store objects in a structure indexed by cell hash, so this problem could not fundamentally occur
+ 

@@ -25,16 +25,36 @@ function AppUpdater(
     const mouse_actions = {
 
         pan: function(app_io, event){
-            const screen_offset = glm.vec2(event.movementX, event.movementY);
-            const screen_frame_store = app_io.diagram.screen_frame_store;
-            drag_ops.transition( view_drags.pan(screen_frame_store), app_io);
+            drag_ops.transition( view_drags.pan(
+                    app_io.diagram.screen_frame_store, 
+                    glm.vec2(event.clientX, event.clientY)), 
+                app_io);
         },
 
         arrow: function(app_io, event){
             const screen_position = glm.vec2(event.clientX, event.clientY);
-            const screen_frame_store = app_io.diagram.screen_frame_store;
-            const screen_frame = screen_state_storage.unpack(screen_frame_store);
-            const model_position = PanZoomMapping(screen_frame).position.revert(screen_position);
+            const screen_state = screen_state_storage.unpack(app_io.diagram.screen_frame_store);
+            const model_position = PanZoomMapping(screen_state).position.revert(screen_position);
+            drag_ops.transition( arrow_drags.create(app_io.diagram.arrows, model_position), app_io);
+        },
+
+    };
+
+    /* 
+    functions mapping app×event→app 
+    where the event must represent the pressing of a mouse key
+    */
+    const touch_actions = {
+
+        pan: function(app_io, event){
+            const screen_offset = glm.vec2(event.touches[0].clientX, event.touches[0].clientY);
+            drag_ops.transition( view_drags.pan(app_io.diagram.screen_frame_store), app_io);
+        },
+
+        arrow: function(app_io, event){
+            const screen_position = glm.vec2(event.clientX, event.clientY);
+            const screen_state = screen_state_storage.unpack(app_io.diagram.screen_frame_store);
+            const model_position = PanZoomMapping(screen_state).position.revert(screen_position);
             drag_ops.transition( arrow_drags.create(app_io.diagram.arrows, model_position), app_io);
         },
 
@@ -145,10 +165,16 @@ function AppUpdater(
         'toggle-grid': 'toggle_grid',
     }
 
-    const mouse_click_bindings = [
+    const mousedown_bindings = [
         'arrow',
         'pan',
         'deselect'
+    ];
+
+    const touchstart_bindings = [
+        'arrow',
+        'pan',
+        'select'
     ];
 
     return {
@@ -162,14 +188,14 @@ function AppUpdater(
         },
 
         mousedown: function(event, drawing, app_io, dom_io){
-            const action_id = mouse_click_bindings[event.button];
+            const action_id = mousedown_bindings[event.button];
             (mouse_actions[action_id] || generic_actions[action_id])(app_io, event);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         mousemove: function(event, drawing, app_io, dom_io){
             // mouse motion is a degenerate case of touchscreen motion where the number of touchpoints is one
-            drag_ops.move( glm.vec2(event.clientX, event.clientY), glm.vec2(event.movementX, event.movementY), app_io);
+            drag_ops.move( glm.vec2(event.clientX, event.clientY), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
@@ -178,13 +204,25 @@ function AppUpdater(
             drawing.redraw(undefined, app_io, dom_io);
         },
 
-        touchsource: function(event, drawing, app_io, dom_io){
-        },
-
-        touchend: function(event, drawing, app_io, dom_io){
+        touchstart: function(event, drawing, app_io, dom_io){
+            const action_id = touchstart_bindings[event.touches.length];
+            (touch_actions[action_id] || generic_actions[action_id])(app_io, event);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         touchmove: function(event, drawing, app_io, dom_io){
+            drag_ops.move(event.touches, app_io);
+            drawing.redraw(undefined, app_io, dom_io);
+        },
+
+        touchend: function(event, drawing, app_io, dom_io){
+            drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
+            drawing.redraw(undefined, app_io, dom_io);
+        },
+
+        touchcancel: function(event, drawing, app_io, dom_io){
+            drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
+            drawing.redraw(undefined, app_io, dom_io);
         },
 
         keydown: function(event, drawing, app_io, dom_io){
@@ -254,7 +292,9 @@ function AppUpdater(
                             inferred_object_selections: [object_],
                         });
                 history.do(app_io, selected_diagram, false);
-                drag_ops.transition( selection_drags.move(selected_diagram), app_io);
+                drag_ops.transition( 
+                    selection_drags.move(selected_diagram, glm.vec2(event.clientX, event.clientY)), 
+                    app_io);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },
@@ -276,7 +316,9 @@ function AppUpdater(
         selection_click: function(event, drawing, app_io, dom_io){
             if (event.button == 0) {
                 event.stopPropagation();
-                drag_ops.transition( selection_drags.move(app_io.diagram), app_io);
+                drag_ops.transition( 
+                    selection_drags.move(app_io.diagram, glm.vec2(event.clientX, event.clientY)), 
+                    app_io);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },

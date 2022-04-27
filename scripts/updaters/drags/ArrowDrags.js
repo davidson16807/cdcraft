@@ -1,7 +1,8 @@
 'use strict';
 
 function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_clockwise, min_length_clockwise_change_per_scroll){
-    function move(arrow_in, model_position, model_offset) {
+    function move(arrow_in, screen_position, screen_state) {
+        const model_position = PanZoomMapping(screen_state).position.revert(screen_position);
         return arrow_in.with({
             arc: user_arcs_and_stored_arcs.user_arc_to_stored_arc(arrow_in.arc.with({target: model_position})),
         });
@@ -74,8 +75,6 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
             const arrows_after = arrows.slice(arrow_id+1);
             return {
                 id: DragState.arrow,
-                is_model_drag: true,
-                is_view_drag: false,
                 initialize: () => replaced_arrow.with({is_edited: true}),
                 move: move,
                 wheel: wheel,
