@@ -13,8 +13,8 @@ function ViewDrags(PanZoomMapping, screen_frame_store,
                 id: DragState.pan,
                 initialize: () => 
                     original_cell_to_pixel_store.with({}),
-                move: (cell_to_pixel_store, screen_position, cell_to_pixel) => {
-                    const screen_offset = screen_position.sub(original_screen_position);
+                move: (cell_to_pixel_store, screen_positions, cell_to_pixel) => {
+                    const screen_offset = screen_positions[0].sub(original_screen_position);
                     const model_offset = PanZoomMapping(cell_to_pixel).offset.revert(screen_offset);
                     return original_cell_to_pixel_store.with({
                         topleft_cell_position: 
@@ -35,7 +35,7 @@ function ViewDrags(PanZoomMapping, screen_frame_store,
             return {
                 id: DragState.released,
                 initialize: () => original_cell_to_pixel_store.with({}),
-                move: (cell_to_pixel_store, screen_position, screen_state) => cell_to_pixel_store,
+                move: (cell_to_pixel_store, screen_positions, screen_state) => cell_to_pixel_store,
                 wheel: function(cell_to_pixel_store, model_focus, scroll_count) {
                     const log2_cell_width_change = log2_cell_width_change_per_scroll * scroll_count;
                     const screen_frame = storage.unpack(cell_to_pixel_store);

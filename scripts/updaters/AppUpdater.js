@@ -47,12 +47,14 @@ function AppUpdater(
     const touch_actions = {
 
         pan: function(app_io, event){
-            const screen_offset = glm.vec2(event.touches[0].clientX, event.touches[0].clientY);
-            drag_ops.transition( view_drags.pan(app_io.diagram.screen_frame_store), app_io);
+            drag_ops.transition( view_drags.pan(
+                    app_io.diagram.screen_frame_store, 
+                    glm.vec2(event.touches[0].clientX, event.touches[0].clientY)), 
+                app_io);
         },
 
         arrow: function(app_io, event){
-            const screen_position = glm.vec2(event.clientX, event.clientY);
+            const screen_position = glm.vec2(event.touches[0].clientX, event.touches[0].clientY);
             const screen_state = screen_state_storage.unpack(app_io.diagram.screen_frame_store);
             const model_position = PanZoomMapping(screen_state).position.revert(screen_position);
             drag_ops.transition( arrow_drags.create(app_io.diagram.arrows, model_position), app_io);
@@ -195,7 +197,7 @@ function AppUpdater(
 
         mousemove: function(event, drawing, app_io, dom_io){
             // mouse motion is a degenerate case of touchscreen motion where the number of touchpoints is one
-            drag_ops.move( glm.vec2(event.clientX, event.clientY), app_io);
+            drag_ops.move( [glm.vec2(event.clientX, event.clientY)], app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
@@ -205,13 +207,17 @@ function AppUpdater(
         },
 
         touchstart: function(event, drawing, app_io, dom_io){
-            const action_id = touchstart_bindings[event.touches.length];
+            const action_id = touchstart_bindings[event.touches.length-1];
             (touch_actions[action_id] || generic_actions[action_id])(app_io, event);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         touchmove: function(event, drawing, app_io, dom_io){
-            drag_ops.move(event.touches, app_io);
+            const positions = [];
+            for (var i = 0; i < event.touches.length; i++) {
+                positions.push(glm.vec2(event.touches[i].clientX, event.touches[i].clientY));
+            }
+            drag_ops.move( positions, app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 

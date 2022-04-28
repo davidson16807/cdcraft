@@ -177,6 +177,7 @@ function SvgAppView(dependencies, onevents) {
         graphics_io.addEventListener('mousemove',   deferal.callbackPrevent     (onevents.mousemove   ));
         graphics_io.addEventListener('mouseup',     deferal.callback            (onevents.mouseup     ));
         graphics_io.addEventListener('wheel',       deferal.callback            (onevents.wheel       ));
+        graphics_io.addEventListener('touchstart',  deferal.callback            (onevents.touchstart  ));
         graphics_io.addEventListener('touchsource', deferal.callback            (onevents.touchsource ));
         graphics_io.addEventListener('touchmove',   deferal.callbackPreventStop (onevents.touchmove   ));
         graphics_io.addEventListener('touchend',    deferal.callback            (onevents.touchend    ));

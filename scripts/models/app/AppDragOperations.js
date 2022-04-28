@@ -25,13 +25,11 @@ function AppDragOperations(
                 app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);
         },
 
-        move: function (screen_position, app_io) {
+        move: function (screen_positions, app_io) {
             const model_to_screen_store = app_io.diagram.screen_frame_store;
             const model_to_screen = storage.unpack(model_to_screen_store);
-            const screen_mapping = PanZoomMapping(model_to_screen);
-            const model_position = screen_mapping.position.revert(screen_position);
 
-            app_io.drag_state = app_io.drag_type.move(app_io.drag_state, screen_position, model_to_screen);
+            app_io.drag_state = app_io.drag_type.move(app_io.drag_state, screen_positions, model_to_screen);
             history.do(app_io, 
                 app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);
         },

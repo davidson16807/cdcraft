@@ -12,8 +12,8 @@ function SelectionDrags(
             return {
                 id: DragState.object,
                 initialize: () => glm.vec2(0,0),
-                move: (model_offset, screen_position, cell_to_pixel) => 
-                    PanZoomMapping(cell_to_pixel).offset.revert(screen_position.sub(original_screen_position)),
+                move: (model_offset, screen_positions, cell_to_pixel) => 
+                    PanZoomMapping(cell_to_pixel).offset.revert(screen_positions[0].sub(original_screen_position)),
                 wheel: (model_offset, screen_focus, scroll_count) => model_offset,
                 arrowenter: (model_offset, arrow) => model_offset,
                 objectenter: (model_offset, object) => model_offset,
