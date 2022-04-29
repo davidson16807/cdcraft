@@ -61,6 +61,7 @@ function SvgArrowView(dependencies, highlight_width) {
         const deferal = view_event_deferal(drawing, arrow, dom);
         if (onclick != null) {
             g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
+            g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
         }
         if (onclick != null) {
             g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
