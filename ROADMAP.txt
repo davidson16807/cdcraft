@@ -1,7 +1,6 @@
 TODO:
 
 HIGH PRIORITY:
-touchpad support
 functor arrows
 latex export/import 
 
@@ -15,6 +14,11 @@ arrow label positioning
 arrow curvature slider
 arrow color select
 arrow decorations
+add zoom support to touchpad
+add selection support to touchpad
+fix bug where panning with touchpad resets the display
+fix bug where dragging one named object on top of another causes overlap
+	we likely need to store objects in a structure indexed by cell hash, so this problem could not fundamentally occur
 
 LOW PRIORITY:
 arrow trim slider
@@ -26,9 +30,6 @@ refresh grids on window resize
 ctrl+A to select all
 copy/paste
 
+REFACTOR:
 decouple state for model/view to support soft undo/redo
 refactor so app operations return new app objects
-
-fix bug where dragging one named object on top of another causes overlap
-	we likely need to store objects in a structure indexed by cell hash, so this problem could not fundamentally occur
- 

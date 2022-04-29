@@ -12,13 +12,6 @@ function ViewDrags(
     const log2 = Math.log2;
     const clamp = (x, lo, hi) => min(max(x, lo), hi);
 
-    function midpoint(positions) {
-        let midpoint = glm.vec2();
-        for (var i = 0; i < positions.length; i++) {
-            midpoint = midpoint.add(positions[i]);
-        }
-        return midpoint.div(positions.length);
-    }
     function min_distance(positions) {
         let min_distance = Infinity;
         for (var i = 0; i < positions.length; i++) {
@@ -33,7 +26,7 @@ function ViewDrags(
 
         pan: function(original_cell_to_pixel_store, original_screen_positions){
             const original_cell_to_pixel = storage.unpack(original_cell_to_pixel_store);
-            const original_screen_midpoint = midpoint(original_screen_positions);
+            const original_screen_midpoint = original_screen_positions[0];
             const original_screen_distance = min_distance(original_screen_positions);
 
             return {
@@ -42,7 +35,7 @@ function ViewDrags(
                     original_cell_to_pixel_store.with({}),
                 move: (cell_to_pixel_store, screen_positions, cell_to_pixel) => {
                     const cell_to_pixel_mapping = PanZoomMapping(cell_to_pixel);
-                    const screen_midpoint = midpoint(screen_positions);
+                    const screen_midpoint = screen_positions[0];
                     const screen_distance = min_distance(screen_positions);
                     const screen_midpoint_offset = screen_midpoint.sub(original_screen_midpoint);
                     const model_midpoint_offset = cell_to_pixel_mapping.offset.revert(screen_midpoint_offset);
