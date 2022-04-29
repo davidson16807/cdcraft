@@ -26,6 +26,7 @@ function SvgObjectSelectionView(dependencies, highlight_width) {
         const deferal = view_event_deferal(drawing, object, dom);
         if (onclick != null) {
             g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
+            g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
         }
         return g;
     }

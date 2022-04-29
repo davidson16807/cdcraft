@@ -33,6 +33,7 @@ function SvgObjectView(dependencies, highlight_width) {
         const deferal = view_event_deferal(drawing, object, dom);
         if (onclick != null) {
             g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
+            g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
         }
         if (onenter != null) {
             g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
