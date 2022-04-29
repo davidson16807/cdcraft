@@ -1,0 +1,355 @@
+<!doctype html>
+<html>
+<head>
+    <title>cdcraft</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="./styles/katex.min.css">
+    <link rel="stylesheet" href="./styles/bootstrap.css">
+    <link rel="stylesheet" href="./styles/graphics.css">
+    <link rel="stylesheet" href="./styles/toolbars.css">
+    <script src="./libraries/glm-js.min.js"></script>
+    <script src="./libraries/katex.min.js"></script>
+    <script src="./libraries/auto-render.min.js"></script>
+    <script src="./scripts/DiagramIds.js"></script>
+    <script src="./scripts/CellHashing.js"></script>
+    <script src="./scripts/coordinates/ScreenStateStorage.js"></script>
+    <script src="./scripts/coordinates/ScreenStateStore.js"></script>
+    <script src="./scripts/coordinates/CoordinateSystems.js"></script>
+    <script src="./scripts/models/arcs/StoredArc.js"></script>
+    <script src="./scripts/models/arcs/UserArc.js"></script>
+    <script src="./scripts/models/arcs/SvgArc.js"></script>
+    <script src="./scripts/models/arcs/SamplerArc.js"></script>
+    <script src="./scripts/models/arcs/ArcGeometry.js"></script>
+    <script src="./scripts/models/arcs/SamplerArcRendering.js"></script>
+    <script src="./scripts/models/arcs/SamplerArcResizing.js"></script>
+    <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
+    <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
+    <script src="./scripts/models/arcs/UserArcsAndSvgArcs.js"></script>
+    <script src="./scripts/models/arcs/UserArcMapping.js"></script>
+    <script src="./scripts/models/arcs/UserArcsAndSamplerArcs.js"></script>
+    <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
+    <script src="./scripts/models/arrows/Arrow.js"></script>
+    <script src="./scripts/models/arrows/DiagramArrow.js"></script>
+    <script src="./scripts/models/arrows/DiagramArrowListsAndLookups.js"></script>
+    <script src="./scripts/models/objects/DiagramObject.js"></script>
+    <script src="./scripts/models/objects/DiagramObjectSetOperations.js"></script>
+    <script src="./scripts/models/diagrams/Diagram.js"></script>
+    <script src="./scripts/models/diagrams/DiagramMetrics.js"></script>
+    <script src="./scripts/models/app/AppState.js"></script>
+    <script src="./scripts/models/app/AppHistoryTraversal.js"></script>
+    <script src="./scripts/models/app/AppDragOperations.js"></script>
+    <script src="./scripts/views/ViewEventDeferal.js"></script>
+    <script src="./scripts/views/SvgObjectView.js"></script>
+    <script src="./scripts/views/SvgObjectSelectionView.js"></script>
+    <script src="./scripts/views/SvgArrowAttributes.js"></script>
+    <script src="./scripts/views/SvgArrowView.js"></script>
+    <script src="./scripts/views/SvgArrowSelectionView.js"></script>
+    <script src="./scripts/views/HtmlObjectToolbarView.js"></script>
+    <script src="./scripts/views/HtmlArrowToolbarView.js"></script>
+    <script src="./scripts/views/SvgGridView.js"></script>
+    <script src="./scripts/views/SvgAppView.js"></script>
+    <script src="./scripts/dom/Html.js"></script>
+    <script src="./scripts/dom/Svg.js"></script>
+    <script src="./scripts/updaters/drags/ViewDrags.js"></script>
+    <script src="./scripts/updaters/drags/SelectionDrags.js"></script>
+    <script src="./scripts/updaters/drags/ArrowDrags.js"></script>
+    <script src="./scripts/updaters/drags/DragState.js"></script>
+    <script src="./scripts/updaters/AppUpdater.js"></script>
+    <script src="./scripts/resources/ArrowPositionsResource.js"></script>
+    <script src="./scripts/resources/ObjectPositionResource.js"></script>
+    <script src="./scripts/resources/ResourceOperations.js"></script>
+    <script src="./scripts/resources/PositionMapOperations.js"></script>
+</head>
+<body>
+
+<svg id="graphics">
+    <g id="transformation">
+        <g id="cell-borders"></g>
+        <g id="object-selections"></g>
+        <g id="arrow-selections"></g>
+        <g id="objects"></g>
+        <g id="arrows"></g>
+        <g id="object-selection-hitboxes" class="hitbox"></g>
+        <g id="arrow-selection-hitboxes" class="hitbox"></g>
+    </g>
+</svg>
+
+<div id="toolbar" class="top left short-axis-group  control">
+
+    <div class="banner"> 
+        <div class="logo">∙⇆∙<div class="title">cdcraft</div></div>
+        <div class="subtitle">A workspace of commutative diagrams</div>
+    </div>
+
+    <div class="short-axis-group group-joined">
+            
+        
+    <!-- 
+        <button id="save" type="button" class="btn btn-dark">
+            <div>Save</div>
+            <img src="icons/save.svg"/>
+            <div class="instructions">ctrl+S</div>
+        </button>
+
+        <button id="load" type="button" class="btn btn-dark">
+            <div>Load</div>
+            <img src="icons/load.svg"/>
+            <div class="instructions">ctrl+O</div>
+        </button>
+     -->
+        <button id="undo" type="button" class="btn btn-dark" disabled>
+            <div>Undo</div>
+            <img src="icons/undo.svg"/>
+            <div class="instructions">ctrl+Z</div>
+        </button>
+
+        <button id="redo" type="button" class="btn btn-dark" disabled>
+            <div>Redo</div>
+            <img src="icons/redo.svg"/>
+            <div class="instructions">ctrl+Y</div>
+        </button>
+    <!-- 
+        <button id="copy" type="button" class="btn btn-dark">
+            <div>Copy</div>
+            <img src="icons/copy.svg"/>
+            <div class="instructions">ctrl+C</div>
+        </button>
+
+        <button id="cut" type="button" class="btn btn-dark">
+            <div>Cut</div>
+            <img src="icons/cut.svg"/>
+            <div class="instructions">ctrl+C</div>
+        </button>
+
+        <button id="paste" type="button" class="btn btn-dark">
+            <div>Paste</div>
+            <img src="icons/paste.svg"/>
+            <div class="instructions">ctrl+V</div>
+        </button>
+        <button id="link" type="button" class="btn btn-dark">
+            <div>Url</div>
+            <img src="icons/link.svg"/>
+        </button>
+
+        <button id="svg" type="button" class="btn btn-dark">
+            <div>SVG</div>
+            <img src="icons/code-angles.svg"/>
+        </button>
+
+        <button id="latex" type="button" class="btn btn-dark">
+            <div>TikZ</div>
+            <img src="icons/code-LaTeX.svg"/>
+        </button>
+     -->
+
+        <button id="toggle-grid" type="button" class="btn btn-dark active">
+            <div>Grid</div>
+            <img src="icons/grid.svg"/>
+        </button>
+
+    </div>
+</div>
+
+<div class="bottom right mobile-logo">∙⇆∙</div>
+
+
+<div id="object-toolbar" class="bottom right short-axis-group group-dark group-round control hidden">
+</div>
+
+
+<div id="arrow-toolbar" class="bottom right short-axis-group group-dark group-round control hidden">
+</div>
+
+
+
+<script type="text/javascript">
+'use strict';
+
+const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
+
+const user_arcs_and_stored_arcs =
+    UserArcsAndStoredArcs(
+        diagram_ids, 
+        0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
+        0.08, // target offset distance
+    );
+const user_arcs_and_sampler_arcs = UserArcsAndSamplerArcs(ArcGeometry());
+
+const sampler_arc_properties = SamplerArcProperties();
+const sampler_arc_resizing = SamplerArcResizing(sampler_arc_properties);
+const sampler_arc_rendering = SamplerArcRendering(sampler_arc_properties);
+
+const screen_state_storage = ScreenStateStorage();
+
+const diagram_object_set_ops = DiagramObjectSetOperations(diagram_ids);
+
+const svg  = Svg();
+const html = Html();
+const view_event_deferal = ViewEventDeferal;
+
+const svg_grid_view = 
+    SvgGridView({
+        svg                  : svg,
+        screen_state_storage : screen_state_storage,
+        diagram_ids          : diagram_ids,
+        PanZoomMapping       : PanZoomMapping,
+    });
+
+const svg_arrow_attributes = 
+    SvgArrowAttributes({
+        PanZoomMapping             : PanZoomMapping,
+        AffineMapping              : AffineMapping,
+        AffineRemapping            : AffineRemapping,
+        SamplerArcMapping          : SamplerArcMapping,
+        screen_state_storage       : screen_state_storage,
+        user_arcs_and_stored_arcs  : user_arcs_and_stored_arcs,
+        user_arcs_and_sampler_arcs : user_arcs_and_sampler_arcs,
+        sampler_arc_resizing       : sampler_arc_resizing,
+        sampler_arc_properties     : sampler_arc_properties,
+        sampler_arc_rendering      : sampler_arc_rendering,
+    }, 
+    { 
+        source_trim_length: 0.12,
+        target_trim_length: 0.10,
+    });
+
+const svg_arrow_view = SvgArrowView({
+        PanZoomMapping             : PanZoomMapping,
+        svg                        : svg,
+        html                       : html,
+        svg_arrow_attributes       : svg_arrow_attributes,
+        view_event_deferal         : view_event_deferal,
+        screen_state_storage       : screen_state_storage,
+        render                     : renderMathInElement,
+    }, 0.2);
+
+const svg_arrow_selection_view = 
+    SvgArrowSelectionView({
+        PanZoomMapping             : PanZoomMapping,
+        svg                        : svg,
+        screen_state_storage       : screen_state_storage,
+        svg_arrow_attributes       : svg_arrow_attributes,
+        view_event_deferal         : view_event_deferal,
+    }, 0.2);
+
+const svg_object_view = 
+    SvgObjectView({
+        PanZoomMapping             : PanZoomMapping,
+        svg                        : svg,
+        html                       : html,
+        screen_state_storage       : screen_state_storage,
+        view_event_deferal         : view_event_deferal,
+        render                     : renderMathInElement,
+    }, 0.5);
+
+const svg_object_selection_view = 
+    SvgObjectSelectionView({
+        PanZoomMapping             : PanZoomMapping,
+        svg                        : svg,
+        screen_state_storage       : screen_state_storage,
+        view_event_deferal         : view_event_deferal,
+    }, 0.5);
+
+const svg_object_toolbar_view = 
+    HtmlObjectToolbarView({
+        html                       : html,
+        view_event_deferal         : view_event_deferal,
+    });
+
+const svg_arrow_toolbar_view = 
+    HtmlArrowToolbarView({
+        html                       : html,
+        view_event_deferal         : view_event_deferal,
+    });
+
+const arrow_positions_resource = 
+    ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, true);
+
+const object_position_resource = 
+    ObjectPositionResource(diagram_ids, true);
+
+const resource_operations = ResourceOperations();
+
+const selection_drags = 
+    SelectionDrags(
+        PanZoomMapping,
+        arrow_positions_resource,
+        object_position_resource,
+        resource_operations,
+        PositionMapOperations(diagram_ids),
+        diagram_object_set_ops,
+    );
+
+const arrow_drags = 
+    ArrowDrags(
+        diagram_ids,
+        user_arcs_and_stored_arcs,
+        1.0, // default_min_length_clockwise
+        0.001 // min_length_clockwise_change_per_scroll
+    );
+
+const view_drags = 
+    ViewDrags(
+        PanZoomMapping,
+        screen_state_storage,
+        -0.001, // log2_cell_width_change_per_scroll
+        Math.log2(50), // log2_cell_width_min
+        Math.log2(500) // log2_cell_width_max
+);
+
+const app_history_traversal = 
+    AppHistoryTraversal(DiagramMetrics(), Infinity);
+
+const drag_state_ops = 
+    AppDragOperations(
+        PanZoomMapping,
+        screen_state_storage,
+        app_history_traversal,
+    );
+
+const app_updater = 
+    AppUpdater({
+        PanZoomMapping               : PanZoomMapping,
+        selection_drags              : selection_drags,
+        arrow_drags                  : arrow_drags,
+        view_drags                   : view_drags,
+        screen_state_storage         : screen_state_storage,
+        object_position_resource     : object_position_resource,
+        drag_state_ops               : drag_state_ops,
+        app_history_traversal        : app_history_traversal,
+    });
+
+const app_view = 
+    SvgAppView({
+        screen_state_storage         : screen_state_storage,
+        arrow_positions_resource     : arrow_positions_resource, 
+        object_position_resource     : object_position_resource,
+        resource_operations          : resource_operations,
+        svg_grid_view                : svg_grid_view,
+        svg_arrow_view               : svg_arrow_view,
+        svg_object_view              : svg_object_view,
+        svg_object_selection_view    : svg_object_selection_view,
+        svg_arrow_selection_view     : svg_arrow_selection_view,
+        html_object_toolbar_view     : svg_object_toolbar_view,
+        html_arrow_toolbar_view      : svg_arrow_toolbar_view,
+        view_event_deferal           : view_event_deferal,
+    }, app_updater);
+
+const initial_screen_frame_store = new ScreenStateStore(glm.vec2(), Math.log2(150));
+const disengaged_drag = view_drags.release(initial_screen_frame_store)
+const disengaged_drag_state = disengaged_drag.initialize();
+const app = new AppState(
+        new Diagram(
+            [], [], 
+            [], [], [], 
+            initial_screen_frame_store), 
+        disengaged_drag,
+        disengaged_drag_state,
+    );
+
+app_view.wire(app, document);
+
+</script>
+</body>
+</html>

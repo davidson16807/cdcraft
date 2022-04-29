@@ -1,0 +1,592 @@
+/*
+"control.css" contains all styling that is specific to 
+control elements in the application, as buttons and toolbars.
+It is written using a responsive, mobile-first design approach. 
+It assumes the user is accessing the site on a modern, evergreen browser. 
+It also assumes it is being used in tandem with main.css. 
+*/
+
+/* ====== START OF SCREEN SPECIFIC CONTENT ======*/
+
+/*
+Overarching design:
+
+* We want to maximize the utility of screenspace for any given orientation. 
+* We want our solution to scale well for any number of UI components. 
+* We want our solution to be consistent to the user.
+* We want to leverage existing UI conventions to prevent user confusion.
+
+We start by assuming the main focus of the application occupies a square region at the center of the screen.
+This square exists regardless of screen orientation, and occupies the largest space available on the screen.
+We will call what occupies this square the "main content".
+
+So in landscape orientations, the remaining screenspace is on the left and right.
+We will use this remaining screenspace for things like toolbars that see occassional use.
+The remaining screenspace is taller than it is wide, so these toolbars should scale out vertically.
+We abstain from scaling the toolbars out horizontally, since a sufficiently large toolbar 
+ could then obstruct the view of the main content.
+Our button groups are vertical, our flexboxes are column based, and we do not wrap content.
+
+In portrait orientations, most of the remaining screenspace is on the top and bottom.
+The remaining screenspace is wider than it is tall, so our toolbar should scale out horizontally.
+We abstain from scaling the toolbar out vertically, since a sufficiently large toolbar 
+ could then obstruct the view of the main content.
+Our button groups are horizontal, our flexboxes are row based, and we do not wrap content.
+
+We also note that text must always consume horizontal space.
+This is the case regardless of screen orientation.
+Because the toolbar scales out horizontally in a portrait orientation,
+ we can see the portrait orientation is more resource constrained.
+As a principle, we design the most resource constrained environment first.
+This is the same reason we pursue a mobile-first design.
+We therefore not only adopt a mobile-first design, but a portrait-first design, as well.
+
+Since we adopt a portrait first design, our button groups are horizontal by default.
+We only style button groups vertically when the user switches to a landscape orientation.
+The same applies to the flexboxes and all our other controls.
+
+We want our UI to be consistent to the user, 
+ and by following a well reasoned design we do already accomplish that to an extent. 
+However, standards should be set for any aspect of design that is not clamped down by the above reasoning.
+By convention, the top left corner is typically used for branding and site level navigation,
+ so we will follow that convention and leave that corner to that purpose.
+That means the remaining UI should occupy one of the remaining corners.
+Since the remaining UI must be able to expand out both horizontally and vertically,
+ we should position it to allow expansion into either of those directions. 
+This requires placing it in the bottom right, as far away from our branding as possible. 
+In landscape orientations, it will expand from bottom right to top right.
+In portrait orientations, it will expand from bottom right to bottom left. 
+*/
+.bottom{
+    /* bottom right corner */
+    position  : fixed;
+    bottom    : 0;
+}
+.top{
+    /* bottom right corner */
+    position  : fixed;
+    top       : 0;
+}
+.right{
+    /* bottom right corner */
+    position  : fixed;
+    right     : 0;
+}
+.left{
+    /* bottom right corner */
+    position  : fixed;
+    left      : 0;
+}
+
+.control {
+    /* max height should not cause world to become obstructed */
+    max-height: 38.2%;
+    overflow-y: hidden;
+
+    /* max width on mobile */
+    max-width : 100%;
+    overflow-x: auto;
+}
+
+@media (orientation: landscape) {
+    .control {
+        /* 
+        Because we do not wrap content, we run the risk of content running off the screen. 
+        To prevent this, we set the height not exceed the height of the window. 
+        If necessary, the user may scroll vertically through the content. 
+        */
+        max-height  : 100%;
+        overflow-y  : auto;
+        /* 
+        To prevent obstructing the view of the main content, 
+        and content width should resize as necessary. 
+        */
+        max-width   : 38.2%;
+        overflow-x  : hidden;
+    }
+}
+
+@media (pointer: fine), (pointer: none) {
+    .control {
+        /* 
+        Because we do not wrap content, we run the risk of content running off the screen. 
+        To prevent this, we set the height not exceed the height of the window. 
+        If necessary, the user may scroll vertically through the content. 
+        */
+        max-height  : 100%;
+        overflow-y  : auto;
+        /* 
+        To prevent obstructing the view of the main content, 
+        and content width should resize as necessary. 
+        */
+        max-width   : 100%;
+        overflow-x  : scroll;
+    }
+}
+
+
+.control label {
+    display: block;
+    -webkit-user-select: none;  
+    -moz-user-select: none;    
+    -ms-user-select: none;      
+    user-select: none;
+}
+
+
+
+.banner {
+    padding-top: 0.2rem;
+    padding-left: 1rem;
+    padding-right: 2rem;
+    /*min-width: 38.2%;*/
+    align-items: left;
+    flex-flow : column nowrap;
+    color: black;
+    display: none;
+}
+@media (prefers-color-scheme: dark) {
+    .banner {
+        color: white;
+    }
+}
+.logo {
+    font-size: 261%;
+    display: none;
+    flex-flow : row nowrap;
+}
+.mobile-logo {
+    color: dimgrey;
+    font-size: 423%;
+}
+.title, .subtitle {
+    padding-left: 0.5rem;
+    display: none;
+}
+@media (min-width: 640px) and ((pointer: fine) or (pointer: none)) {
+  .mobile-logo {
+    display: none;
+  }
+  .banner, .logo {
+    display : flex;
+  }
+}
+@media (min-width: 900px) and ((pointer: fine) or (pointer: none)) {
+  .title, .subtitle {
+    display: inherit;
+  }
+}
+
+
+
+/*
+Mobile phones require big buttons that are easy to press. 
+Therefore, buttons icons are enlarged on small screens. 
+This applies regardless of screen orientation. 
+Text is also shrunk and placed below the icon to give a space saving square shape.
+
+If the users have the ability to select buttons with pixel perfect precision, they do not require big buttons.
+However desktop users still presumably want to maximize screenspace spent towards the main content.
+So we therefore reduce the size of buttons to allow for this.
+Our buttons then become composed of small icons next to large text. 
+Since text consumes space horizontally, we will always want button groups to consume space vertically.
+This will be the case regardless of screen orientation. 
+*/
+.btn {
+    /* we follow apple recommendations for button size */
+    /*min-width : 70px;*/
+    display   : flex;
+    flex-flow : column nowrap;
+    align-items: center;
+    flex: 1 2 auto;
+    border-radius: 0.5rem;
+}
+.btn img {
+    width:  48px;
+    height: 48px;
+}
+.btn.btn-sm img {
+    width:  24px;
+    height: 24px;
+}
+.btn .img {
+    width:  48px;
+    height: 48px;
+    font-size: 161%;
+}
+.btn.btn-sm .img {
+    width:  24px;
+    height: 24px;
+}
+
+.btn-rainbow{
+    background: linear-gradient(to right, rgb(255, 0, 0), rgb(255, 191, 0), rgb(128, 255, 0), rgb(0, 255, 64), rgb(0, 255, 255), rgb(0, 64, 255), rgb(128, 0, 255));
+}
+.btn-contrast {
+    background: black;
+}
+@media (prefers-color-scheme: dark){
+    .btn-contrast {
+        background: white;
+    }
+}
+
+@media (pointer: fine) or (pointer: none) {
+  .btn img{
+    width:  24px;
+    height: 24px;
+  }
+  .btn .img{
+    width:  24px;
+    height: 24px;
+    font-size: 100%;
+  }
+}
+
+
+/*
+We also want to display hints to desktop users so they can learn shortcuts and hotkeys
+To accomplish this we display "instructions" next to button text. 
+These only appear when pointer precision indicates a desktop user.
+*/
+.instructions {
+    display: none;
+}
+@media (pointer: fine), (pointer: none) {
+    .instructions {
+        display     : block;
+        font-size   : 75%;
+    }
+}
+
+.maybe-slider {
+    width: max-content;
+}
+.maybe-slider input {
+    width: 120px;
+}
+
+.group-dark {
+  color: #fff;
+  background-color: #343a40;
+  border-color: #343a40;
+}
+
+.group-round {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+/* text is enlarged and placed beside the icon to save vertical space */
+/* cancel the height/width restrictions that are imposed on mobile */
+/* 
+@media (pointer: fine), (pointer: none) {
+    .btn {
+        min-width : auto;
+        min-height: auto;
+        font-size : 1rem !important;
+        display   : flex;
+        flex-flow : row nowrap;
+        align-items: left;
+        padding    : 0.2rem;
+    }
+    .btn img {
+        width    : 1rem;
+        height   : 1rem;
+        margin   : 0.2rem;
+    }
+}
+*/
+
+.horizontal-axis-group {
+    display   : flex;
+    flex-flow : row nowrap;
+    justify-content: space-evenly;
+}
+
+.vertical-axis-group {
+    display   : flex;
+    flex-flow : column nowrap;
+    justify-content: space-evenly;
+}
+
+
+.horizontal-axis-group.group-joined .btn,
+.horizontal-axis-group.group-joined .btn {
+  border-top-left-radius     : 0;
+  border-top-right-radius    : 0;
+  border-bottom-left-radius  : 0;
+  border-bottom-right-radius : 0;
+}
+.horizontal-axis-group.group-joined .btn:first-of-type {
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+.horizontal-axis-group.group-joined .btn:last-of-type {
+  border-top-right-radius : 0.5rem;
+  border-bottom-right-radius : 0.5rem;
+}
+
+.vertical-axis-group.group-joined .btn {
+  border-top-left-radius     : 0;
+  border-top-right-radius    : 0;
+  border-bottom-left-radius  : 0;
+  border-bottom-right-radius : 0;
+}
+.vertical-axis-group.group-joined .btn:first-of-type {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+.vertical-axis-group.group-joined .btn:last-child {
+  border-bottom-left-radius : 0.5rem;
+  border-bottom-right-radius : 0.5rem;
+}
+
+/*
+".short-axis-group" behaves similarly to bootstrap's .btn-group,
+ however it switches between vertical and horizontal axes dependant on screen orientation.
+It picks whichever axis is shortest at any given time:
+In portrait mode, it assumes a horizontal layout. 
+In horizontal mode, it assumes a vertical layout. 
+On a desktop, consistency is valued over screenspace so it is positioned horizontally.
+The short axis is important because we can add components along it indefinitely
+ without ever obstructing the main content.
+Since one of our core design principles is to prevent obstruction of the main focus, 
+ .short-axis-group should be used with any component that can expand to an arbitrary length, 
+ especially if the component should always remain visible for ease of use.
+*/
+.short-axis-group {
+    /* flex, wrap right to left, bottom to top*/
+    display    : flex;
+    flex-flow  : row nowrap;
+    align-items: stretch;
+}
+@media (orientation: landscape) and (pointer: coarse) {
+    .short-axis-group {
+        /* 
+        We want everything within a button group to be consistently sized,
+        so we set all flexbox properties to "stretch".
+        */
+        display   : flex;
+        flex-flow : column nowrap;
+    }
+}
+
+
+.short-axis-group.group-joined .btn{
+  border-top-left-radius     : 0;
+  border-top-right-radius    : 0;
+  border-bottom-left-radius  : 0;
+  border-bottom-right-radius : 0;
+}
+@media (orientation: portrait) or (pointer: fine) or (pointer: none) {
+    .short-axis-group.group-joined > .btn:first-of-type {
+      border-top-left-radius: 0.5rem;
+      border-bottom-left-radius: 0.5rem;
+    }
+    .short-axis-group.group-joined > .btn:last-of-type {
+      border-top-right-radius : 0.5rem;
+      border-bottom-right-radius : 0.5rem;
+    }
+}
+@media (orientation: landscape) and (pointer: coarse) {
+    .short-axis-group.group-joined > .btn:first-of-type {
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+    }
+    .short-axis-group.group-joined > .btn:last-of-type {
+      border-bottom-left-radius : 0.5rem;
+      border-bottom-right-radius : 0.5rem;
+    }
+}
+
+
+
+/*
+".long-axis-group" behaves similarly to bootstrap's .btn-group,
+ however it switches between vertical and horizontal axes dependant on screen orientation.
+It picks whichever axis is longest at any given time:
+In portrait mode, it assumes a horizontal layout. 
+In horizontal mode, it assumes a vertical layout.
+"Long axis" will always expand towards the main content.
+Since one of our core design principles is to prevent obstruction of the main focus, 
+ .long-axis-group should be used sparingly.
+Use it only when you can guarantee the number of components you're dealing with is small.
+*/
+.long-axis-group {
+    /* 
+    We want everything within a button group to be consistently sized,
+    so we set all flexbox properties to "stretch".
+    */
+    display   : flex;
+    flex-flow : column nowrap;
+}
+@media (orientation: landscape) and (pointer: coarse) {
+    .long-axis-group {
+        /* 
+        We want everything within a button group to be consistently sized,
+        so we set all flexbox properties to "stretch".
+        */
+        display   : flex;
+        flex-flow : row nowrap;
+        align-items: stretch;
+    }
+}
+
+
+
+
+.long-axis-group.group-joined .btn {
+  border-top-left-radius     : 0;
+  border-top-right-radius    : 0;
+  border-bottom-left-radius  : 0;
+  border-bottom-right-radius : 0;
+}
+@media (orientation: landscape) and (pointer: coarse) {
+    .long-axis-group.group-joined > .btn:first-of-type,
+    .long-axis-group.group-joined .long-axis-group.group-joined:first-of-type > .btn:first-of-type {
+      border-top-left-radius: 0.5rem;
+      border-bottom-left-radius: 0.5rem;
+    }
+    .long-axis-group.group-joined > .btn:last-of-type,
+    .long-axis-group.group-joined .long-axis-group.group-joined:last-of-type > .btn:last-of-type {
+      border-top-right-radius : 0.5rem;
+      border-bottom-right-radius : 0.5rem;
+    }
+}
+@media (orientation: portrait) or (pointer: fine) or (pointer: none) {
+    .long-axis-group.group-joined > .btn:first-of-type,
+    .long-axis-group.group-joined .long-axis-group.group-joined:first-of-type > .btn:first-of-type {
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+    }
+    .long-axis-group.group-joined > .btn:last-of-type,
+    .long-axis-group.group-joined .long-axis-group.group-joined:last-of-type > .btn:last-of-type {
+      border-bottom-left-radius : 0.5rem;
+      border-bottom-right-radius : 0.5rem;
+    }
+}
+
+
+
+/* 
+is-long-axis-vertical only displays when the vertical axis is longest
+is-long-axis-horizontal only displays when the horizontal axis is longest
+*/
+.is-long-axis-vertical {
+  display: inherit;
+}
+.is-long-axis-horizontal {
+  display: none;
+}
+@media (pointer: fine), (pointer: none), (orientation: landscape) {
+    .is-long-axis-vertical {
+      display: none;
+    }
+    .is-long-axis-horizontal {
+      display: inherit;
+    }
+}
+
+/* 
+is-short-axis-vertical only displays when the vertical axis is shortest
+is-short-axis-horizontal only displays when the horizontal axis is shortest
+*/
+.is-short-axis-vertical {
+  display: none;
+}
+.is-short-axis-horizontal {
+  display: inherit;
+}
+@media (pointer: fine), (pointer: none), (orientation: landscape) {
+    .is-short-axis-vertical {
+      display: inherit;
+    }
+    .is-short-axis-horizontal {
+      display: none;
+    }
+}
+/* 
+is-mobile only displays when the vertical axis is shortest
+is-desktop only displays when the horizontal axis is shortest
+*/
+.is-mobile {
+  display: inherit;
+}
+.is-desktop {
+  display: none;
+}
+@media (pointer: fine), (pointer: none) {
+    .is-mobile {
+      display: none;
+    }
+    .is-desktop {
+      display: inherit;
+    }
+}
+
+.slider-label {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    align-items     : center;
+    justify-content : space-between;
+}
+.slider-label img{
+    width:  24px;
+    height: 24px;
+}
+/* cancel the height/width restrictions that are imposed on mobile */
+/* text is enlarged and placed beside the icon to save vertical space */
+/* 
+@media (pointer: fine), (pointer: none) {
+    .slider-label {
+        min-width : auto;
+        min-height: auto;
+        font-size : 1rem !important;
+        display   : flex;
+        flex-flow : row nowrap;
+        align-items: center;
+        padding    : 0.2rem;
+    }
+    .slider-label img {
+        width    : 1rem;
+        height   : 1rem;
+        margin   : 0.5rem;
+    }
+    .slider-label .vertical-axis-group {
+        align-items     : flex-start;
+    }
+}
+*/
+
+input[type="range"].slider-vertical {
+    /*we follow apple recommendations for width of touchable components*/
+    width: 44px;
+    height: 88px;
+    -webkit-appearance: slider-vertical;
+    writing-mode: bt-lr;
+}
+
+input[type="text"] {
+    /*we follow apple recommendations for width of touchable components*/
+    width: 200px;
+}
+
+/* when pointer precision is better than a touchscreen, we can make sliders smaller */
+/* 
+@media (pointer: fine), (pointer: none) {
+    input[type="range"].slider-vertical {
+        width: 20px;
+    }
+}
+*/
+
+/*
+".hidden-when-loading" indicates an element must not render when 
+ a new game or save file is loaded. 
+This may be used to avoid confusing the user, 
+ or to prevent invalid states from occuring due to user interaction.
+*/
+.hidden{
+    display: none;
+}
