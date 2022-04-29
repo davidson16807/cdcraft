@@ -6,19 +6,31 @@ function ViewDrags(PanZoomMapping, screen_frame_store,
     const max = Math.max;
     const min = Math.min;
     const clamp = (x, lo, hi) => min(max(x, lo), hi);
+
+    function midpoint(positions) {
+        let midpoint = glm.vec2();
+        for (var i = 0; i < positions.length; i++) {
+            midpoint = midpoint.add(positions[i]);
+        }
+        return midpoint.div(positions.length);
+    }
+
     return {
 
-        pan: function(original_cell_to_pixel_store, original_screen_position){
+        pan: function(original_cell_to_pixel_store, original_screen_positions){
+            const original_screen_midpoint = midpoint(original_screen_positions);
+
             return {
                 id: DragState.pan,
                 initialize: () => 
                     original_cell_to_pixel_store.with({}),
                 move: (cell_to_pixel_store, screen_positions, cell_to_pixel) => {
-                    const screen_offset = screen_positions[0].sub(original_screen_position);
-                    const model_offset = PanZoomMapping(cell_to_pixel).offset.revert(screen_offset);
+                    const screen_midpoint = midpoint(screen_positions);
+                    const screen_midpoint_offset = screen_midpoint.sub(original_screen_midpoint);
+                    const model_midpoint_offset = PanZoomMapping(cell_to_pixel).offset.revert(screen_midpoint_offset);
                     return original_cell_to_pixel_store.with({
                         topleft_cell_position: 
-                            original_cell_to_pixel_store.topleft_cell_position.sub(model_offset), 
+                            original_cell_to_pixel_store.topleft_cell_position.sub(model_midpoint_offset), 
                     });
                 },
                 wheel: (cell_to_pixel_store, screen_focus, scroll_count) => cell_to_pixel_store,

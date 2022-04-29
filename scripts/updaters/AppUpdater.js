@@ -27,7 +27,7 @@ function AppUpdater(
         pan: function(app_io, event){
             drag_ops.transition( view_drags.pan(
                     app_io.diagram.screen_frame_store, 
-                    glm.vec2(event.clientX, event.clientY)), 
+                    [glm.vec2(event.clientX, event.clientY)]), 
                 app_io);
         },
 
@@ -49,7 +49,7 @@ function AppUpdater(
         pan: function(app_io, event){
             drag_ops.transition( view_drags.pan(
                     app_io.diagram.screen_frame_store, 
-                    glm.vec2(event.touches[0].clientX, event.touches[0].clientY)), 
+                    [glm.vec2(event.touches[0].clientX, event.touches[0].clientY)]), 
                 app_io);
         },
 
