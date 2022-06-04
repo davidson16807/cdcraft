@@ -5,8 +5,8 @@ When the drag starts, the application initializes an instance of the category an
 When the drag is in progress, the application applies operations to the state object returning a new state object.
 These operations reflect user actions that occur mid-drag, and are so far limited to movement or scrolling.
 
-A state object can be used at any point to return a command object.
-The command objects are small categories of idempotent isomorphic functions that return application state 
+A state object can be used at any point to return a command.
+The command is a function that maps application state 
 from any point during the drag to the points immediately before or after.
 
 The functions within a `*Drag` category can be considered the successively curried versions of pure functions.

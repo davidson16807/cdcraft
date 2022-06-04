@@ -29,7 +29,7 @@ function HtmlObjectToolbarView(dependencies) {
         const is_single_object_selected = (
             (diagram.inferred_object_selections.length == 1 ||
              diagram.object_selections.length == 1) &&
-             diagram.arrow_selections.length < 1);
+             diagram.arrows.arrow_selections.length < 1);
 
         if (is_single_object_selected) {
             const object = (

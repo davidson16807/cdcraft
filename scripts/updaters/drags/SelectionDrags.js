@@ -21,22 +21,21 @@ function SelectionDrags(
                 command: (model_offset, is_released, is_canceled) => diagram => {
                     const cell_positions = position_map_operations.offset(
                         resource_operations.update(
-                            arrow_positions_resource.get(initial_diagram.arrow_selections.map(id => initial_diagram.arrows[id])),
+                            arrow_positions_resource.get(arrow_state_operations.selection(diagram.arrows)),
                             object_position_resource.get(initial_diagram.object_selections.map(id => initial_diagram.objects[id])),
                             object_position_resource.get(initial_diagram.inferred_object_selections),
                         ), 
                         model_offset);
                     return (is_canceled? 
                         diagram.with({
-                            arrows:                     arrow_positions_resource.delete(initial_diagram.arrows, cell_positions),
-                            objects:                    object_position_resource.delete(initial_diagram.objects, cell_positions),
-                            arrow_selections:  [], 
+                            arrows:  arrow_positions_resource.delete(initial_diagram.arrows, cell_positions),
+                            objects: object_position_resource.delete(initial_diagram.objects, cell_positions),
                             object_selections: [],
                             inferred_object_selections: [],
                         })
                       : diagram.with({
-                            arrows:                     arrow_positions_resource.put(initial_diagram.arrows, cell_positions, !is_released),
-                            objects:                    object_position_resource.put(initial_diagram.objects, cell_positions, !is_released),
+                            arrows:  arrow_positions_resource.put(initial_diagram.arrows, cell_positions, !is_released),
+                            objects: object_position_resource.put(initial_diagram.objects, cell_positions, !is_released),
                             inferred_object_selections: object_position_resource.put(initial_diagram.inferred_object_selections, cell_positions, !is_released),
                         })
                     );

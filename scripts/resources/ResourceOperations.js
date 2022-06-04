@@ -1,7 +1,7 @@
 'use strict';
 
 /*
-`*ResourceOperations` uses single operations to potentially get or set many positions,
+`*Resource` classes uses single operations to potentially get or set many values,
 so the position object that it gets or sets cannot be a simple `glm.vec2`.
 For this reason, we need a namespace of operations that are analogous to operations in `glm.vec2`,
 but for maps between position hashes and their updated positions.

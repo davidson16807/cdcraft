@@ -2,7 +2,6 @@
 
 function SvgArrowAttributes(dependencies, settings) {
     const screen_state_storage         = dependencies.screen_state_storage;
-    const user_arcs_and_stored_arcs    = dependencies.user_arcs_and_stored_arcs;
     const user_arcs_and_sampler_arcs   = dependencies.user_arcs_and_sampler_arcs;
     const sampler_arc_resizing         = dependencies.sampler_arc_resizing;
     const sampler_arc_properties       = dependencies.sampler_arc_properties;
@@ -29,8 +28,7 @@ function SvgArrowAttributes(dependencies, settings) {
 
     return {
 
-        stored_arc_to_trimmed_arc: function(stored_arc) {
-            const user_arc = user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
+        position_arc_to_trimmed_arc: function(user_arc) {
             const sampler_arc = user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
             const trimmed_arc = sampler_arc_resizing.resize(sampler_arc, source_trim_length, -target_trim_length);
             return trimmed_arc;

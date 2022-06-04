@@ -16,6 +16,10 @@ function ObjectPositionResource(diagram_ids){
             return position_map;
         },
 
+        post: function(position_map) {
+            return Object.values(position_map).map(position => new DiagramObject(position));
+        },
+
         put: function(objects, position_map, show_invalid) {
             const updated = [];
             for(let object of objects){
@@ -45,10 +49,6 @@ function ObjectPositionResource(diagram_ids){
             }
             return filtered;
         },
-
-        post: function(position_map) {
-            return Object.values(position_map).map(position => new DiagramObject(position));
-        }
 
     };
 }

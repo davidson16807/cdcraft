@@ -11,11 +11,12 @@
     <script src="./libraries/glm-js.min.js"></script>
     <script src="./libraries/katex.min.js"></script>
     <script src="./libraries/auto-render.min.js"></script>
-    <script src="./scripts/DiagramIds.js"></script>
-    <script src="./scripts/CellHashing.js"></script>
+    <script src="./scripts/coordinates/DiagramIds.js"></script>
+    <script src="./scripts/coordinates/CellHashing.js"></script>
     <script src="./scripts/coordinates/ScreenStateStorage.js"></script>
     <script src="./scripts/coordinates/ScreenStateStore.js"></script>
     <script src="./scripts/coordinates/CoordinateSystems.js"></script>
+    <script src="./scripts/models/nodes/Node.js"></script>
     <script src="./scripts/models/arcs/StoredArc.js"></script>
     <script src="./scripts/models/arcs/UserArc.js"></script>
     <script src="./scripts/models/arcs/SvgArc.js"></script>
@@ -30,10 +31,10 @@
     <script src="./scripts/models/arcs/UserArcsAndSamplerArcs.js"></script>
     <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
     <script src="./scripts/models/arrows/Arrow.js"></script>
-    <script src="./scripts/models/arrows/DiagramArrow.js"></script>
-    <script src="./scripts/models/arrows/DiagramArrowListsAndLookups.js"></script>
-    <script src="./scripts/models/objects/DiagramObject.js"></script>
-    <script src="./scripts/models/objects/DiagramObjectSetOperations.js"></script>
+    <script src="./scripts/models/arrows/ArrowState.js"></script>
+    <script src="./scripts/models/arrows/ArrowListsAndLookups.js"></script>
+    <script src="./scripts/models/objects/Object.js"></script>
+    <script src="./scripts/models/objects/ObjectSetOperations.js"></script>
     <script src="./scripts/models/diagrams/Diagram.js"></script>
     <script src="./scripts/models/diagrams/DiagramMetrics.js"></script>
     <script src="./scripts/models/app/AppState.js"></script>
@@ -56,6 +57,7 @@
     <script src="./scripts/updaters/drags/ArrowDrags.js"></script>
     <script src="./scripts/updaters/drags/DragState.js"></script>
     <script src="./scripts/updaters/AppUpdater.js"></script>
+    <script src="./scripts/resources/ArrowsResource.js"></script>
     <script src="./scripts/resources/ArrowPositionsResource.js"></script>
     <script src="./scripts/resources/ObjectPositionResource.js"></script>
     <script src="./scripts/resources/ResourceOperations.js"></script>
@@ -166,14 +168,10 @@
 <script type="text/javascript">
 'use strict';
 
-const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
+const cell_hashing = UnboundedCellHashing(PositiveCellHashing());
 
-const user_arcs_and_stored_arcs =
-    UserArcsAndStoredArcs(
-        diagram_ids, 
-        0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
-        0.08, // target offset distance
-    );
+const diagram_ids = DiagramIds(cell_hashing);
+
 const user_arcs_and_sampler_arcs = UserArcsAndSamplerArcs(ArcGeometry());
 
 const sampler_arc_properties = SamplerArcProperties();
@@ -203,7 +201,6 @@ const svg_arrow_attributes =
         AffineRemapping            : AffineRemapping,
         SamplerArcMapping          : SamplerArcMapping,
         screen_state_storage       : screen_state_storage,
-        user_arcs_and_stored_arcs  : user_arcs_and_stored_arcs,
         user_arcs_and_sampler_arcs : user_arcs_and_sampler_arcs,
         sampler_arc_resizing       : sampler_arc_resizing,
         sampler_arc_properties     : sampler_arc_properties,
@@ -263,8 +260,39 @@ const svg_arrow_toolbar_view =
         view_event_deferal         : view_event_deferal,
     });
 
+const arc_arrow_id_resource = 
+    ArcArrowIdResource(
+        NodePositionResource({
+            cell:  CellNodePositionResource(cell_hashing),
+            arrow: ArrowNodePositionResource(),
+        })
+    );
+const arc_position_resource = 
+    ArcPositionResource(
+        NodePositionResource({
+            cell:  CellNodePositionResource(cell_hashing),
+            arrow: ArrowNodePositionResource(),
+        })
+    );
+
+const user_arcs_and_stored_arcs =
+    UserArcsAndStoredArcs(
+        NodeOffsets({
+            cell:  CellNodeOffsets(),
+            arrow: ArrowNodeOffsets(),
+        }),
+        NodeRounding({
+            cell:  PositionRounding(),
+            arrow: ArrowIdDummyRounding(),
+        }),
+        0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
+        0.08, // target offset distance
+    );
+
+const arrows_resource = ArrowsResource(arc_arrow_id_resource);
+
 const arrow_positions_resource = 
-    ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, true);
+    ArrowPositionsResource(user_arcs_and_stored_arcs, arc_position_resource);
 
 const object_position_resource = 
     ObjectPositionResource(diagram_ids, true);
@@ -284,6 +312,7 @@ const selection_drags =
 const arrow_drags = 
     ArrowDrags(
         diagram_ids,
+        arrows_resource,
         user_arcs_and_stored_arcs,
         1.0, // default_min_length_clockwise
         0.001 // min_length_clockwise_change_per_scroll
@@ -341,7 +370,7 @@ const disengaged_drag = view_drags.release(initial_screen_frame_store)
 const disengaged_drag_state = disengaged_drag.initialize();
 const app = new AppState(
         new Diagram(
-            [], [], 
+            new ArrowState([],[]), 
             [], [], [], 
             initial_screen_frame_store), 
         disengaged_drag,

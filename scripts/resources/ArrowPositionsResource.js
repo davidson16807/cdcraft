@@ -4,59 +4,62 @@
 A `ArrowPositionsResource` implements a REST-like interface
 on source and target positions within a list of arrows.
 */
-function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
+function ArrowPositionsResource(user_arcs_and_stored_arcs, arc_position_resource){
     return {
 
-        get: function(arrows, position_map){
+        get: function(arrow_state, position_map){
             let updated_position_map = {};
-            for(let arrow of arrows){
-                const stored_arc = arrow.arc;
-                const source_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.source);
-                const target_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.target);
-                if (position_map == null || position_map[source_hash] != null) {
-                    updated_position_map[source_hash] = stored_arc.source;
-                }
-                if (position_map == null || position_map[target_hash] != null) {
-                    updated_position_map[target_hash] = stored_arc.target;
-                }
+            for(let arrow of arrow_state.arrows){
+                updated_position_map = {
+                    ...updated_position_map, 
+                    ...arc_position_resource.get(arrow.arc, position_map),
+                };
             }
             return updated_position_map;
         },
 
-        put: function(arrows, position_map, show_invalid) {
-            const updated_arrows = [];
-            for(let arrow of arrows){
+        put: function(arrow_state, position_map, show_invalid) {
+            const arrows = [];
+            const arrow_selections = [];
+            const arrow_selection_set = {};
+            for(let id of arrow_state.arrow_selections){
+                arrow_selection_set[id] = id;
+            }
+            for(let i = 0; i<arrow_state.arrows.length; i++){
+                const arrow = arrow_state.arrows[i];
                 const old_stored = arrow.arc;
                 const old_users = user_arcs_and_stored_arcs.stored_arc_to_user_arc(old_stored);
-                const source_hash = diagram_ids.cell_id_to_cell_hash(old_stored.source);
-                const target_hash = diagram_ids.cell_id_to_cell_hash(old_stored.target);
-                const new_users = new UserArc(
-                    position_map[source_hash] != null? 
-                        old_stored.target_offset_id.mul(-0.015).add(position_map[source_hash]) 
-                      : old_users.source, 
-                    position_map[target_hash] != null? 
-                        old_stored.target_offset_id.mul( 0.015).add(position_map[target_hash]) 
-                      : old_users.target,
-                    old_users.min_length_clockwise);
-                const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users, old_stored.target_offset_id);
+                let new_users = arc_position_resource.offset(
+                    arc_position_resource.get(old_users, position_map),
+                    old_stored.chord_direction.mul(0.15));
+                const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users, old_stored.chord_direction);
                 if(new_stored.is_valid || show_invalid){
-                    updated_arrows.push(arrow.with({arc:new_stored}));
+                    if (arrow_selection_set[i] != null) {
+                        arrow_selections.push(arrows.length);
+                    }
+                    arrows.push(arrow.with({arc:new_stored}));
                 }
             }
-            return updated_arrows;
+            return new ArrowState(arrows, arrow_selections);
         },
 
-        delete: function(arrows, position_map) {
-            const filtered = [];
-            for(let arrow of arrows){
-                const arc = arrow.arc;
-                const source_hash = diagram_ids.cell_id_to_cell_hash(arc.source);
-                const target_hash = diagram_ids.cell_id_to_cell_hash(arc.target);
-                if (position_map[source_hash] == null && position_map[target_hash] == null) {
-                    filtered.push(arrow);
+        delete: function(arrow_state, position_map) {
+            const arrows = [];
+            const arrow_selections = [];
+            const arrow_selection_set = {};
+            for(let id of arrow_state.arrow_selections){
+                arrow_selection_set[id] = id;
+            }
+            for(let i = 0; i<arrow_state.arrows.length; i++){
+                const arrow = arrow_state.arrows[i];
+                if(!arc_position_resource.in(arrow.arc, position_map)){
+                    if (arrow_selection_set[i] != null) {
+                        arrow_selections.push(arrows.length);
+                    }
+                    arrows.push(arrow);
                 }
             }
-            return filtered;
+            return new ArrowState(arrows, arrow_selections);
         },
 
     };

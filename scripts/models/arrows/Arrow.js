@@ -1,17 +1,33 @@
+'use strict';
+
 
 /*
-`Arrow` is a data structure that represents only the attributes within the mathematical definition of an arrow
-`source` and `target` are ivec2s indicating source and target in cell coordinates.
+`DiagramArrow` is a data structure that represents every property of an arrow that can be depicted within the application
 */
-class Arrow {
-    constructor(source, target){
-        Object.defineProperty(this, 'source',  {get: ()=> source});
-        Object.defineProperty(this, 'target',  {get: ()=> target});
+class DiagramArrow {
+    constructor(
+        arc, is_edited, label, label_offset, 
+        source_style_id, end_style_id, line_style_id, 
+    ){
+        Object.defineProperty(this, 'arc',              {get: ()=> arc});
+        Object.defineProperty(this, 'is_edited',        {get: ()=> is_edited || false});
+        Object.defineProperty(this, 'label',            {get: ()=> label || ''});
+        Object.defineProperty(this, 'label_offset',     {get: ()=> label_offset || glm.vec2()});
+        Object.defineProperty(this, 'source_style_id',  {get: ()=> source_style_id || 0});
+        Object.defineProperty(this, 'end_style_id',     {get: ()=> end_style_id || 0});
+        Object.defineProperty(this, 'line_style_id',    {get: ()=> line_style_id || 0});
     }
-    with(attributes){ 
-        return new Arrow(
-            attributes.source != null? attributes.source : this.source, 
-            attributes.target != null? attributes.target : this.target
+
+    with(attributes){
+        return new DiagramArrow(
+            attributes.arc              != null? attributes.arc              : this.arc,
+            attributes.is_edited        != null? attributes.is_edited        : this.is_edited,
+            attributes.label            != null? attributes.label            : this.label,
+            attributes.label_offset     != null? attributes.label_offset     : this.label_offset,
+            attributes.source_style_id  != null? attributes.source_style_id  : this.source_style_id,
+            attributes.end_style_id     != null? attributes.end_style_id     : this.end_style_id,
+            attributes.line_style_id    != null? attributes.line_style_id    : this.line_style_id,
         );
     }
+
 }

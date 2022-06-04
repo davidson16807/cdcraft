@@ -1,5 +1,27 @@
 'use strict';
 
+function ArrowIdObjectInference() {
+    return {
+        infer: (arrow_id) => {},
+    }
+}
+
+function PositionObjectInference(cell_hashing) {
+    return {
+        infer: (position) => { 
+            const cell_lookup = {};
+            cell_lookup[cell_hashing.hash(position)] = position;
+            return cell_lookup;
+        },
+    }
+}
+
+function NodeObjectInference(type_lookup) {
+    return {
+        infer: (node) => type_lookup[node.type].infer(node.value),
+    };
+}
+
 /*
 `DiagramObjectSetOperations` returns a namespace of pure functions operating on sets of objects.
 Object sets are represented using associative arrays for the sake of simplicity,
@@ -35,10 +57,13 @@ function DiagramObjectSetOperations(diagram_ids){
         },
 
         infer: (arrows) => {
-            const objects = {};
+            let objects = {};
             for(let arrow of arrows){
-                objects[diagram_ids.cell_id_to_cell_hash(arrow.arc.source)] = new DiagramObject(arrow.arc.source);
-                objects[diagram_ids.cell_id_to_cell_hash(arrow.arc.target)] = new DiagramObject(arrow.arc.target);
+                objects = {
+                    ...objects,
+                    ...node_objects.infer(arrow.arc.source),
+                    ...node_objects.infer(arrow.arc.target),
+                }
             }
             return objects;
         },

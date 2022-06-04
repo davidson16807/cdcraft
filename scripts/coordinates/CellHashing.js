@@ -24,3 +24,18 @@ function UnboundedCellHashing(positive_cell_hashing) {
         hash: (x,y) => 4*positive_cell_hashing.hash(abs(x),abs(y)) + 2*(y<0) + (x<0),
     };
 }
+
+/*
+`NodeHashing` generates a namespace with a single pure function exposed, `hash()`.
+The function maps any "node", either a 2d cell coordinate or an index to an arrow in an array,
+to a unique integer. It is bijective in principle, however its inverse is not implemented.
+*/
+function NodeHashing(unbounded_cell_hashing) {
+    const lookup = {
+        cell:  xy => unbounded_cell_hashing.hash(xy),
+        arrow: id => -(id+1)
+    }
+    return {
+        hash: node => lookup[node.type](node.value),
+    }
+}

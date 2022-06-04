@@ -5,6 +5,7 @@ function SvgArrowView(dependencies, highlight_width) {
     const svg = dependencies.svg;
     const html = dependencies.html;
     const screen_state_storage = dependencies.screen_state_storage;
+    const nodes_and_positions = dependencies.nodes_and_positions;
     const svg_arrow_attributes = dependencies.svg_arrow_attributes;
     const view_event_deferal = dependencies.view_event_deferal;
     const render = dependencies.render;
@@ -15,7 +16,7 @@ function SvgArrowView(dependencies, highlight_width) {
     }
 
     const drawing = {};
-    drawing.draw = function(dom, screen_state_store, arrow, drag_type, onclick, onenter) {
+    drawing.draw = function(dom, screen_state_store, arrow_list, drag_type, onclick, onenter) {
         const screen_state = screen_state_storage.unpack(screen_state_store);
         const trimmed_arc = svg_arrow_attributes.stored_arc_to_trimmed_arc(arrow.arc, screen_state_store);
         const screen_arc = svg_arrow_attributes.trimmed_arc_to_screen_arc(trimmed_arc, screen_state_store);
@@ -31,8 +32,9 @@ function SvgArrowView(dependencies, highlight_width) {
         render(div, {throwOnError: false});
         /*
         Append the label, measure its dimensions, then remove.
-        This is not very performant, however measurement 
-        can only be done when an element is added to the document.
+        This is not very performant, however it is the only definitive way 
+        to measure an element, and it can only be done when an element 
+        is added to the document.
         */
         document.body.appendChild(div);
         const label_height = div.offsetHeight;

@@ -26,22 +26,6 @@ function DiagramArrowListsAndLookups(diagram_ids) {
             }
             return arrow_lookup;
         },
-        lookup_to_set: (arrow_lookup) => {
-            const arrow_set = [];
-            for(let cell_hash in arrow_lookup){
-                for(let arrow of arrow_lookup[cell_hash]){
-                    arrow_set[diagram_ids.cell_pair_to_cell_pair_hash(arrow.arc.source, arc.arrow.target)] = arrow;
-                }
-            }
-            return arrow_set;
-        },
-        list_to_set: (arrow_list) => {
-            const arrow_set = [];
-            for(let arrow of arrow_list){
-                arrow_set[diagram_ids.cell_pair_to_cell_pair_hash(arrow.arc.source, arc.arrow.target)] = arrow;
-            }
-            return arrow_set;
-        },
         set_to_list: (arrow_set) => {
             const arrow_list = [];
             for(let cell_hash in arrow_set){

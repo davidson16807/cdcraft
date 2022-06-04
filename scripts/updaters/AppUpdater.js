@@ -102,8 +102,8 @@ function AppUpdater(
         arrow_text: function(app_io, event) {
             const diagram_in = app_io.diagram;
             const arrows_in = diagram_in.arrows;
-            if (diagram_in.arrow_selections.length == 1) {
-                const arrow_id = diagram_in.arrow_selections[0];
+            if (diagram_in.arrows.arrow_selections.length == 1) {
+                const arrow_id = diagram_in.arrows.arrow_selections[0];
                 const arrow_in = diagram_in.arrows[arrow_id];
                 const arrows_before = arrows_in.slice(0,arrow_id);
                 const arrows_after = arrows_in.slice(arrow_id+1);
@@ -142,7 +142,7 @@ function AppUpdater(
             if (!event.shiftKey && !event.ctrlKey) {
                 // rmb handles selections, cancel if nothing is selected
                 history.do(app_io, app_io.diagram.with({
-                    arrow_selections: [], 
+                    arrows: arrows.with({arrow_selections: []}), 
                     object_selections: [],
                     inferred_object_selections: [],
                 }), false);
@@ -182,37 +182,44 @@ function AppUpdater(
     return {
 
         contextmenu: function(event, drawing, app_io, dom_io){
+            console.log('contextmenu');
         },
 
         wheel: function(event, drawing, app_io, dom_io){
+            console.log('wheel');
             drag_ops.wheel( glm.vec2(event.clientX, event.clientY), event.deltaY, app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         mousedown: function(event, drawing, app_io, dom_io){
+            console.log('mousedown');
             const action_id = mousedown_bindings[event.button];
             (mouse_actions[action_id] || generic_actions[action_id])(app_io, event);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         mousemove: function(event, drawing, app_io, dom_io){
+            console.log('mousemove');
             // mouse motion is a degenerate case of touchscreen motion where the number of touchpoints is one
             drag_ops.move( [glm.vec2(event.clientX, event.clientY)], app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         mouseup: function(event, drawing, app_io, dom_io){
+            console.log('mouseup');
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         touchstart: function(event, drawing, app_io, dom_io){
+            console.log('touchstart');
             const action_id = touchstart_bindings[event.touches.length-1];
             (touch_actions[action_id] || generic_actions[action_id])(app_io, event);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         touchmove: function(event, drawing, app_io, dom_io){
+            console.log('touchmove');
             const positions = [];
             for (var i = 0; i < event.touches.length; i++) {
                 positions.push(glm.vec2(event.touches[i].clientX, event.touches[i].clientY));
@@ -222,16 +229,19 @@ function AppUpdater(
         },
 
         touchend: function(event, drawing, app_io, dom_io){
+            console.log('touchend');
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         touchcancel: function(event, drawing, app_io, dom_io){
+            console.log('touchcancel');
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         keydown: function(event, drawing, app_io, dom_io){
+            console.log('keydown');
             const keycode = `${event.ctrlKey?'ctrl+':''}${event.shiftKey?'shift+':''}${event.key.toLowerCase()}`
             const action_id = key_bindings[keycode];
             if (action_id!=null) {
@@ -244,6 +254,7 @@ function AppUpdater(
         },
 
         buttonclick: function(event, drawing, app_io, dom_io){
+            console.log('buttonclick');
             const action_id = button_bindings[event.currentTarget.id];
             if (action_id!=null) {
                 const action = generic_actions[action_id];
@@ -255,6 +266,7 @@ function AppUpdater(
         },
 
         textinput: function(event, drawing, app_io, dom_io){
+            console.log('textinput');
             const action_id = text_bindings[event.currentTarget.id];
             if (action_id!=null) {
                 const action = text_actions[action_id];
@@ -266,6 +278,7 @@ function AppUpdater(
         },
 
         arrowdown: function(event, drawing, arrow, app_io, dom_io){
+            console.log('arrowdown');
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow), app_io);
@@ -274,26 +287,32 @@ function AppUpdater(
         },
 
         arrowenter: function(event, drawing, arrow, app_io, dom_io){
+            console.log('arrowenter');
             if (event.buttons == 2 && !arrow.is_edited) {
                 event.stopPropagation();
                 const arrow_id = app_io.diagram.arrows.indexOf(arrow);
-                history.do(app_io, app_io.diagram.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]}), true);
+                history.do(app_io, 
+                    app_io.diagram.with({
+                        arrows: arrows.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]})
+                    }), 
+                    true);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },
 
         objectdown: function(event, drawing, object_, app_io, dom_io){
+            console.log('objectdown');
             if (event.buttons == 1 && !object_.is_edited) {
                 event.stopPropagation();
                 const object_id = app_io.diagram.objects.indexOf(object_);
                 const selected_diagram = object_id >= 0?
                       app_io.diagram.with({ 
-                            arrow_selections:[], 
+                            arrows: arrows.with({arrow_selections:[]}), 
                             object_selections: [object_id],
                             inferred_object_selections: []
                         })
                     : app_io.diagram.with({ 
-                            arrow_selections:[], 
+                            arrows: arrows.with({arrow_selections:[]}), 
                             object_selections: [],
                             inferred_object_selections: [object_],
                         });
@@ -306,6 +325,7 @@ function AppUpdater(
         },
 
         objectenter: function(event, drawing, object_, app_io, dom_io){
+            console.log('objectenter');
             if (event.buttons == 2 && !object_.is_edited) {
                 event.stopPropagation();
                 const object_id = app_io.diagram.objects.indexOf(object_);
@@ -320,6 +340,7 @@ function AppUpdater(
         },
 
         selection_click: function(event, drawing, app_io, dom_io){
+            console.log('selection_click');
             if (event.button == 0) {
                 event.stopPropagation();
                 drag_ops.transition( 

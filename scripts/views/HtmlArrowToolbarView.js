@@ -137,10 +137,10 @@ function HtmlArrowToolbarView(dependencies) {
         const is_single_arrow_selected = (
             app.diagram.inferred_object_selections.length < 1 &&
             app.diagram.object_selections.length < 1 &&
-            app.diagram.arrow_selections.length == 1);
+            app.diagram.arrows.arrow_selections.length == 1);
 
         if (is_single_arrow_selected) {
-            const arrow = diagram.arrows[diagram.arrow_selections[0]];
+            const arrow = diagram.arrows.arrows[diagram.arrows.arrow_selections[0]];
             const deferal = view_event_deferal(drawing, arrow, dom);
 
             panels.push(

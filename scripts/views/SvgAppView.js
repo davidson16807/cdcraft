@@ -2,18 +2,18 @@
 
 function SvgAppView(dependencies, onevents) {
 
-    const screen_state_storage       = dependencies.screen_state_storage;
-    const arrow_positions_resource   = dependencies.arrow_positions_resource;
-    const object_position_resource   = dependencies.object_position_resource;
-    const resource_operations        = dependencies.resource_operations;
-    const svg_grid_view              = dependencies.svg_grid_view;
-    const svg_object_view            = dependencies.svg_object_view;
-    const svg_arrow_view             = dependencies.svg_arrow_view;
-    const svg_object_selection_view  = dependencies.svg_object_selection_view;
-    const html_object_toolbar_view   = dependencies.html_object_toolbar_view;
+    const screen_state_storage      = dependencies.screen_state_storage;
+    const arrow_positions_resource  = dependencies.arrow_positions_resource;
+    const object_position_resource  = dependencies.object_position_resource;
+    const resource_operations       = dependencies.resource_operations;
+    const svg_grid_view             = dependencies.svg_grid_view;
+    const svg_object_view           = dependencies.svg_object_view;
+    const svg_arrow_view            = dependencies.svg_arrow_view;
+    const svg_object_selection_view = dependencies.svg_object_selection_view;
+    const html_object_toolbar_view  = dependencies.html_object_toolbar_view;
     const html_arrow_toolbar_view   = dependencies.html_arrow_toolbar_view;
-    const svg_arrow_selection_view   = dependencies.svg_arrow_selection_view;
-    const view_event_deferal         = dependencies.view_event_deferal;
+    const svg_arrow_selection_view  = dependencies.svg_arrow_selection_view;
+    const view_event_deferal        = dependencies.view_event_deferal;
 
     onevents = onevents || {};
 
@@ -56,8 +56,7 @@ function SvgAppView(dependencies, onevents) {
         }
 
         if (old_app == null || 
-            old_app.diagram.arrows != new_app.diagram.arrows ||
-            old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
+            old_app.diagram.arrows != new_app.diagram.arrows) {
 
             if (trigger != 'arrow-text'){
                 dom_io.getElementById('arrow-toolbar')
@@ -67,8 +66,8 @@ function SvgAppView(dependencies, onevents) {
                     ));
             }
 
-            const arrow_selections_list = new_app.diagram.arrow_selections
-                    .map(id => new_app.diagram.arrows[id])
+            const arrow_selections_list = new_app.diagram.arrows.arrow_selections
+                    .map(id => new_app.diagram.arrows.arrows[id])
                     .filter(arrow => arrow != null);
             dom_io.getElementById('arrow-selections')
                 .replaceChildren(...arrow_selections_list
@@ -149,15 +148,14 @@ function SvgAppView(dependencies, onevents) {
             old_app.diagram.arrows != new_app.diagram.arrows || 
             old_app.drag_type != new_app.drag_type) {
             dom_io.getElementById('arrows')
-                .replaceChildren(...new_app.diagram.arrows
-                    .map(arrow => 
-                        svg_arrow_view.draw(
-                            dom_io,
-                            new_app.diagram.screen_frame_store, 
-                            arrow, 
-                            new_app.drag_type, 
-                            (event, arrow_drawing, arrow, dom2) => onevents.arrowdown(event, drawing, arrow, new_app, dom_io),
-                            (event, arrow_drawing, arrow, dom2) => onevents.arrowenter(event, drawing, arrow, new_app, dom_io))));
+                .replaceWith(
+                    svg_arrow_view.draw(
+                        dom_io,
+                        new_app.diagram.screen_frame_store, 
+                        new_app.diagram.arrows.arrows, 
+                        new_app.drag_type, 
+                        (event, arrow_drawing, arrow, dom2) => onevents.arrowdown(event, drawing, arrow, new_app, dom_io),
+                        (event, arrow_drawing, arrow, dom2) => onevents.arrowenter(event, drawing, arrow, new_app, dom_io)));
         }
 
     }

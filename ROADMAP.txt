@@ -3,9 +3,9 @@ TODO:
 HIGH PRIORITY:
 functor arrows
 latex export/import 
+svg export
 
 MEDIUM PRIORITY:
-svg export
 arrow/object label toggle for latex/plaintext
 object labels should float over bullet point when they are too big to fit where the bullet point is
 circle cursor on rmb
@@ -16,7 +16,6 @@ arrow color select
 arrow decorations
 add zoom support to touchpad
 add selection support to touchpad
-fix bug where panning with touchpad resets the display
 fix bug where dragging one named object on top of another causes overlap
 	we likely need to store objects in a structure indexed by cell hash, so this problem could not fundamentally occur
 
