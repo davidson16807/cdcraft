@@ -1,7 +1,7 @@
 'use strict';
 
 /*
-`SvgArc` is a data structure that represents a directed arc using the same method as an svg path
+`SvgArc` is a data structure that represents a directed arc in the same manner as an svg path
 */
 class SvgArc{
     constructor(source, target, radius, is_large_arc, is_clockwise){
