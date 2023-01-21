@@ -11,8 +11,9 @@ function SvgAppView(dependencies, onevents) {
     const svg_arrow_view             = dependencies.svg_arrow_view;
     const svg_object_selection_view  = dependencies.svg_object_selection_view;
     const html_object_toolbar_view   = dependencies.html_object_toolbar_view;
-    const html_arrow_toolbar_view   = dependencies.html_arrow_toolbar_view;
+    const html_arrow_toolbar_view    = dependencies.html_arrow_toolbar_view;
     const svg_arrow_selection_view   = dependencies.svg_arrow_selection_view;
+    const svg_arrow_midpoint_view    = dependencies.svg_arrow_midpoint_view;
     const view_event_deferal         = dependencies.view_event_deferal;
 
     onevents = onevents || {};
@@ -158,6 +159,15 @@ function SvgAppView(dependencies, onevents) {
                             new_app.drag_type, 
                             (event, arrow_drawing, arrow, dom2) => onevents.arrowdown(event, drawing, arrow, new_app, dom_io),
                             (event, arrow_drawing, arrow, dom2) => onevents.arrowenter(event, drawing, arrow, new_app, dom_io))));
+            dom_io.getElementById('arrow-midpoint-hitboxes')
+                .replaceChildren(...new_app.diagram.arrows
+                    .map(arrow => 
+                        svg_arrow_midpoint_view.draw(
+                            dom_io,
+                            new_app.diagram.screen_frame_store, 
+                            arrow,
+                            new_app.drag_type, 
+                            null)));
         }
 
     }
