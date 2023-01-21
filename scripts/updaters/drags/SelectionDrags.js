@@ -26,7 +26,14 @@ function SelectionDrags(
                             object_position_resource.get(initial_diagram.inferred_object_selections),
                         ), 
                         model_offset);
-                    return (is_canceled? 
+                    const updated_diagram = diagram.with({
+                            arrows:                     arrow_positions_resource.put(initial_diagram.arrows, cell_positions),
+                            objects:                    object_position_resource.put(initial_diagram.objects, cell_positions),
+                            inferred_object_selections: object_position_resource.put(initial_diagram.inferred_object_selections, cell_positions),
+                        });
+                    const is_valid = (updated_diagram.arrows.every(arrow => arrow.arc.is_valid) && 
+                                      updated_diagram.objects.every(object => object.is_valid));
+                    return (is_canceled || (is_released && !is_valid)? 
                         diagram.with({
                             arrows:                     arrow_positions_resource.delete(initial_diagram.arrows, cell_positions),
                             objects:                    object_position_resource.delete(initial_diagram.objects, cell_positions),
@@ -34,11 +41,7 @@ function SelectionDrags(
                             object_selections: [],
                             inferred_object_selections: [],
                         })
-                      : diagram.with({
-                            arrows:                     arrow_positions_resource.put(initial_diagram.arrows, cell_positions, !is_released),
-                            objects:                    object_position_resource.put(initial_diagram.objects, cell_positions, !is_released),
-                            inferred_object_selections: object_position_resource.put(initial_diagram.inferred_object_selections, cell_positions, !is_released),
-                        })
+                      : updated_diagram
                     );
                 }
             };

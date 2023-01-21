@@ -23,7 +23,7 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
             return updated_position_map;
         },
 
-        put: function(arrows, position_map, show_invalid) {
+        put: function(arrows, position_map) {
             const updated_arrows = [];
             for(let arrow of arrows){
                 const old_stored = arrow.arc;
@@ -39,9 +39,7 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
                       : old_users.target,
                     old_users.min_length_clockwise);
                 const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users, old_stored.target_offset_id);
-                if(new_stored.is_valid || show_invalid){
-                    updated_arrows.push(arrow.with({arc:new_stored}));
-                }
+                updated_arrows.push(arrow.with({arc:new_stored}));
             }
             return updated_arrows;
         },
