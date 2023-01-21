@@ -167,7 +167,8 @@ function SvgAppView(dependencies, onevents) {
                             new_app.diagram.screen_frame_store, 
                             arrow,
                             new_app.drag_type, 
-                            null)));
+                            (event, arrow_drawing, arrow, dom2) => onevents.midpointdown(event, drawing, arrow, new_app, dom_io),
+                            (event, arrow_drawing, arrow, dom2) => onevents.midpointenter(event, drawing, arrow, new_app, dom_io))));
         }
 
     }

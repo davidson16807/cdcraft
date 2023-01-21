@@ -8,7 +8,7 @@ function SvgArrowMidpointView(dependencies, midpoint_width) {
     const screen_state_storage = dependencies.screen_state_storage;
 
     const drawing = {};
-    drawing.draw = function(dom, screen_state_store, arrow, drag_type, onclick) {
+    drawing.draw = function(dom, screen_state_store, arrow, drag_type, onclick, onenter) {
         const screen_frame = screen_state_storage.unpack(screen_state_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_midpoint_width = screen_mapping.distance.apply(midpoint_width);
@@ -17,7 +17,7 @@ function SvgArrowMidpointView(dependencies, midpoint_width) {
 
         const deferal = view_event_deferal(drawing, arrow, dom);
 
-        const midpoint = svg.g(
+        const g = svg.g(
             {
                 class: (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
             },
@@ -31,10 +31,14 @@ function SvgArrowMidpointView(dependencies, midpoint_width) {
                 ),
             ]);
         if (onclick != null) {
-            midpoint.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
-            midpoint.addEventListener('touchstart', deferal.callbackPrevent(onclick));
+            g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
+            g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
         }
-        return midpoint;
+        if (onenter != null) {
+            g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
+            g.addEventListener('mouseover', deferal.callbackPrevent(onenter));
+        }
+        return g;
     }
     return drawing;
 }
