@@ -6,4 +6,4 @@ therefore references can be used to cheaply store redundant state in the undo/re
 and these references will forever reflect state as it was in the past. 
 It also means that referential equality can be used as a cheap test for when the view needs to be updated, 
 which is itself invaluable. 
-
+Purity is enforced vigorously using Object.freeze() with every attribute within classes of the model layer.

@@ -10,11 +10,11 @@
 */
 class StoredArc {
     constructor(source, target, min_length_clockwise, target_offset_id, is_valid){
-        Object.defineProperty(this, 'source',  {get: ()=> source});
-        Object.defineProperty(this, 'target',  {get: ()=> target});
-        Object.defineProperty(this, 'min_length_clockwise',  {get: ()=> min_length_clockwise});
-        Object.defineProperty(this, 'target_offset_id',  {get: ()=> target_offset_id});
-        Object.defineProperty(this, 'is_valid',  {get: ()=> is_valid});
+        this.source = Object.freeze(source);
+        this.target = Object.freeze(target);
+        this.min_length_clockwise = Object.freeze(min_length_clockwise);
+        this.target_offset_id = Object.freeze(target_offset_id);
+        this.is_valid = Object.freeze(is_valid);
     }
     with(attributes){
         return new StoredArc(
