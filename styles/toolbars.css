@@ -1,5 +1,5 @@
 /*
-"control.css" contains all styling that is specific to 
+"toolbars.css" contains all styling that is specific to 
 control elements in the application, as buttons and toolbars.
 It is written using a responsive, mobile-first design approach. 
 It assumes the user is accessing the site on a modern, evergreen browser. 
@@ -120,7 +120,7 @@ In portrait orientations, it will expand from bottom right to bottom left.
         and content width should resize as necessary. 
         */
         max-width   : 100%;
-        overflow-x  : scroll;
+        overflow-x  : hidden;
     }
 }
 
