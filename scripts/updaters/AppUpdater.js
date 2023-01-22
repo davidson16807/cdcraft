@@ -286,7 +286,7 @@ function AppUpdater(
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 console.log('midpointdown')
-                // drag_ops.transition( arrow_drags.create_2arrow(app_io.diagram.arrows, model_position), app_io);
+                // drag_ops.transition( arrow_drags.create_2arrow(app_io.diagram.arrows, arrow), app_io);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },
