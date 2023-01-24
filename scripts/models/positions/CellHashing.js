@@ -16,8 +16,8 @@ function PositiveCellHashing() {
 The function maps any whole number 2d coordinates, regardless of sign, to a unique positive integer.
 It is bijective in principle, however its inverse is not implemented.
 */
-function UnboundedCellHashing(positive_cell_hashing) {
-    const abs = Math.abs;
+function UnboundedCellHashing(positive_cell_hashing, math) {
+    const abs = math.abs;
     return {
         // there are four quadrants on an unbounded 2d grid, 
         // so multiply the hash for the absolute values by four and offset by a unique id for the quadrant

@@ -11,26 +11,34 @@
     <script src="./libraries/glm-js.min.js"></script>
     <script src="./libraries/katex.min.js"></script>
     <script src="./libraries/auto-render.min.js"></script>
-    <script src="./scripts/DiagramIds.js"></script>
-    <script src="./scripts/CellHashing.js"></script>
     <script src="./scripts/coordinates/ScreenStateStorage.js"></script>
     <script src="./scripts/coordinates/ScreenStateStore.js"></script>
     <script src="./scripts/coordinates/CoordinateSystems.js"></script>
+    <script src="./scripts/models/positions/DiagramIds.js"></script>
+    <script src="./scripts/models/positions/CellHashing.js"></script>
+    <script src="./scripts/models/positions/PositionMetricBundle.js"></script>
+    <script src="./scripts/models/nodes/UserNode.js"></script>
+    <script src="./scripts/models/nodes/UserNodePointIndication.js"></script>
+    <script src="./scripts/models/nodes/UserNodeMetricBundle.js"></script>
     <script src="./scripts/models/arcs/StoredArc.js"></script>
     <script src="./scripts/models/arcs/UserArc.js"></script>
-    <script src="./scripts/models/arcs/SvgArc.js"></script>
+    <script src="./scripts/models/arcs/FlatArc.js"></script>
     <script src="./scripts/models/arcs/SamplerArc.js"></script>
+    <script src="./scripts/models/arcs/SvgArc.js"></script>
     <script src="./scripts/models/arcs/ArcGeometry.js"></script>
     <script src="./scripts/models/arcs/SamplerArcRendering.js"></script>
     <script src="./scripts/models/arcs/SamplerArcResizing.js"></script>
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
-    <script src="./scripts/models/arcs/UserArcsAndSvgArcs.js"></script>
-    <script src="./scripts/models/arcs/UserArcsAndSamplerArcs.js"></script>
     <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
+    <script src="./scripts/models/arcs/UserArcsAndFlatArcs.js"></script>
+    <script src="./scripts/models/arcs/MetaUserArcPointIndication.js"></script>
+    <script src="./scripts/models/arcs/FlatArcsAndSamplerArcs.js"></script>
+    <script src="./scripts/models/arcs/FlatArcsAndSvgArcs.js"></script>
+    <script src="./scripts/models/arcs/FlatArcMapping.js"></script>
+    <script src="./scripts/models/arcs/FlatArcPointIndication.js"></script>
     <script src="./scripts/models/arrows/Arrow.js"></script>
     <script src="./scripts/models/arrows/DiagramArrow.js"></script>
-    <script src="./scripts/models/arrows/DiagramArrowListsAndLookups.js"></script>
     <script src="./scripts/models/objects/DiagramObject.js"></script>
     <script src="./scripts/models/objects/DiagramObjectSetOperations.js"></script>
     <script src="./scripts/models/diagrams/Diagram.js"></script>
@@ -167,15 +175,29 @@
 <script type="text/javascript">
 'use strict';
 
-const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
+const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing(), Math), Math);
+
+const user_node_metric_bundle = UserNodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
 
 const user_arcs_and_stored_arcs =
     UserArcsAndStoredArcs(
-        diagram_ids, 
+        user_node_metric_bundle, diagram_ids, glm,
         0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
         0.08, // target offset distance
     );
-const user_arcs_and_sampler_arcs = UserArcsAndSamplerArcs(ArcGeometry());
+
+const user_arcs_and_flat_arcs = 
+    UserArcsAndFlatArcs(
+        UserNodePointIndication(
+            MetaUserArcPointIndication(
+                FlatArcPointIndication(
+                    FlatArcsAndSamplerArcs(
+                        ArcGeometry(),
+                        Math), 
+                    SamplerArcProperties(),
+                    0.5))));
+
+const flat_arcs_and_sampler_arcs = FlatArcsAndSamplerArcs(ArcGeometry(), Math);
 
 const sampler_arc_properties = SamplerArcProperties();
 const sampler_arc_resizing = SamplerArcResizing(sampler_arc_properties);
@@ -205,7 +227,8 @@ const svg_arrow_attributes =
         SamplerArcMapping          : SamplerArcMapping,
         screen_state_storage       : screen_state_storage,
         user_arcs_and_stored_arcs  : user_arcs_and_stored_arcs,
-        user_arcs_and_sampler_arcs : user_arcs_and_sampler_arcs,
+        user_arcs_and_flat_arcs    : user_arcs_and_flat_arcs,
+        flat_arcs_and_sampler_arcs : flat_arcs_and_sampler_arcs,
         sampler_arc_resizing       : sampler_arc_resizing,
         sampler_arc_properties     : sampler_arc_properties,
         sampler_arc_rendering      : sampler_arc_rendering,

@@ -15,6 +15,8 @@ class StoredArc {
         this.min_length_clockwise = Object.freeze(min_length_clockwise);
         this.target_offset_id = Object.freeze(target_offset_id);
         this.is_valid = Object.freeze(is_valid);
+        if(this.source.constructor.name != 'UserNode') { console.log(this.source.constructor.name); throw new Error();}
+        if(this.target.constructor.name != 'UserNode') { console.log(this.target.constructor.name); throw new Error();}
     }
     with(attributes){
         return new StoredArc(

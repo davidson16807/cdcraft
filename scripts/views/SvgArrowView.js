@@ -21,7 +21,7 @@ function SvgArrowView(dependencies, highlight_width) {
         const screen_arc = svg_arrow_attributes.trimmed_arc_to_screen_arc(trimmed_arc, screen_state_store);
         const screen_highlight_width = PanZoomMapping(screen_state).distance.apply(highlight_width);
         const text_width = 80;
-        const arc_direction = glm.normalize(arrow.arc.target.sub(arrow.arc.source));
+        const arc_direction = glm.normalize(arrow.arc.target.position.sub(arrow.arc.source.position));
         const arc_midpoint = svg_arrow_attributes.sample(screen_arc, 0.5);
         const arc_midpoint_offset_from_origin = arc_midpoint.sub(screen_arc.origin);
         const arc_midpoint_direction_from_origin = 

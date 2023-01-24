@@ -2,9 +2,15 @@
 
 function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_clockwise, min_length_clockwise_change_per_scroll){
     function move(arrow_in, screen_positions, screen_state) {
+        const arc_in = arrow_in.arc;
         const model_position = PanZoomMapping(screen_state).position.revert(screen_positions[0]);
         return arrow_in.with({
-            arc: user_arcs_and_stored_arcs.user_arc_to_stored_arc(arrow_in.arc.with({target: model_position})),
+            arc: user_arcs_and_stored_arcs.user_arc_to_stored_arc(
+                    arc_in.with({
+                        target: arc_in.target.with({
+                            position: model_position
+                        })
+                    })),
         });
     };
 
@@ -13,9 +19,8 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
     const max = Math.max;
     function wheel(arrow_in, screen_focus, scroll_count) {
         const arc_in = arrow_in.arc;
-
         const min_length_clockwise_change = min_length_clockwise_change_per_scroll * scroll_count;
-        const chord_length = glm.distance(arc_in.source, arc_in.target);
+        const chord_length = glm.distance(arc_in.source.position, arc_in.target.position);
         const arc_length1 = 0.7;
         const arc_length2 = max(arc_length1, chord_length);
         const min_arc_length = abs(arc_in.min_length_clockwise);
@@ -26,7 +31,9 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
         const min_length_clockwise_out = sign(excess_out) * (is_different_sign? arc_length1 : (abs(excess_out) + abs(arc_length2)));
 
         return arrow_in.with({
-            arc: new StoredArc(arc_in.source, arc_in.target, min_length_clockwise_out, arc_in.target_offset_id, arc_in.is_valid),
+            arc: arc_in.with({
+                min_length_clockwise: min_length_clockwise_out
+            }),
         });
     };
 
@@ -36,16 +43,19 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
             const original_length = arrows.length;
             return {
                 id: DragState.arrow,
-                initialize: () => new DiagramArrow(
-                        user_arcs_and_stored_arcs.user_arc_to_stored_arc(
-                            new UserArc(
-                                diagram_ids.cell_position_to_cell_id(initial_model_position), 
-                                diagram_ids.cell_position_to_cell_id(initial_model_position),
-                                default_min_length_clockwise,
-                            )
-                        ),
-                        true,
-                    ),
+                initialize: () => {
+                        const result = new DiagramArrow(
+                            user_arcs_and_stored_arcs.user_arc_to_stored_arc(
+                                new UserArc(
+                                    new UserNode(diagram_ids.cell_position_to_cell_id(initial_model_position)), 
+                                    new UserNode(diagram_ids.cell_position_to_cell_id(initial_model_position)),
+                                    default_min_length_clockwise,
+                                )
+                            ),
+                            true,
+                        );
+                        return result;
+                    },
                 move: move,
                 wheel: wheel,
                 arrowenter: (replacement_arrow, arrow) => replacement_arrow,
@@ -95,7 +105,7 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                                          replacement_arrow.with({is_edited: !is_released}),
                                          ...arrows_after],
                                     arrow_selections: 
-                                        glm.distance(replacement_arrow.arc.target, replaced_arrow.arc.target) > 0?
+                                        glm.distance(replacement_arrow.arc.target.position, replaced_arrow.arc.target.position) > 0?
                                             [] : [arrow_id], 
                                     object_selections: [],
                                     inferred_object_selections: [],

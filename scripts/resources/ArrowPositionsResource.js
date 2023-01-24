@@ -11,13 +11,13 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
             let updated_position_map = {};
             for(let arrow of arrows){
                 const stored_arc = arrow.arc;
-                const source_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.source);
-                const target_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.target);
+                const source_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.source.position);
+                const target_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.target.position);
                 if (position_map == null || position_map[source_hash] != null) {
-                    updated_position_map[source_hash] = stored_arc.source;
+                    updated_position_map[source_hash] = stored_arc.source.position;
                 }
                 if (position_map == null || position_map[target_hash] != null) {
-                    updated_position_map[target_hash] = stored_arc.target;
+                    updated_position_map[target_hash] = stored_arc.target.position;
                 }
             }
             return updated_position_map;
@@ -28,15 +28,15 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
             for(let arrow of arrows){
                 const old_stored = arrow.arc;
                 const old_users = user_arcs_and_stored_arcs.stored_arc_to_user_arc(old_stored);
-                const source_hash = diagram_ids.cell_id_to_cell_hash(old_stored.source);
-                const target_hash = diagram_ids.cell_id_to_cell_hash(old_stored.target);
+                const source_hash = diagram_ids.cell_id_to_cell_hash(old_stored.source.position);
+                const target_hash = diagram_ids.cell_id_to_cell_hash(old_stored.target.position);
                 const new_users = new UserArc(
-                    position_map[source_hash] != null? 
-                        old_stored.target_offset_id.mul(-0.015).add(position_map[source_hash]) 
-                      : old_users.source, 
-                    position_map[target_hash] != null? 
-                        old_stored.target_offset_id.mul( 0.015).add(position_map[target_hash]) 
-                      : old_users.target,
+                    new UserNode(position_map[source_hash] != null? 
+                                    old_stored.target_offset_id.mul(-0.015).add(position_map[source_hash]) 
+                                  : old_users.source.position), 
+                    new UserNode(position_map[target_hash] != null? 
+                                    old_stored.target_offset_id.mul( 0.015).add(position_map[target_hash]) 
+                                  : old_users.target.position),
                     old_users.min_length_clockwise);
                 const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users, old_stored.target_offset_id);
                 updated_arrows.push(arrow.with({arc:new_stored}));
@@ -48,8 +48,8 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
             const filtered = [];
             for(let arrow of arrows){
                 const arc = arrow.arc;
-                const source_hash = diagram_ids.cell_id_to_cell_hash(arc.source);
-                const target_hash = diagram_ids.cell_id_to_cell_hash(arc.target);
+                const source_hash = diagram_ids.cell_id_to_cell_hash(arc.source.position);
+                const target_hash = diagram_ids.cell_id_to_cell_hash(arc.target.position);
                 if (position_map[source_hash] == null && position_map[target_hash] == null) {
                     filtered.push(arrow);
                 }
