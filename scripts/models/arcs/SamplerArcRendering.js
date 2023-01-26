@@ -28,8 +28,8 @@ function SamplerArcRendering(sampler_arc_properties){
 
             const points = [ sampler_arc_properties.position(inscribed_arc, 0.0) ];
             for (let i = 1; i <= sample_point_count; i++) {
-                points.push(sampler_arc_properties.position(circumscribed_arc, circumscribed_arc.length_clockwise * (i-0.5)/sample_point_count));
-                points.push(sampler_arc_properties.position(inscribed_arc, inscribed_arc.length_clockwise * i/sample_point_count));
+                points.push(sampler_arc_properties.position(circumscribed_arc, (i-0.5)/sample_point_count));
+                points.push(sampler_arc_properties.position(inscribed_arc, i/sample_point_count));
             }
 
             return new SvgQuadraticBezier(points);

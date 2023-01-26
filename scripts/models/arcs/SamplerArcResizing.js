@@ -12,7 +12,7 @@ function SamplerArcResizing(sampler_arc_properties){
             target_offset *= clockwise_sign;
             return new SamplerArc(
                 sampler_arc.origin, 
-                sampler_arc_properties.position(sampler_arc, source_offset).sub(sampler_arc.origin), 
+                sampler_arc_properties.position(sampler_arc, source_offset/sampler_arc.length_clockwise).sub(sampler_arc.origin), 
                 sampler_arc.length_clockwise - source_offset + target_offset
             );
         },

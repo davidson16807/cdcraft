@@ -49,7 +49,7 @@ function SvgArrowAttributes(dependencies, settings) {
             const screen_state = screen_state_storage.unpack(screen_state_store);
             const arrowhead_mapping = 
                 AffineMapping(AffineRemapping(PanZoomMapping(screen_state)).apply(
-                    sampler_arc_properties.map(trimmed_arc, trimmed_arc.length_clockwise)));
+                    sampler_arc_properties.map(trimmed_arc, 1.0)));
 
             const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
             const screen_points = cell_points.map(point => arrowhead_mapping.position.revert(point));
@@ -57,7 +57,7 @@ function SvgArrowAttributes(dependencies, settings) {
         },
 
         sample: function (screen_arc, fraction) {
-            return sampler_arc_properties.position(screen_arc, fraction*screen_arc.length_clockwise);
+            return sampler_arc_properties.position(screen_arc, fraction);
         },
 
         path: function (screen_arc) {
