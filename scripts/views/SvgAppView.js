@@ -77,7 +77,8 @@ function SvgAppView(dependencies, onevents) {
                         svg_arrow_selection_view.draw(
                             dom_io,
                             new_app.diagram.screen_frame_store, 
-                            arrow)));
+                            arrow,
+                            new_app.diagram.arrows)));
             dom_io.getElementById('arrow-selection-hitboxes')
                 .replaceChildren(...arrow_selections_list
                     .map(arrow => 
@@ -85,6 +86,7 @@ function SvgAppView(dependencies, onevents) {
                             dom_io,
                             new_app.diagram.screen_frame_store, 
                             arrow,
+                            new_app.diagram.arrows,
                             (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, new_app, dom_io))));
         }
 
@@ -156,6 +158,7 @@ function SvgAppView(dependencies, onevents) {
                             dom_io,
                             new_app.diagram.screen_frame_store, 
                             arrow, 
+                            new_app.diagram.arrows,
                             new_app.drag_type, 
                             (event, arrow_drawing, arrow, dom2) => onevents.arrowdown(event, drawing, arrow, new_app, dom_io),
                             (event, arrow_drawing, arrow, dom2) => onevents.arrowenter(event, drawing, arrow, new_app, dom_io))));
@@ -166,6 +169,7 @@ function SvgAppView(dependencies, onevents) {
                             dom_io,
                             new_app.diagram.screen_frame_store, 
                             arrow,
+                            new_app.diagram.arrows,
                             new_app.drag_type, 
                             (event, arrow_drawing, arrow, dom2) => onevents.midpointdown(event, drawing, arrow, new_app, dom_io),
                             (event, arrow_drawing, arrow, dom2) => onevents.midpointenter(event, drawing, arrow, new_app, dom_io))));

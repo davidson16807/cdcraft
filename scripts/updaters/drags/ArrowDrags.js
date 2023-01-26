@@ -80,6 +80,7 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
         },
 
         create_2arrow: function(arrows, initial_model_position, initial_arrow) {
+            const arrow_id = arrows.indexOf(initial_arrow);
             const original_length = arrows.length;
             return {
                 id: DragState.arrow,
@@ -87,7 +88,7 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                         const result = new DiagramArrow(
                             user_arcs_and_stored_arcs.user_arc_to_stored_arc(
                                 new UserArc(
-                                    new UserNode(initial_model_position, initial_arrow.arc), 
+                                    new UserNode(initial_model_position, arrow_id), 
                                     new UserNode(initial_model_position),
                                     default_min_length_clockwise,
                                 )

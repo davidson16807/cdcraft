@@ -31,7 +31,7 @@
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
     <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
-    <script src="./scripts/models/arcs/UserArcsAndFlatArcs.js"></script>
+    <script src="./scripts/models/arcs/MetaUserArcsAndFlatArcs.js"></script>
     <script src="./scripts/models/arcs/MetaUserArcPointIndication.js"></script>
     <script src="./scripts/models/arcs/FlatArcsAndSamplerArcs.js"></script>
     <script src="./scripts/models/arcs/FlatArcsAndSvgArcs.js"></script>
@@ -186,8 +186,8 @@ const user_arcs_and_stored_arcs =
         0.08, // target offset distance
     );
 
-const user_arcs_and_flat_arcs = 
-    UserArcsAndFlatArcs(
+const meta_user_arcs_and_flat_arcs = 
+    MetaUserArcsAndFlatArcs(
         MetaUserNodePointIndication(
             MetaUserArcPointIndication(
                 FlatArcPointIndication(
@@ -221,17 +221,17 @@ const svg_grid_view =
 
 const svg_arrow_attributes = 
     SvgArrowAttributes({
-        PanZoomMapping             : PanZoomMapping,
-        AffineMapping              : AffineMapping,
-        AffineRemapping            : AffineRemapping,
-        SamplerArcMapping          : SamplerArcMapping,
-        screen_state_storage       : screen_state_storage,
-        user_arcs_and_stored_arcs  : user_arcs_and_stored_arcs,
-        user_arcs_and_flat_arcs    : user_arcs_and_flat_arcs,
-        flat_arcs_and_sampler_arcs : flat_arcs_and_sampler_arcs,
-        sampler_arc_resizing       : sampler_arc_resizing,
-        sampler_arc_properties     : sampler_arc_properties,
-        sampler_arc_rendering      : sampler_arc_rendering,
+        PanZoomMapping              : PanZoomMapping,
+        AffineMapping               : AffineMapping,
+        AffineRemapping             : AffineRemapping,
+        SamplerArcMapping           : SamplerArcMapping,
+        screen_state_storage        : screen_state_storage,
+        user_arcs_and_stored_arcs   : user_arcs_and_stored_arcs,
+        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
+        flat_arcs_and_sampler_arcs  : flat_arcs_and_sampler_arcs,
+        sampler_arc_resizing        : sampler_arc_resizing,
+        sampler_arc_properties      : sampler_arc_properties,
+        sampler_arc_rendering       : sampler_arc_rendering,
     }, 
     { 
         source_trim_length: 0.12,

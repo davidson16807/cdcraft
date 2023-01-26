@@ -15,9 +15,9 @@ function SvgArrowView(dependencies, highlight_width) {
     }
 
     const drawing = {};
-    drawing.draw = function(dom, screen_state_store, arrow, drag_type, onclick, onenter) {
+    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter) {
         const screen_state = screen_state_storage.unpack(screen_state_store);
-        const trimmed_arc = svg_arrow_attributes.stored_arc_to_trimmed_arc(arrow.arc, screen_state_store);
+        const trimmed_arc = svg_arrow_attributes.stored_arc_to_trimmed_arc(arrow.arc, arrows);
         const screen_arc = svg_arrow_attributes.trimmed_arc_to_screen_arc(trimmed_arc, screen_state_store);
         const screen_highlight_width = PanZoomMapping(screen_state).distance.apply(highlight_width);
         const text_width = 80;
