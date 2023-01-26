@@ -21,12 +21,11 @@ function UserArcsAndStoredArcs(
             const target_cell = node_metric_bundle.bundle(arc.target);
 
             const is_loop = node_metric_bundle.distance(arc.source, arc.target) < max_loop_chord_length;
-            const is_hidden = glm.distance(arc.source.position, arc.target.position) < min_loop_chord_length;
             const max_snap_distance = (is_loop? max_loop_snap_distance : max_nonloop_snap_distance)
             const is_snapped = (
                 node_metric_bundle.distance(arc.source, source_cell) < max_snap_distance && 
                 node_metric_bundle.distance(arc.target, target_cell) < max_snap_distance);
-            const is_valid = is_snapped && !is_hidden;
+            const is_valid = is_snapped;
 
             /*
             TODO: offsets should be calculated in *the reference frame determined by node.source.reference.
@@ -38,13 +37,11 @@ function UserArcsAndStoredArcs(
                 :            glm.vec2();
 
             const source = 
-                  is_hidden?     source_cell
-                : is_snapped?    source_cell
+                  is_snapped?    source_cell
                 :                arc.source;
 
             const target = 
-                  is_hidden?  source_cell
-                : is_snapped? target_cell
+                  is_snapped? target_cell
                 :             arc.target;
 
             const stored_arc = new StoredArc(

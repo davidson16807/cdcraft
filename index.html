@@ -18,7 +18,7 @@
     <script src="./scripts/models/positions/CellHashing.js"></script>
     <script src="./scripts/models/positions/PositionMetricBundle.js"></script>
     <script src="./scripts/models/nodes/UserNode.js"></script>
-    <script src="./scripts/models/nodes/UserNodePointIndication.js"></script>
+    <script src="./scripts/models/nodes/MetaUserNodePointIndication.js"></script>
     <script src="./scripts/models/nodes/UserNodeMetricBundle.js"></script>
     <script src="./scripts/models/arcs/StoredArc.js"></script>
     <script src="./scripts/models/arcs/UserArc.js"></script>
@@ -188,7 +188,7 @@ const user_arcs_and_stored_arcs =
 
 const user_arcs_and_flat_arcs = 
     UserArcsAndFlatArcs(
-        UserNodePointIndication(
+        MetaUserNodePointIndication(
             MetaUserArcPointIndication(
                 FlatArcPointIndication(
                     FlatArcsAndSamplerArcs(

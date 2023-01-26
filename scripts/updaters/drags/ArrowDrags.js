@@ -79,6 +79,47 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
             };
         },
 
+        create_2arrow: function(arrows, initial_model_position, initial_arrow) {
+            const original_length = arrows.length;
+            return {
+                id: DragState.arrow,
+                initialize: () => {
+                        const result = new DiagramArrow(
+                            user_arcs_and_stored_arcs.user_arc_to_stored_arc(
+                                new UserArc(
+                                    new UserNode(initial_model_position, initial_arrow.arc), 
+                                    new UserNode(initial_model_position),
+                                    default_min_length_clockwise,
+                                )
+                            ),
+                            true,
+                        );
+                        return result;
+                    },
+                move: move,
+                wheel: wheel,
+                arrowenter: (replacement_arrow, arrow) => replacement_arrow,
+                objectenter: (replacement_arrow, object) => replacement_arrow,
+                midpointenter: (replacement_arrow, object) => replacement_arrow,
+                // do nothing if not snapped, otherwise add the arrow
+                command: (replacement_arrow, is_released, is_canceled) => {
+                    return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
+                            diagram => diagram.with({
+                                    arrows: arrows, 
+                                    arrow_selections: [], 
+                                    object_selections: [],
+                                    inferred_object_selections: [],
+                                })
+                          : diagram => diagram.with({
+                                    arrows: [...arrows, replacement_arrow.with({is_edited: !is_released})],
+                                    arrow_selections: [],
+                                    object_selections: [],
+                                    inferred_object_selections: [],
+                                })
+                }
+            };
+        },
+
         edit: function(arrows, replaced_arrow) {
             const arrow_id = arrows.indexOf(replaced_arrow);
             const arrows_before = arrows.slice(0,arrow_id);

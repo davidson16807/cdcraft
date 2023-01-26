@@ -7,7 +7,8 @@ function MetaUserArcPointIndication(flat_arc_point_indication) {
         since it may recursively use MetaArcPointIndication as a dependency.
         */
         instantiate: (user_arcs_and_flat_arcs) => {
-            return {/*
+            return {
+                /*
                 Returns a position vector that visually represents the node to the user.
                 */
                 point: (arc) => flat_arc_point_indication.point(
