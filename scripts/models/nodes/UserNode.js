@@ -9,14 +9,19 @@ and no need is foreseen to support other objects, however other data types are p
 `reference` is undefined if no object is represented by `position`.
 */
 class UserNode {
+
     constructor(position, reference){
+        typecheck(position, 'glm_vec2$class+glm_ivec2$class+1');
+        typecheck(reference, 'Number+1');
         this.position = Object.freeze(position);
         this.reference = Object.freeze(reference);
     }
+
     with(attributes){
         return new UserNode(
             attributes.position  != null? attributes.position  : this.position,
             attributes.reference != null? attributes.reference : this.reference,
         );
     }
+
 }

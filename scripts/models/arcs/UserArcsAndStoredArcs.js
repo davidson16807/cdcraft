@@ -55,8 +55,8 @@ function UserArcsAndStoredArcs(
         },
         stored_arc_to_user_arc: (arc) => {
             return new UserArc(
-                new UserNode(arc.target_offset_id.mul(-target_offset_distance).add(arc.source.position), arc.source.reference), 
-                new UserNode(arc.target_offset_id.mul( target_offset_distance).add(arc.target.position), arc.target.reference),
+                arc.source.with({position: arc.source.position == null? null : arc.target_offset_id.mul(-target_offset_distance).add(arc.source.position)}),
+                arc.target.with({position: arc.target.position == null? null : arc.target_offset_id.mul( target_offset_distance).add(arc.target.position)}),
                 arc.min_length_clockwise
             );
         }

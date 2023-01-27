@@ -11,6 +11,7 @@
     <script src="./libraries/glm-js.min.js"></script>
     <script src="./libraries/katex.min.js"></script>
     <script src="./libraries/auto-render.min.js"></script>
+    <script src="./scripts/typecheck.js"></script>
     <script src="./scripts/coordinates/ScreenStateStorage.js"></script>
     <script src="./scripts/coordinates/ScreenStateStore.js"></script>
     <script src="./scripts/coordinates/CoordinateSystems.js"></script>
@@ -246,6 +247,7 @@ const svg_arrow_view = SvgArrowView({
         view_event_deferal         : view_event_deferal,
         screen_state_storage       : screen_state_storage,
         render                     : renderMathInElement,
+        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
     }, 0.2);
 
 const svg_arrow_selection_view = 
@@ -255,6 +257,7 @@ const svg_arrow_selection_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
+        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
     }, 0.2);
 
 const svg_arrow_midpoint_view = 
@@ -264,6 +267,7 @@ const svg_arrow_midpoint_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
+        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
     }, 0.5);
 
 const svg_object_view = 

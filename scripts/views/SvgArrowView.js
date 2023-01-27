@@ -8,6 +8,7 @@ function SvgArrowView(dependencies, highlight_width) {
     const svg_arrow_attributes = dependencies.svg_arrow_attributes;
     const view_event_deferal = dependencies.view_event_deferal;
     const render = dependencies.render;
+    const meta_user_arcs_and_flat_arcs = dependencies.meta_user_arcs_and_flat_arcs;
 
     const sign = Math.sign;
     function linearstep(lo,hi,x) {
@@ -17,11 +18,14 @@ function SvgArrowView(dependencies, highlight_width) {
     const drawing = {};
     drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter) {
         const screen_state = screen_state_storage.unpack(screen_state_store);
-        const trimmed_arc = svg_arrow_attributes.stored_arc_to_trimmed_arc(arrow.arc, arrows);
+        const user_arcs_and_flat_arcs = meta_user_arcs_and_flat_arcs.instantiate(arrows);
+        const flat_arc = user_arcs_and_flat_arcs.user_arc_to_flat_arc(
+                            user_arcs_and_stored_arcs.stored_arc_to_user_arc(arrow.arc));
+        const trimmed_arc = svg_arrow_attributes.flat_arc_to_trimmed_arc(flat_arc);
         const screen_arc = svg_arrow_attributes.trimmed_arc_to_screen_arc(trimmed_arc, screen_state_store);
         const screen_highlight_width = PanZoomMapping(screen_state).distance.apply(highlight_width);
         const text_width = 80;
-        const arc_direction = glm.normalize(arrow.arc.target.position.sub(arrow.arc.source.position));
+        const arc_direction = glm.normalize(flat_arc.target.sub(flat_arc.source));
         const arc_midpoint = svg_arrow_attributes.sample(screen_arc, 0.5);
         const arc_midpoint_offset_from_origin = arc_midpoint.sub(screen_arc.origin);
         const arc_midpoint_direction_from_origin = 

@@ -285,7 +285,6 @@ function AppUpdater(
         midpointdown: function(event, drawing, arrow, app_io, dom_io){
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
-                console.log('midpointdown')
                 drag_ops.transition( arrow_drags.create_2arrow(app_io.diagram.arrows, glm.vec2(0,0), arrow), app_io);
                 drawing.redraw(undefined, app_io, dom_io);
             }
@@ -295,7 +294,6 @@ function AppUpdater(
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 const arrow_id = app_io.diagram.arrows.indexOf(arrow);
-                console.log('midpointenter')
                 // history.do(app_io, app_io.diagram.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]}), true);
                 drawing.redraw(undefined, app_io, dom_io);
             }
@@ -305,7 +303,6 @@ function AppUpdater(
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 const arrow_id = app_io.diagram.arrows.indexOf(arrow);
-                console.log('midpointexit')
                 // history.do(app_io, app_io.diagram.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]}), true);
                 drawing.redraw(undefined, app_io, dom_io);
             }

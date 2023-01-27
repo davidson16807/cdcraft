@@ -88,7 +88,7 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, default_min_length_c
                         const result = new DiagramArrow(
                             user_arcs_and_stored_arcs.user_arc_to_stored_arc(
                                 new UserArc(
-                                    new UserNode(initial_model_position, arrow_id), 
+                                    new UserNode(null, arrow_id), 
                                     new UserNode(initial_model_position),
                                     default_min_length_clockwise,
                                 )

@@ -8,11 +8,11 @@ selected by the user and the object that point refers to, if any.
 */
 class UserArc {
     constructor(source, target, min_length_clockwise){
+        typecheck(source, 'UserNode');
+        typecheck(target, 'UserNode');
         this.source = Object.freeze(source);
         this.target = Object.freeze(target);
         this.min_length_clockwise = Object.freeze(min_length_clockwise);
-        if(this.source.constructor.name != 'UserNode') { console.log(this.source.constructor.name); throw new Error();}
-        if(this.target.constructor.name != 'UserNode') { console.log(this.target.constructor.name); throw new Error();}
     }
     with(attributes){
         return new UserArc(

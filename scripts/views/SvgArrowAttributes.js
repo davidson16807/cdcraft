@@ -30,11 +30,8 @@ function SvgArrowAttributes(dependencies, settings) {
 
     return {
 
-        stored_arc_to_trimmed_arc: function(stored_arc, arrows) {
-            const sampler_arc =
-                flat_arcs_and_sampler_arcs.flat_arc_to_sampler_arc(
-                    meta_user_arcs_and_flat_arcs.instantiate(arrows).user_arc_to_flat_arc(
-                        user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc)))
+        flat_arc_to_trimmed_arc: function(flat_arc) {
+            const sampler_arc = flat_arcs_and_sampler_arcs.flat_arc_to_sampler_arc(flat_arc)
             const trimmed_arc = sampler_arc_resizing.resize(sampler_arc, source_trim_length, -target_trim_length);
             return trimmed_arc;
         },

@@ -41,7 +41,6 @@ function AppDragOperations(
             const is_canceled = drag_type.id != DragState.released && drag_type.id != app_io.drag_type.id;
 
             if (is_released || is_canceled) { 
-                console.log(app_io.drag_state);
                 history.do(app_io, 
                     app_io.drag_type.command(app_io.drag_state, is_released, is_canceled)(app_io.diagram), !is_released);
                 app_io.drag_type = drag_type;
