@@ -14,7 +14,7 @@ function ResourceOperations(){
         `update` offsets all positions within a `position_map`.
         */
         update: function(...maps) {
-            return Object.assign(...maps);
+            return Object.assign({}, ...maps);
         },
 
         /*
