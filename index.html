@@ -301,7 +301,9 @@ const svg_arrow_toolbar_view =
     });
 
 const arrow_positions_resource = 
-    ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, true);
+    ArrowPositionsResource(
+        NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math)), 
+        user_arcs_and_stored_arcs, true);
 
 const object_position_resource = 
     ObjectPositionResource(diagram_ids, true);

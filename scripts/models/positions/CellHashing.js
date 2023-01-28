@@ -35,6 +35,6 @@ function NodeHashing(unbounded_cell_hashing) {
         // A node can be either a position or an arrow reference, 
         // so multiply the hash of either by two and offset by a unique id for the quadrant
         // hash: (node) => (node.position == null? 0 : unbounded_cell_hashing.hash(node.position)) - (node.reference || 0),
-        hash: (node) => unbounded_cell_hashing.hash(node.position),
+        hash: (node) => (node.position == null? (-node.reference-1) : unbounded_cell_hashing.hash(node.position.x, node.position.y)),
     };
 }

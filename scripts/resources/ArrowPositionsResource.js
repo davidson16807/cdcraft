@@ -4,15 +4,15 @@
 A `ArrowPositionsResource` implements a REST-like interface
 on source and target positions within a list of arrows.
 */
-function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
+function ArrowPositionsResource(node_hashing, user_arcs_and_stored_arcs){
     return {
 
         get: function(arrows, position_map){
             let updated_position_map = {};
             for(let arrow of arrows){
                 const stored_arc = arrow.arc;
-                const source_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.source.position);
-                const target_hash = diagram_ids.cell_id_to_cell_hash(stored_arc.target.position);
+                const source_hash = node_hashing.hash(stored_arc.source);
+                const target_hash = node_hashing.hash(stored_arc.target);
                 if ((position_map == null || position_map[source_hash] != null) && stored_arc.source.position != null) {
                     updated_position_map[source_hash] = stored_arc.source.position;
                 }
@@ -28,8 +28,8 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
             for(let arrow of arrows){
                 const old_stored = arrow.arc;
                 const old_users = user_arcs_and_stored_arcs.stored_arc_to_user_arc(old_stored);
-                const source_hash = diagram_ids.cell_id_to_cell_hash(old_stored.source.position);
-                const target_hash = diagram_ids.cell_id_to_cell_hash(old_stored.target.position);
+                const source_hash = node_hashing.hash(old_stored.source);
+                const target_hash = node_hashing.hash(old_stored.target);
                 const new_users = new UserArc(
                     old_users.source.with({
                         position: position_map[source_hash] != null? 
@@ -50,15 +50,26 @@ function ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs){
 
         delete: function(arrows, position_map) {
             const filtered = [];
-            for(let arrow of arrows){
+            const node_map = {};
+            for(let i = 0; i < arrows.length; i++){
+                const arrow = arrows[i];
                 const arc = arrow.arc;
-                const source_hash = diagram_ids.cell_id_to_cell_hash(arc.source.position);
-                const target_hash = diagram_ids.cell_id_to_cell_hash(arc.target.position);
+                const source_hash = node_hashing.hash(arc.source);
+                const target_hash = node_hashing.hash(arc.target);
                 if (position_map[source_hash] == null && position_map[target_hash] == null) {
                     filtered.push(arrow);
+                } else {
+                    const arrow_hash = node_hashing.hash(new UserNode(null, i));
+                    node_map[arrow_hash] = 0;
                 }
             }
-            return filtered;
+            /*
+            The arrows that were removed may be referenced by other arrows,
+            so recursively call `delete()` for as long as arrows have been removed and there are more arrows available.
+            */
+            return 0 < filtered.length && filtered.length < arrows.length? 
+                  this.delete(filtered, node_map)
+                : filtered;
         },
 
     };
