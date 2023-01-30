@@ -10,8 +10,8 @@
 */
 class StoredArc {
     constructor(source, target, min_length_clockwise, target_offset_id, is_valid){
-        typecheck(source, 'UserNode')
-        typecheck(target, 'UserNode')
+        typecheck(source, 'Node')
+        typecheck(target, 'Node')
         this.source = Object.freeze(source);
         this.target = Object.freeze(target);
         this.min_length_clockwise = Object.freeze(min_length_clockwise);

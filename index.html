@@ -18,9 +18,10 @@
     <script src="./scripts/models/positions/DiagramIds.js"></script>
     <script src="./scripts/models/positions/CellHashing.js"></script>
     <script src="./scripts/models/positions/PositionMetricBundle.js"></script>
-    <script src="./scripts/models/nodes/UserNode.js"></script>
-    <script src="./scripts/models/nodes/MetaUserNodePointIndication.js"></script>
-    <script src="./scripts/models/nodes/UserNodeMetricBundle.js"></script>
+    <script src="./scripts/models/nodes/Node.js"></script>
+    <script src="./scripts/models/nodes/NodeHashing.js"></script>
+    <script src="./scripts/models/nodes/MetaNodePointIndication.js"></script>
+    <script src="./scripts/models/nodes/NodeMetricBundle.js"></script>
     <script src="./scripts/models/arcs/StoredArc.js"></script>
     <script src="./scripts/models/arcs/UserArc.js"></script>
     <script src="./scripts/models/arcs/FlatArc.js"></script>
@@ -178,18 +179,18 @@
 
 const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing(), Math), Math);
 
-const user_node_metric_bundle = UserNodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
+const node_metric_bundle = NodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
 
 const user_arcs_and_stored_arcs =
     UserArcsAndStoredArcs(
-        user_node_metric_bundle, diagram_ids, glm,
+        node_metric_bundle, diagram_ids, glm,
         0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
         0.08, // target offset distance
     );
 
 const meta_user_arcs_and_flat_arcs = 
     MetaUserArcsAndFlatArcs(
-        MetaUserNodePointIndication(
+        MetaNodePointIndication(
             MetaUserArcPointIndication(
                 FlatArcPointIndication(
                     FlatArcsAndSamplerArcs(
@@ -323,7 +324,7 @@ const selection_drags =
 const arrow_drags = 
     ArrowDrags(
         diagram_ids,
-        user_node_metric_bundle,
+        node_metric_bundle,
         user_arcs_and_stored_arcs,
         meta_user_arcs_and_flat_arcs,
         1.0, // default_min_length_clockwise

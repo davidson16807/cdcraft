@@ -52,12 +52,12 @@ function ArrowDrags(
             arrowenter: (arrow_in, arrow) => 
                 arrow_in.with({ 
                     arc: arrow_in.arc.with({
-                        target: new UserNode(null, arrows.indexOf(arrow))}) }),
+                        target: new Node(null, arrows.indexOf(arrow))}) }),
 
             arrowleave: (arrow_in, screen_positions, screen_state) => 
                 arrow_in.with({
                     arc: arrow_in.arc.with({
-                        target: new UserNode(PanZoomMapping(screen_state).position.revert(screen_positions[0])),
+                        target: new Node(PanZoomMapping(screen_state).position.revert(screen_positions[0])),
                     }),
                 }),
         }
@@ -75,8 +75,8 @@ function ArrowDrags(
                         const result = new DiagramArrow(
                             user_arcs_and_stored_arcs.user_arc_to_stored_arc(
                                 new UserArc(
-                                    new UserNode(diagram_ids.cell_position_to_cell_id(initial_model_position)), 
-                                    new UserNode(diagram_ids.cell_position_to_cell_id(initial_model_position)),
+                                    new Node(diagram_ids.cell_position_to_cell_id(initial_model_position)), 
+                                    new Node(diagram_ids.cell_position_to_cell_id(initial_model_position)),
                                     default_min_length_clockwise,
                                 )
                             ),
@@ -118,8 +118,8 @@ function ArrowDrags(
                         const result = new DiagramArrow(
                             user_arcs_and_stored_arcs.user_arc_to_stored_arc(
                                 new UserArc(
-                                    new UserNode(null, arrow_id), 
-                                    new UserNode(initial_model_position),
+                                    new Node(null, arrow_id), 
+                                    new Node(initial_model_position),
                                     default_min_length_clockwise,
                                 )
                             ),

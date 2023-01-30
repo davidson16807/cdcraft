@@ -59,7 +59,7 @@ function ArrowPositionsResource(node_hashing, user_arcs_and_stored_arcs){
                 if (position_map[source_hash] == null && position_map[target_hash] == null) {
                     filtered.push(arrow);
                 } else {
-                    const arrow_hash = node_hashing.hash(new UserNode(null, i));
+                    const arrow_hash = node_hashing.hash(new Node(null, i));
                     node_map[arrow_hash] = 0;
                 }
             }

@@ -1,6 +1,6 @@
 'use strict';
 
-function MetaUserNodePointIndication(meta_arc_point_indication) {
+function MetaNodePointIndication(meta_arc_point_indication) {
     return {
         instantiate: (user_arcs_and_flat_arcs, arrows) => {
             return {
