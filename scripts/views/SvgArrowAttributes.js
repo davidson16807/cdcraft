@@ -3,7 +3,7 @@
 function SvgArrowAttributes(dependencies, settings) {
     const screen_state_storage         = dependencies.screen_state_storage;
     const user_arcs_and_stored_arcs    = dependencies.user_arcs_and_stored_arcs;
-    const meta_user_arcs_and_flat_arcs = dependencies.meta_user_arcs_and_flat_arcs;
+    const curried_user_arcs_and_flat_arcs = dependencies.curried_user_arcs_and_flat_arcs;
     const flat_arcs_and_sampler_arcs   = dependencies.flat_arcs_and_sampler_arcs;
     const sampler_arc_resizing         = dependencies.sampler_arc_resizing;
     const sampler_arc_properties       = dependencies.sampler_arc_properties;

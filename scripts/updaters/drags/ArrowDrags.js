@@ -3,7 +3,7 @@
 function ArrowDrags(
         diagram_ids, 
         node_metric_bundle,
-        meta_abstract_arrow_drag, 
+        curried_abstract_arrow_drag, 
         user_arcs_and_stored_arcs, 
         default_min_length_clockwise, 
         min_length_clockwise_change_per_scroll
@@ -12,7 +12,7 @@ function ArrowDrags(
     return {
         create: function(arrows, initial_model_position) {
             return Object.assign({}, 
-                meta_abstract_arrow_drag.instantiate(arrows), 
+                curried_abstract_arrow_drag(arrows), 
                 {
                     initialize: () => 
                         new DiagramArrow(
@@ -46,7 +46,7 @@ function ArrowDrags(
         create_2arrow: function(arrows, initial_model_position, initial_arrow) {
             const arrow_id = arrows.indexOf(initial_arrow);
             return Object.assign({}, 
-                meta_abstract_arrow_drag.instantiate(arrows), 
+                curried_abstract_arrow_drag(arrows), 
                 {
                     initialize: () => 
                         new DiagramArrow(
@@ -82,7 +82,7 @@ function ArrowDrags(
             const arrows_before = arrows.slice(0,arrow_id);
             const arrows_after = arrows.slice(arrow_id+1);
             return Object.assign({}, 
-                meta_abstract_arrow_drag.instantiate(arrows), 
+                curried_abstract_arrow_drag(arrows), 
                 {
                     initialize: () => replaced_arrow.with({is_edited: true}),
                     // delete the arrow if canceled or not snapped, otherwise edit the arrow

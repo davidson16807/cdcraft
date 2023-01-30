@@ -20,7 +20,7 @@
     <script src="./scripts/models/positions/PositionMetricBundle.js"></script>
     <script src="./scripts/models/nodes/Node.js"></script>
     <script src="./scripts/models/nodes/NodeHashing.js"></script>
-    <script src="./scripts/models/nodes/MetaNodePointIndication.js"></script>
+    <script src="./scripts/models/nodes/CurriedNodePointIndication.js"></script>
     <script src="./scripts/models/nodes/NodeMetricBundle.js"></script>
     <script src="./scripts/models/arcs/StoredArc.js"></script>
     <script src="./scripts/models/arcs/UserArc.js"></script>
@@ -33,8 +33,8 @@
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
     <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
-    <script src="./scripts/models/arcs/MetaUserArcsAndPointArcs.js"></script>
-    <script src="./scripts/models/arcs/MetaUserArcPointIndication.js"></script>
+    <script src="./scripts/models/arcs/CurriedUserArcsAndPointArcs.js"></script>
+    <script src="./scripts/models/arcs/CurriedUserArcPointIndication.js"></script>
     <script src="./scripts/models/arcs/PointArcsAndSamplerArcs.js"></script>
     <script src="./scripts/models/arcs/PointArcsAndSvgArcs.js"></script>
     <script src="./scripts/models/arcs/PointArcMapping.js"></script>
@@ -61,7 +61,7 @@
     <script src="./scripts/views/SvgAppView.js"></script>
     <script src="./scripts/dom/Html.js"></script>
     <script src="./scripts/dom/Svg.js"></script>
-    <script src="./scripts/updaters/drags/MetaAbstractArrowDrag.js"></script>
+    <script src="./scripts/updaters/drags/CurriedAbstractArrowDrag.js"></script>
     <script src="./scripts/updaters/drags/ViewDrags.js"></script>
     <script src="./scripts/updaters/drags/SelectionDrags.js"></script>
     <script src="./scripts/updaters/drags/ArrowDrags.js"></script>
@@ -189,10 +189,10 @@ const user_arcs_and_stored_arcs =
         0.08, // target offset distance
     );
 
-const meta_user_arcs_and_flat_arcs = 
-    MetaUserArcsAndPointArcs(
-        MetaNodePointIndication(
-            MetaUserArcPointIndication(
+const curried_user_arcs_and_flat_arcs = 
+    CurriedUserArcsAndPointArcs(
+        CurriedNodePointIndication(
+            CurriedUserArcPointIndication(
                 PointArcPointIndication(
                     PointArcsAndSamplerArcs(
                         ArcGeometry(),
@@ -230,7 +230,7 @@ const svg_arrow_attributes =
         SamplerArcMapping           : SamplerArcMapping,
         screen_state_storage        : screen_state_storage,
         user_arcs_and_stored_arcs   : user_arcs_and_stored_arcs,
-        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
+        curried_user_arcs_and_flat_arcs: curried_user_arcs_and_flat_arcs,
         flat_arcs_and_sampler_arcs  : flat_arcs_and_sampler_arcs,
         sampler_arc_resizing        : sampler_arc_resizing,
         sampler_arc_properties      : sampler_arc_properties,
@@ -249,7 +249,7 @@ const svg_arrow_view = SvgArrowView({
         view_event_deferal         : view_event_deferal,
         screen_state_storage       : screen_state_storage,
         render                     : renderMathInElement,
-        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
+        curried_user_arcs_and_flat_arcs: curried_user_arcs_and_flat_arcs,
     }, 0.2);
 
 const svg_arrow_selection_view = 
@@ -259,7 +259,7 @@ const svg_arrow_selection_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
+        curried_user_arcs_and_flat_arcs: curried_user_arcs_and_flat_arcs,
     }, 0.2);
 
 const svg_arrow_midpoint_view = 
@@ -269,7 +269,7 @@ const svg_arrow_midpoint_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
+        curried_user_arcs_and_flat_arcs: curried_user_arcs_and_flat_arcs,
     }, 0.5);
 
 const svg_object_view = 
@@ -326,9 +326,9 @@ const arrow_drags =
     ArrowDrags(
         diagram_ids,
         node_metric_bundle,
-        MetaAbstractArrowDrag(
+        CurriedAbstractArrowDrag(
             user_arcs_and_stored_arcs, 
-            meta_user_arcs_and_flat_arcs, 
+            curried_user_arcs_and_flat_arcs, 
             Math),
         user_arcs_and_stored_arcs,
         1.0, // default_min_length_clockwise
