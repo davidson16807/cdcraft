@@ -20,11 +20,11 @@ function ArrowDrags(
                 const model_position = PanZoomMapping(screen_state).position.revert(screen_positions[0]);
                 return arrow_in.with({
                     arc: user_arcs_and_stored_arcs.user_arc_to_stored_arc(
-                            arc_in.with({
-                                target: arc_in.target.with({
-                                    position: model_position
-                                })
-                            })),
+                        arc_in.with({
+                            target: arc_in.target.reference == null? 
+                                  arc_in.target.with({ position: model_position})
+                                : arc_in.target
+                        })),
                 });
             },
 
@@ -80,7 +80,14 @@ function ArrowDrags(
                         arc: replacement_arrow.arc.with({
                             target: new UserNode(null, arrows.indexOf(arrow))}) }),
                 arrowleave: (replacement_arrow, screen_positions, screen_state) => 
-                    tools.move(replacement_arrow, screen_positions, screen_state),
+                    tools.move(
+                        replacement_arrow.with({
+                            arc: replacement_arrow.arc.with({
+                                target: new UserNode(),
+                            }),
+                        }), 
+                        screen_positions, 
+                        screen_state),
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
@@ -127,7 +134,14 @@ function ArrowDrags(
                         arc: replacement_arrow.arc.with({
                             target: new UserNode(null, arrows.indexOf(arrow))}) }),
                 arrowleave: (replacement_arrow, screen_positions, screen_state) => 
-                    tools.move(replacement_arrow, screen_positions, screen_state),
+                    tools.move(
+                        replacement_arrow.with({
+                            arc: replacement_arrow.arc.with({
+                                target: new UserNode(),
+                            }),
+                        }), 
+                        screen_positions, 
+                        screen_state),
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
@@ -163,7 +177,14 @@ function ArrowDrags(
                         arc: replacement_arrow.arc.with({
                             target: new UserNode(null, arrows.indexOf(arrow))}) }),
                 arrowleave: (replacement_arrow, screen_positions, screen_state) => 
-                    tools.move(replacement_arrow, screen_positions, screen_state),
+                    tools.move(
+                        replacement_arrow.with({
+                            arc: replacement_arrow.arc.with({
+                                target: new UserNode(),
+                            }),
+                        }), 
+                        screen_positions, 
+                        screen_state),
                 // delete the arrow if canceled or not snapped, otherwise edit the arrow
                 command: (replacement_arrow, is_released, is_canceled) => diagram => 
                     is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
