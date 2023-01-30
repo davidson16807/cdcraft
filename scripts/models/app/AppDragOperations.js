@@ -35,18 +35,14 @@ function AppDragOperations(
         },
 
         arrowenter: function (arrow, app_io) {
-            // console.log('arrowenter', app_io.drag_state);
-            // console.log('arrowenter', app_io.drag_state, app_io.drag_type.arrowenter(app_io.drag_state, arrow).arc);
             app_io.drag_state = app_io.drag_type.arrowenter(app_io.drag_state, arrow);
             history.do(app_io, 
                 app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);
         },
 
         arrowleave: function (screen_positions, app_io) {
-            // console.log('arrowleave', app_io.drag_state);
             const model_to_screen_store = app_io.diagram.screen_frame_store;
             const model_to_screen = storage.unpack(model_to_screen_store);
-            // console.log('arrowleave', app_io.drag_state, app_io.drag_type.arrowleave(app_io.drag_state, screen_positions, model_to_screen).arc);
             app_io.drag_state = app_io.drag_type.arrowleave(app_io.drag_state, screen_positions, model_to_screen);
             history.do(app_io, 
                 app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);

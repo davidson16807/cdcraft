@@ -9,24 +9,23 @@ function ArrowDrags(
         min_length_clockwise_change_per_scroll
     ){
 
-    const Tools = (user_arcs_and_flat_arcs) => {
+    const Tools = (arrows) => {
+        const user_arcs_and_flat_arcs = meta_user_arcs_and_flat_arcs.instantiate(arrows);
         const sign = Math.sign;
         const abs = Math.abs;
         const max = Math.max;
         return {
 
-            move: (arrow_in, screen_positions, screen_state) => {
-                const arc_in = arrow_in.arc;
-                const model_position = PanZoomMapping(screen_state).position.revert(screen_positions[0]);
-                return arrow_in.with({
+            move: (arrow_in, screen_positions, screen_state) => 
+                arrow_in.with({
                     arc: user_arcs_and_stored_arcs.user_arc_to_stored_arc(
-                        arc_in.with({
-                            target: arc_in.target.reference == null? 
-                                  arc_in.target.with({ position: model_position})
-                                : arc_in.target
+                        arrow_in.arc.with({
+                            target: arrow_in.arc.target.reference == null? 
+                                  arrow_in.arc.target.with({ 
+                                    position: PanZoomMapping(screen_state).position.revert(screen_positions[0])})
+                                : arrow_in.arc.target
                         })),
-                });
-            },
+                }),
 
             wheel: (arrow_in, screen_focus, scroll_count) => {
                 const flat_arc = user_arcs_and_flat_arcs.user_arc_to_flat_arc(arrow_in.arc)
@@ -48,6 +47,19 @@ function ArrowDrags(
                 });
             },
 
+            objectenter: (arrow_in, object) => arrow_in,
+
+            arrowenter: (arrow_in, arrow) => 
+                arrow_in.with({ 
+                    arc: arrow_in.arc.with({
+                        target: new UserNode(null, arrows.indexOf(arrow))}) }),
+
+            arrowleave: (arrow_in, screen_positions, screen_state) => 
+                arrow_in.with({
+                    arc: arrow_in.arc.with({
+                        target: new UserNode(PanZoomMapping(screen_state).position.revert(screen_positions[0])),
+                    }),
+                }),
         }
     }
 
@@ -56,7 +68,7 @@ function ArrowDrags(
     return {
         create: function(arrows, initial_model_position) {
             const original_length = arrows.length;
-            const tools = Tools(meta_user_arcs_and_flat_arcs.instantiate(arrows));
+            const tools = Tools(arrows);
             return {
                 id: DragState.arrow,
                 initialize: () => {
@@ -74,20 +86,9 @@ function ArrowDrags(
                     },
                 move: tools.move,
                 wheel: tools.wheel,
-                objectenter: (replacement_arrow, object) => replacement_arrow,
-                arrowenter: (replacement_arrow, arrow) => 
-                    replacement_arrow.with({ 
-                        arc: replacement_arrow.arc.with({
-                            target: new UserNode(null, arrows.indexOf(arrow))}) }),
-                arrowleave: (replacement_arrow, screen_positions, screen_state) => 
-                    tools.move(
-                        replacement_arrow.with({
-                            arc: replacement_arrow.arc.with({
-                                target: new UserNode(),
-                            }),
-                        }), 
-                        screen_positions, 
-                        screen_state),
+                objectenter: tools.objectenter,
+                arrowenter: tools.arrowenter,
+                arrowleave: tools.arrowleave,
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
@@ -110,7 +111,7 @@ function ArrowDrags(
         create_2arrow: function(arrows, initial_model_position, initial_arrow) {
             const arrow_id = arrows.indexOf(initial_arrow);
             const original_length = arrows.length;
-            const tools = Tools(meta_user_arcs_and_flat_arcs.instantiate(arrows));
+            const tools = Tools(arrows);
             return {
                 id: DragState.arrow,
                 initialize: () => {
@@ -128,20 +129,9 @@ function ArrowDrags(
                     },
                 move: tools.move,
                 wheel: tools.wheel,
-                objectenter: (replacement_arrow, object) => replacement_arrow,
-                arrowenter: (replacement_arrow, arrow) => 
-                    replacement_arrow.with({ 
-                        arc: replacement_arrow.arc.with({
-                            target: new UserNode(null, arrows.indexOf(arrow))}) }),
-                arrowleave: (replacement_arrow, screen_positions, screen_state) => 
-                    tools.move(
-                        replacement_arrow.with({
-                            arc: replacement_arrow.arc.with({
-                                target: new UserNode(),
-                            }),
-                        }), 
-                        screen_positions, 
-                        screen_state),
+                objectenter: tools.objectenter,
+                arrowenter: tools.arrowenter,
+                arrowleave: tools.arrowleave,
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
@@ -165,26 +155,15 @@ function ArrowDrags(
             const arrow_id = arrows.indexOf(replaced_arrow);
             const arrows_before = arrows.slice(0,arrow_id);
             const arrows_after = arrows.slice(arrow_id+1);
-            const tools = Tools(meta_user_arcs_and_flat_arcs.instantiate(arrows));
+            const tools = Tools(arrows);
             return {
                 id: DragState.arrow,
                 initialize: () => replaced_arrow.with({is_edited: true}),
                 move: tools.move,
                 wheel: tools.wheel,
-                objectenter: (replacement_arrow, object) => replacement_arrow,
-                arrowenter: (replacement_arrow, arrow) => 
-                    replacement_arrow.with({ 
-                        arc: replacement_arrow.arc.with({
-                            target: new UserNode(null, arrows.indexOf(arrow))}) }),
-                arrowleave: (replacement_arrow, screen_positions, screen_state) => 
-                    tools.move(
-                        replacement_arrow.with({
-                            arc: replacement_arrow.arc.with({
-                                target: new UserNode(),
-                            }),
-                        }), 
-                        screen_positions, 
-                        screen_state),
+                objectenter: tools.objectenter,
+                arrowenter: tools.arrowenter,
+                arrowleave: tools.arrowleave,
                 // delete the arrow if canceled or not snapped, otherwise edit the arrow
                 command: (replacement_arrow, is_released, is_canceled) => diagram => 
                     is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 

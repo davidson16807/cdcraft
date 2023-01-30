@@ -269,7 +269,6 @@ function AppUpdater(
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow), app_io);
-                console.log('arrowdown', app_io.diagram.arrows);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },
@@ -288,12 +287,8 @@ function AppUpdater(
                     drawing.redraw(undefined, app_io, dom_io);
                 }
                 if (event.buttons == 1 && !arrow.is_edited) {
-                    console.log('arrowenter', app_io.diagram.arrows.indexOf(arrow), arrow, app_io.diagram.arrows, event.buttons, app_io.drag_type.id);
-                }
-                if (event.buttons == 1 && !arrow.is_edited) {
                     event.stopPropagation();
                     drag_ops.arrowenter(arrow, app_io);
-                    // console.log('midpointenter', app_io.drag_state.arc.target);
                     drawing.redraw(undefined, app_io, dom_io);
                 }
             }
@@ -301,12 +296,8 @@ function AppUpdater(
 
         arrowleave: function(event, drawing, arrow, app_io, dom_io){
             if (event.buttons == 1 && !arrow.is_edited) {
-                console.log('arrowleave', app_io.diagram.arrows.indexOf(arrow), app_io.diagram.arrows, event.buttons, app_io.drag_type.id);
-            }
-            if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.arrowleave([glm.vec2(event.clientX, event.clientY)], app_io);
-                // console.log('arrowleave', app_io.drag_state.arc.target);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },
@@ -314,33 +305,10 @@ function AppUpdater(
         midpointdown: function(event, drawing, arrow, app_io, dom_io){
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
-                drag_ops.transition(arrow_drags.create_2arrow(app_io.diagram.arrows, glm.vec2(0,0), arrow), app_io);
-                drawing.redraw(undefined, app_io, dom_io);
-            }
-        },
-
-        midpointenter: function(event, drawing, arrow, app_io, dom_io){
-            if (!arrow.is_edited) {
-                console.log('midpointenter', app_io.diagram.arrows.indexOf(arrow));
-            }
-            // console.log('midpointenter');
-            if (event.buttons == 1 && !arrow.is_edited) {
-                event.stopPropagation();
-                drag_ops.arrowenter(arrow, app_io);
-                // console.log('midpointenter', app_io.drag_state.arc.target);
-                drawing.redraw(undefined, app_io, dom_io);
-            }
-        },
-
-        midpointleave: function(event, drawing, arrow, app_io, dom_io){
-            if (!arrow.is_edited) {
-                console.log('midpointleave', app_io.diagram.arrows.indexOf(arrow));
-            }
-            // console.log('midpointleave');
-            if (event.buttons == 1 && !arrow.is_edited) {
-                event.stopPropagation();
-                drag_ops.arrowleave([glm.vec2(event.clientX, event.clientY)], app_io);
-                // console.log('midpointleave', app_io.drag_state.arc.target);
+                const screen_position = glm.vec2(event.clientX, event.clientY);
+                const screen_state = screen_state_storage.unpack(app_io.diagram.screen_frame_store);
+                const model_position = PanZoomMapping(screen_state).position.revert(screen_position);
+                drag_ops.transition(arrow_drags.create_2arrow(app_io.diagram.arrows, model_position, arrow), app_io);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },

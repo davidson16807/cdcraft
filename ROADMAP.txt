@@ -1,7 +1,6 @@
 TODO:
 
 HIGH PRIORITY:
-functor arrows
 latex export/import 
 
 MEDIUM PRIORITY:
@@ -21,6 +20,7 @@ fix bug where dragging one named object on top of another causes overlap
 	we likely need to store objects in a structure indexed by cell hash, so this problem could not fundamentally occur
 
 LOW PRIORITY:
+non-zero-length 2-loops
 arrow trim slider
 arrow offset slider
 arrow flip/reverse operations
