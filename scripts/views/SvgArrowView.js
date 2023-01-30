@@ -16,7 +16,7 @@ function SvgArrowView(dependencies, highlight_width) {
     }
 
     const drawing = {};
-    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter) {
+    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter, onleave) {
         const screen_state = screen_state_storage.unpack(screen_state_store);
         const user_arcs_and_flat_arcs = meta_user_arcs_and_flat_arcs.instantiate(arrows);
         const flat_arc = user_arcs_and_flat_arcs.user_arc_to_flat_arc(
@@ -67,9 +67,12 @@ function SvgArrowView(dependencies, highlight_width) {
             g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
             g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
         }
-        if (onclick != null) {
+        if (onenter != null) {
             g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
-            g.addEventListener('mouseover', deferal.callbackPrevent(onenter));
+            g.addEventListener('mouseenter', deferal.callbackPrevent(onenter));
+        }
+        if (onleave != null) {
+            g.addEventListener('mouseleave', deferal.callbackPrevent(onleave));
         }
         return g;
     }

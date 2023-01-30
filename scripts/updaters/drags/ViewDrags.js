@@ -50,6 +50,7 @@ function ViewDrags(
                 },
                 wheel: (cell_to_pixel_store, screen_focus, scroll_count) => cell_to_pixel_store,
                 arrowenter: (state, arrow) => state,
+                arrowleave: (state, screen_position, model_to_screen) => state,
                 objectenter: (state, object) => state,
                 command: (cell_to_pixel_store, is_released, is_canceled) => 
                     diagram => diagram.with({screen_frame_store: cell_to_pixel_store})
@@ -87,6 +88,7 @@ function ViewDrags(
                         );
                 },
                 arrowenter: (state, arrow) => state,
+                arrowleave: (state, screen_position, model_to_screen) => state,
                 objectenter: (state, object) => state,
                 command: (cell_to_pixel_store, is_released, is_canceled) => 
                     diagram => diagram.with({screen_frame_store: cell_to_pixel_store})

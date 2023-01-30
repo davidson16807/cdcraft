@@ -11,7 +11,7 @@ function DiagramIds(cell_hashing, math){
         cell_position_to_border_id: cell_position => glm.vec2(floor(cell_position.x), floor(cell_position.y)),
         border_id_to_cell_position: border_id => border_id.add(0.5),
         cell_position_to_cell_id: cell_position => glm.vec2(round(cell_position.x), round(cell_position.y)),
-        cell_id_to_cell_hash: cell_id => cell_id == null? null : cell_hashing.hash(cell_id.x, cell_id.y),
+        cell_id_to_cell_hash: cell_id => cell_hashing.hash(cell_id.x, cell_id.y),
         offset_to_offset_id: offset => glm.sign(offset).mul(glm.vec2(glm.bvec2(abs(offset.x) > abs(offset.y), abs(offset.x) < abs(offset.y)))),
         // don't delete the following two, they should be useful when reading/writing latex
         offset_id_to_offset_hash: offset_id => ((offset_id.x > offset_id.y) << 1) + (-offset_id.x > offset_id.y),

@@ -161,7 +161,9 @@ function SvgAppView(dependencies, onevents) {
                             new_app.diagram.arrows,
                             new_app.drag_type, 
                             (event, arrow_drawing, arrow, dom2) => onevents.arrowdown(event, drawing, arrow, new_app, dom_io),
-                            (event, arrow_drawing, arrow, dom2) => onevents.arrowenter(event, drawing, arrow, new_app, dom_io))));
+                            (event, arrow_drawing, arrow, dom2) => onevents.arrowenter(event, drawing, arrow, new_app, dom_io),
+                            (event, arrow_drawing, arrow, dom2) => onevents.arrowleave(event, drawing, arrow, new_app, dom_io),
+                        )));
             dom_io.getElementById('arrow-midpoint-hitboxes')
                 .replaceChildren(...new_app.diagram.arrows
                     .map(arrow => 
@@ -172,7 +174,7 @@ function SvgAppView(dependencies, onevents) {
                             new_app.diagram.arrows,
                             new_app.drag_type, 
                             (event, arrow_drawing, arrow, dom2) => onevents.midpointdown(event, drawing, arrow, new_app, dom_io),
-                            (event, arrow_drawing, arrow, dom2) => onevents.midpointenter(event, drawing, arrow, new_app, dom_io))));
+                        )));
         }
 
     }

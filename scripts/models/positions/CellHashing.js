@@ -29,6 +29,7 @@ function UnboundedCellHashing(positive_cell_hashing, math) {
 `NodeHashing` generates a namspace with a single pure function exposed, `hash()`.
 The function maps any `UserNode` to a unique positive integer.
 It is bijective in principle, however its inverse is not implemented.
+`NodeHashing.hash(new UserNode(position))` is equivalent to `UnboundedCellHashing.hash(position)` 
 */
 function NodeHashing(unbounded_cell_hashing) {
     return {

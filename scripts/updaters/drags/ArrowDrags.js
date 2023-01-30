@@ -1,6 +1,13 @@
 'use strict';
 
-function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, meta_user_arcs_and_flat_arcs, default_min_length_clockwise, min_length_clockwise_change_per_scroll){
+function ArrowDrags(
+        diagram_ids, 
+        node_metric_bundle,
+        user_arcs_and_stored_arcs, 
+        meta_user_arcs_and_flat_arcs, 
+        default_min_length_clockwise, 
+        min_length_clockwise_change_per_scroll
+    ){
 
     const Tools = (user_arcs_and_flat_arcs) => {
         const sign = Math.sign;
@@ -67,8 +74,13 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, meta_user_arcs_and_f
                     },
                 move: tools.move,
                 wheel: tools.wheel,
-                arrowenter: (replacement_arrow, arrow) => replacement_arrow,
                 objectenter: (replacement_arrow, object) => replacement_arrow,
+                arrowenter: (replacement_arrow, arrow) => 
+                    replacement_arrow.with({ 
+                        arc: replacement_arrow.arc.with({
+                            target: new UserNode(null, arrows.indexOf(arrow))}) }),
+                arrowleave: (replacement_arrow, screen_positions, screen_state) => 
+                    tools.move(replacement_arrow, screen_positions, screen_state),
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
@@ -109,9 +121,13 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, meta_user_arcs_and_f
                     },
                 move: tools.move,
                 wheel: tools.wheel,
-                arrowenter: (replacement_arrow, arrow) => replacement_arrow,
                 objectenter: (replacement_arrow, object) => replacement_arrow,
-                midpointenter: (replacement_arrow, object) => replacement_arrow,
+                arrowenter: (replacement_arrow, arrow) => 
+                    replacement_arrow.with({ 
+                        arc: replacement_arrow.arc.with({
+                            target: new UserNode(null, arrows.indexOf(arrow))}) }),
+                arrowleave: (replacement_arrow, screen_positions, screen_state) => 
+                    tools.move(replacement_arrow, screen_positions, screen_state),
                 // do nothing if not snapped, otherwise add the arrow
                 command: (replacement_arrow, is_released, is_canceled) => {
                     return is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
@@ -141,8 +157,13 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, meta_user_arcs_and_f
                 initialize: () => replaced_arrow.with({is_edited: true}),
                 move: tools.move,
                 wheel: tools.wheel,
-                arrowenter: (replacement_arrow, arrow) => replacement_arrow,
                 objectenter: (replacement_arrow, object) => replacement_arrow,
+                arrowenter: (replacement_arrow, arrow) => 
+                    replacement_arrow.with({ 
+                        arc: replacement_arrow.arc.with({
+                            target: new UserNode(null, arrows.indexOf(arrow))}) }),
+                arrowleave: (replacement_arrow, screen_positions, screen_state) => 
+                    tools.move(replacement_arrow, screen_positions, screen_state),
                 // delete the arrow if canceled or not snapped, otherwise edit the arrow
                 command: (replacement_arrow, is_released, is_canceled) => diagram => 
                     is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
@@ -158,7 +179,7 @@ function ArrowDrags(diagram_ids, user_arcs_and_stored_arcs, meta_user_arcs_and_f
                                          replacement_arrow.with({is_edited: !is_released}),
                                          ...arrows_after],
                                     arrow_selections: 
-                                        glm.distance(replacement_arrow.arc.target.position, replaced_arrow.arc.target.position) > 0?
+                                        node_metric_bundle.distance(replacement_arrow.arc.target, replaced_arrow.arc.target) > 0?
                                             [] : [arrow_id], 
                                     object_selections: [],
                                     inferred_object_selections: [],
