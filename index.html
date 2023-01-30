@@ -61,6 +61,7 @@
     <script src="./scripts/views/SvgAppView.js"></script>
     <script src="./scripts/dom/Html.js"></script>
     <script src="./scripts/dom/Svg.js"></script>
+    <script src="./scripts/updaters/drags/MetaAbstractArrowDrag.js"></script>
     <script src="./scripts/updaters/drags/ViewDrags.js"></script>
     <script src="./scripts/updaters/drags/SelectionDrags.js"></script>
     <script src="./scripts/updaters/drags/ArrowDrags.js"></script>
@@ -325,8 +326,11 @@ const arrow_drags =
     ArrowDrags(
         diagram_ids,
         node_metric_bundle,
+        MetaAbstractArrowDrag(
+            user_arcs_and_stored_arcs, 
+            meta_user_arcs_and_flat_arcs, 
+            Math),
         user_arcs_and_stored_arcs,
-        meta_user_arcs_and_flat_arcs,
         1.0, // default_min_length_clockwise
         0.001 // min_length_clockwise_change_per_scroll
     );
