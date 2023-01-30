@@ -2,14 +2,14 @@
 
 
 /*
-`MetaUserArcsAndFlatArcs` returns a namespace of pure functions that describe maps between `SamplerArc`s and `UserArc`s
+`MetaUserArcsAndPointArcs` returns a namespace of pure functions that describe maps between `SamplerArc`s and `UserArc`s
 */
-function MetaUserArcsAndFlatArcs(meta_node_point_indication) {
+function MetaUserArcsAndPointArcs(meta_node_point_indication) {
     return {
         instantiate: (arrows) => {
             const user_arcs_and_flat_arcs = {};
             user_arcs_and_flat_arcs.user_arc_to_flat_arc = (user_arc) => 
-                new FlatArc(
+                new PointArc(
                     meta_node_point_indication.instantiate(user_arcs_and_flat_arcs, arrows).point(user_arc.source),
                     meta_node_point_indication.instantiate(user_arcs_and_flat_arcs, arrows).point(user_arc.target),
                     user_arc.min_length_clockwise

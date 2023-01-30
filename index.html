@@ -24,7 +24,7 @@
     <script src="./scripts/models/nodes/NodeMetricBundle.js"></script>
     <script src="./scripts/models/arcs/StoredArc.js"></script>
     <script src="./scripts/models/arcs/UserArc.js"></script>
-    <script src="./scripts/models/arcs/FlatArc.js"></script>
+    <script src="./scripts/models/arcs/PointArc.js"></script>
     <script src="./scripts/models/arcs/SamplerArc.js"></script>
     <script src="./scripts/models/arcs/SvgArc.js"></script>
     <script src="./scripts/models/arcs/ArcGeometry.js"></script>
@@ -33,12 +33,12 @@
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
     <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
-    <script src="./scripts/models/arcs/MetaUserArcsAndFlatArcs.js"></script>
+    <script src="./scripts/models/arcs/MetaUserArcsAndPointArcs.js"></script>
     <script src="./scripts/models/arcs/MetaUserArcPointIndication.js"></script>
-    <script src="./scripts/models/arcs/FlatArcsAndSamplerArcs.js"></script>
-    <script src="./scripts/models/arcs/FlatArcsAndSvgArcs.js"></script>
-    <script src="./scripts/models/arcs/FlatArcMapping.js"></script>
-    <script src="./scripts/models/arcs/FlatArcPointIndication.js"></script>
+    <script src="./scripts/models/arcs/PointArcsAndSamplerArcs.js"></script>
+    <script src="./scripts/models/arcs/PointArcsAndSvgArcs.js"></script>
+    <script src="./scripts/models/arcs/PointArcMapping.js"></script>
+    <script src="./scripts/models/arcs/PointArcPointIndication.js"></script>
     <script src="./scripts/models/arrows/Arrow.js"></script>
     <script src="./scripts/models/arrows/DiagramArrow.js"></script>
     <script src="./scripts/models/objects/DiagramObject.js"></script>
@@ -189,17 +189,17 @@ const user_arcs_and_stored_arcs =
     );
 
 const meta_user_arcs_and_flat_arcs = 
-    MetaUserArcsAndFlatArcs(
+    MetaUserArcsAndPointArcs(
         MetaNodePointIndication(
             MetaUserArcPointIndication(
-                FlatArcPointIndication(
-                    FlatArcsAndSamplerArcs(
+                PointArcPointIndication(
+                    PointArcsAndSamplerArcs(
                         ArcGeometry(),
                         Math), 
                     SamplerArcProperties(),
                     0.5))));
 
-const flat_arcs_and_sampler_arcs = FlatArcsAndSamplerArcs(ArcGeometry(), Math);
+const flat_arcs_and_sampler_arcs = PointArcsAndSamplerArcs(ArcGeometry(), Math);
 
 const sampler_arc_properties = SamplerArcProperties();
 const sampler_arc_resizing = SamplerArcResizing(sampler_arc_properties);

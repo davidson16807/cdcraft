@@ -1,9 +1,9 @@
 'use strict';
 
 /*
-`FlatArcsAndSamplerArcs` returns a namespace of pure functions that describe maps between `SamplerArc`s and `UserArc`s
+`PointArcsAndSamplerArcs` returns a namespace of pure functions that describe maps between `SamplerArc`s and `UserArc`s
 */
-function FlatArcsAndSamplerArcs(arc_geometry, math) {
+function PointArcsAndSamplerArcs(arc_geometry, math) {
     const sign = math.sign;
     const abs = math.abs;
     const max = math.max;

@@ -1,6 +1,6 @@
 'use strict';
 
-function FlatArcPointIndication(
+function PointArcPointIndication(
         user_arcs_and_sampler_arcs, 
         sampler_arc_properties,
         representative_distance_along_arc) {
