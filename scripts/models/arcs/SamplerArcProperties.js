@@ -12,7 +12,7 @@ function SamplerArcProperties(){
         normal: function (sampler_arc, distance) {
             const v = glm.normalize(sampler_arc.source_offset);
             const radius = glm.length(sampler_arc.source_offset);
-            const theta = distance / radius;
+            const theta = distance * sampler_arc.length_clockwise / radius;
             return glm.vec2(
                 v.x * cos(theta) - v.y * sin(theta),
                 v.x * sin(theta) + v.y * cos(theta),
@@ -21,7 +21,7 @@ function SamplerArcProperties(){
         tangent: function (sampler_arc, distance) {
             const v = glm.normalize(sampler_arc.source_offset);
             const radius = glm.length(sampler_arc.source_offset);
-            const theta = (distance / radius) + pi/2.0* sign(sampler_arc.length_clockwise) ;
+            const theta = (distance * sampler_arc.length_clockwise / radius) + pi/2.0* sign(sampler_arc.length_clockwise) ;
             return glm.vec2(
                 v.x * cos(theta) - v.y * sin(theta),
                 v.x * sin(theta) + v.y * cos(theta),
@@ -30,7 +30,7 @@ function SamplerArcProperties(){
         position: function (sampler_arc, distance){
             const v = sampler_arc.source_offset;
             const radius = glm.length(sampler_arc.source_offset);
-            const theta = distance / radius;
+            const theta = distance * sampler_arc.length_clockwise / radius;
             return radius == 0? 
                   sampler_arc.origin 
                 : glm.vec2(
@@ -42,7 +42,7 @@ function SamplerArcProperties(){
             const v = sampler_arc.source_offset;
             const vhat = glm.normalize(v);
             const radius = glm.length(sampler_arc.source_offset);
-            const theta = distance / radius;
+            const theta = distance * sampler_arc.length_clockwise / radius;
             const theta_offset = theta + pi/2.0* sign(sampler_arc.length_clockwise);
             return new AffineMap(
                 glm.vec2(

@@ -274,10 +274,41 @@ function AppUpdater(
         },
 
         arrowenter: function(event, drawing, arrow, app_io, dom_io){
-            if (event.buttons == 2 && !arrow.is_edited) {
+            /*
+            Do not consider arrows unless they are found in the current diagram.
+            Some arrows may not occur in the diagram if they were updated by an earlier event.
+            These arrows do not reflect the most current state and should not be considered.
+            */
+            const arrow_id = app_io.diagram.arrows.indexOf(arrow);
+            if (arrow_id >= 0) {
+                if (event.buttons == 2 && !arrow.is_edited) {
+                    event.stopPropagation();
+                    history.do(app_io, app_io.diagram.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]}), true);
+                    drawing.redraw(undefined, app_io, dom_io);
+                }
+                if (event.buttons == 1 && !arrow.is_edited) {
+                    event.stopPropagation();
+                    drag_ops.arrowenter(arrow, app_io);
+                    drawing.redraw(undefined, app_io, dom_io);
+                }
+            }
+        },
+
+        arrowleave: function(event, drawing, arrow, app_io, dom_io){
+            if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
-                const arrow_id = app_io.diagram.arrows.indexOf(arrow);
-                history.do(app_io, app_io.diagram.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]}), true);
+                drag_ops.arrowleave([glm.vec2(event.clientX, event.clientY)], app_io);
+                drawing.redraw(undefined, app_io, dom_io);
+            }
+        },
+
+        midpointdown: function(event, drawing, arrow, app_io, dom_io){
+            if (event.buttons == 1 && !arrow.is_edited) {
+                event.stopPropagation();
+                const screen_position = glm.vec2(event.clientX, event.clientY);
+                const screen_state = screen_state_storage.unpack(app_io.diagram.screen_frame_store);
+                const model_position = PanZoomMapping(screen_state).position.revert(screen_position);
+                drag_ops.transition(arrow_drags.create_2arrow(app_io.diagram.arrows, model_position, arrow), app_io);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },

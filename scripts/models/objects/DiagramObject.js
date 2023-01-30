@@ -5,10 +5,10 @@
 */
 class DiagramObject {
     constructor(position, depiction, is_edited, is_valid){
-        Object.defineProperty(this, 'position',  {get: ()=> position});
-        Object.defineProperty(this, 'depiction', {get: ()=> depiction || ''});
-        Object.defineProperty(this, 'is_edited', {get: ()=> is_edited || false});
-        Object.defineProperty(this, 'is_valid',  {get: ()=> is_valid  || true});
+        this.position = Object.freeze(position);
+        this.depiction = Object.freeze(depiction);
+        this.is_edited = Object.freeze(is_edited);
+        this.is_valid = Object.freeze(is_valid);
     }
 
     with(attributes){

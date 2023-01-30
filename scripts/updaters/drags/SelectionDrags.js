@@ -16,6 +16,7 @@ function SelectionDrags(
                     PanZoomMapping(cell_to_pixel).offset.revert(screen_positions[0].sub(original_screen_position)),
                 wheel: (model_offset, screen_focus, scroll_count) => model_offset,
                 arrowenter: (model_offset, arrow) => model_offset,
+                arrowleave: (model_offset, screen_position, model_to_screen) => model_offset,
                 objectenter: (model_offset, object) => model_offset,
                 // delete the object and its arrows if canceled, otherwise move the object and its arrows
                 command: (model_offset, is_released, is_canceled) => diagram => {
@@ -26,7 +27,14 @@ function SelectionDrags(
                             object_position_resource.get(initial_diagram.inferred_object_selections),
                         ), 
                         model_offset);
-                    return (is_canceled? 
+                    const updated_diagram = diagram.with({
+                            arrows:                     arrow_positions_resource.put(initial_diagram.arrows, cell_positions),
+                            objects:                    object_position_resource.put(initial_diagram.objects, cell_positions),
+                            inferred_object_selections: object_position_resource.put(initial_diagram.inferred_object_selections, cell_positions),
+                        });
+                    const is_valid = (updated_diagram.arrows.every(arrow => arrow.arc.is_valid) && 
+                                      updated_diagram.objects.every(object => object.is_valid));
+                    return (is_canceled || (is_released && !is_valid)? 
                         diagram.with({
                             arrows:                     arrow_positions_resource.delete(initial_diagram.arrows, cell_positions),
                             objects:                    object_position_resource.delete(initial_diagram.objects, cell_positions),
@@ -34,11 +42,7 @@ function SelectionDrags(
                             object_selections: [],
                             inferred_object_selections: [],
                         })
-                      : diagram.with({
-                            arrows:                     arrow_positions_resource.put(initial_diagram.arrows, cell_positions, !is_released),
-                            objects:                    object_position_resource.put(initial_diagram.objects, cell_positions, !is_released),
-                            inferred_object_selections: object_position_resource.put(initial_diagram.inferred_object_selections, cell_positions, !is_released),
-                        })
+                      : updated_diagram
                     );
                 }
             };

@@ -1,15 +1,15 @@
 'use strict';
 
 /*
-`SvgArc` is a data structure that represents a directed arc using the same method as an svg path
+`SvgArc` is a data structure that represents a directed arc in the same manner as an svg path
 */
 class SvgArc{
     constructor(source, target, radius, is_large_arc, is_clockwise){
-        Object.defineProperty(this, 'source',  {get: ()=> source});
-        Object.defineProperty(this, 'target',  {get: ()=> target});
-        Object.defineProperty(this, 'radius',  {get: ()=> radius});
-        Object.defineProperty(this, 'is_large_arc',  {get: ()=> is_large_arc});
-        Object.defineProperty(this, 'is_clockwise',  {get: ()=> is_clockwise});
+        this.source = Object.freeze(source);
+        this.target = Object.freeze(target);
+        this.radius = Object.freeze(radius);
+        this.is_large_arc = Object.freeze(is_large_arc);
+        this.is_clockwise = Object.freeze(is_clockwise);
     }
     with(attributes){
         return new SvgArc(

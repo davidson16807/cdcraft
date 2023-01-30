@@ -11,27 +11,35 @@
     <script src="./libraries/glm-js.min.js"></script>
     <script src="./libraries/katex.min.js"></script>
     <script src="./libraries/auto-render.min.js"></script>
-    <script src="./scripts/DiagramIds.js"></script>
-    <script src="./scripts/CellHashing.js"></script>
+    <script src="./scripts/typecheck.js"></script>
     <script src="./scripts/coordinates/ScreenStateStorage.js"></script>
     <script src="./scripts/coordinates/ScreenStateStore.js"></script>
     <script src="./scripts/coordinates/CoordinateSystems.js"></script>
+    <script src="./scripts/models/positions/DiagramIds.js"></script>
+    <script src="./scripts/models/positions/CellHashing.js"></script>
+    <script src="./scripts/models/positions/PositionMetricBundle.js"></script>
+    <script src="./scripts/models/nodes/UserNode.js"></script>
+    <script src="./scripts/models/nodes/MetaUserNodePointIndication.js"></script>
+    <script src="./scripts/models/nodes/UserNodeMetricBundle.js"></script>
     <script src="./scripts/models/arcs/StoredArc.js"></script>
     <script src="./scripts/models/arcs/UserArc.js"></script>
-    <script src="./scripts/models/arcs/SvgArc.js"></script>
+    <script src="./scripts/models/arcs/FlatArc.js"></script>
     <script src="./scripts/models/arcs/SamplerArc.js"></script>
+    <script src="./scripts/models/arcs/SvgArc.js"></script>
     <script src="./scripts/models/arcs/ArcGeometry.js"></script>
     <script src="./scripts/models/arcs/SamplerArcRendering.js"></script>
     <script src="./scripts/models/arcs/SamplerArcResizing.js"></script>
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
-    <script src="./scripts/models/arcs/UserArcsAndSvgArcs.js"></script>
-    <script src="./scripts/models/arcs/UserArcMapping.js"></script>
-    <script src="./scripts/models/arcs/UserArcsAndSamplerArcs.js"></script>
     <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
+    <script src="./scripts/models/arcs/MetaUserArcsAndFlatArcs.js"></script>
+    <script src="./scripts/models/arcs/MetaUserArcPointIndication.js"></script>
+    <script src="./scripts/models/arcs/FlatArcsAndSamplerArcs.js"></script>
+    <script src="./scripts/models/arcs/FlatArcsAndSvgArcs.js"></script>
+    <script src="./scripts/models/arcs/FlatArcMapping.js"></script>
+    <script src="./scripts/models/arcs/FlatArcPointIndication.js"></script>
     <script src="./scripts/models/arrows/Arrow.js"></script>
     <script src="./scripts/models/arrows/DiagramArrow.js"></script>
-    <script src="./scripts/models/arrows/DiagramArrowListsAndLookups.js"></script>
     <script src="./scripts/models/objects/DiagramObject.js"></script>
     <script src="./scripts/models/objects/DiagramObjectSetOperations.js"></script>
     <script src="./scripts/models/diagrams/Diagram.js"></script>
@@ -45,6 +53,7 @@
     <script src="./scripts/views/SvgArrowAttributes.js"></script>
     <script src="./scripts/views/SvgArrowView.js"></script>
     <script src="./scripts/views/SvgArrowSelectionView.js"></script>
+    <script src="./scripts/views/SvgArrowMidpointView.js"></script>
     <script src="./scripts/views/HtmlObjectToolbarView.js"></script>
     <script src="./scripts/views/HtmlArrowToolbarView.js"></script>
     <script src="./scripts/views/SvgGridView.js"></script>
@@ -69,6 +78,7 @@
         <g id="object-selections"></g>
         <g id="arrow-selections"></g>
         <g id="objects"></g>
+        <g id="arrow-midpoint-hitboxes"></g>
         <g id="arrows"></g>
         <g id="object-selection-hitboxes" class="hitbox"></g>
         <g id="arrow-selection-hitboxes" class="hitbox"></g>
@@ -166,15 +176,29 @@
 <script type="text/javascript">
 'use strict';
 
-const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing()));
+const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing(), Math), Math);
+
+const user_node_metric_bundle = UserNodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
 
 const user_arcs_and_stored_arcs =
     UserArcsAndStoredArcs(
-        diagram_ids, 
+        user_node_metric_bundle, diagram_ids, glm,
         0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
         0.08, // target offset distance
     );
-const user_arcs_and_sampler_arcs = UserArcsAndSamplerArcs(ArcGeometry());
+
+const meta_user_arcs_and_flat_arcs = 
+    MetaUserArcsAndFlatArcs(
+        MetaUserNodePointIndication(
+            MetaUserArcPointIndication(
+                FlatArcPointIndication(
+                    FlatArcsAndSamplerArcs(
+                        ArcGeometry(),
+                        Math), 
+                    SamplerArcProperties(),
+                    0.5))));
+
+const flat_arcs_and_sampler_arcs = FlatArcsAndSamplerArcs(ArcGeometry(), Math);
 
 const sampler_arc_properties = SamplerArcProperties();
 const sampler_arc_resizing = SamplerArcResizing(sampler_arc_properties);
@@ -198,16 +222,17 @@ const svg_grid_view =
 
 const svg_arrow_attributes = 
     SvgArrowAttributes({
-        PanZoomMapping             : PanZoomMapping,
-        AffineMapping              : AffineMapping,
-        AffineRemapping            : AffineRemapping,
-        SamplerArcMapping          : SamplerArcMapping,
-        screen_state_storage       : screen_state_storage,
-        user_arcs_and_stored_arcs  : user_arcs_and_stored_arcs,
-        user_arcs_and_sampler_arcs : user_arcs_and_sampler_arcs,
-        sampler_arc_resizing       : sampler_arc_resizing,
-        sampler_arc_properties     : sampler_arc_properties,
-        sampler_arc_rendering      : sampler_arc_rendering,
+        PanZoomMapping              : PanZoomMapping,
+        AffineMapping               : AffineMapping,
+        AffineRemapping             : AffineRemapping,
+        SamplerArcMapping           : SamplerArcMapping,
+        screen_state_storage        : screen_state_storage,
+        user_arcs_and_stored_arcs   : user_arcs_and_stored_arcs,
+        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
+        flat_arcs_and_sampler_arcs  : flat_arcs_and_sampler_arcs,
+        sampler_arc_resizing        : sampler_arc_resizing,
+        sampler_arc_properties      : sampler_arc_properties,
+        sampler_arc_rendering       : sampler_arc_rendering,
     }, 
     { 
         source_trim_length: 0.12,
@@ -222,6 +247,7 @@ const svg_arrow_view = SvgArrowView({
         view_event_deferal         : view_event_deferal,
         screen_state_storage       : screen_state_storage,
         render                     : renderMathInElement,
+        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
     }, 0.2);
 
 const svg_arrow_selection_view = 
@@ -231,7 +257,18 @@ const svg_arrow_selection_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
+        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
     }, 0.2);
+
+const svg_arrow_midpoint_view = 
+    SvgArrowMidpointView({
+        PanZoomMapping             : PanZoomMapping,
+        svg                        : svg,
+        screen_state_storage       : screen_state_storage,
+        svg_arrow_attributes       : svg_arrow_attributes,
+        view_event_deferal         : view_event_deferal,
+        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
+    }, 0.5);
 
 const svg_object_view = 
     SvgObjectView({
@@ -264,7 +301,9 @@ const svg_arrow_toolbar_view =
     });
 
 const arrow_positions_resource = 
-    ArrowPositionsResource(diagram_ids, user_arcs_and_stored_arcs, true);
+    ArrowPositionsResource(
+        NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math)), 
+        user_arcs_and_stored_arcs, true);
 
 const object_position_resource = 
     ObjectPositionResource(diagram_ids, true);
@@ -284,7 +323,9 @@ const selection_drags =
 const arrow_drags = 
     ArrowDrags(
         diagram_ids,
+        user_node_metric_bundle,
         user_arcs_and_stored_arcs,
+        meta_user_arcs_and_flat_arcs,
         1.0, // default_min_length_clockwise
         0.001 // min_length_clockwise_change_per_scroll
     );
@@ -331,6 +372,7 @@ const app_view =
         svg_object_view              : svg_object_view,
         svg_object_selection_view    : svg_object_selection_view,
         svg_arrow_selection_view     : svg_arrow_selection_view,
+        svg_arrow_midpoint_view      : svg_arrow_midpoint_view,
         html_object_toolbar_view     : svg_object_toolbar_view,
         html_arrow_toolbar_view      : svg_arrow_toolbar_view,
         view_event_deferal           : view_event_deferal,

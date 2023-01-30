@@ -34,6 +34,20 @@ function AppDragOperations(
                 app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);
         },
 
+        arrowenter: function (arrow, app_io) {
+            app_io.drag_state = app_io.drag_type.arrowenter(app_io.drag_state, arrow);
+            history.do(app_io, 
+                app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);
+        },
+
+        arrowleave: function (screen_positions, app_io) {
+            const model_to_screen_store = app_io.diagram.screen_frame_store;
+            const model_to_screen = storage.unpack(model_to_screen_store);
+            app_io.drag_state = app_io.drag_type.arrowleave(app_io.drag_state, screen_positions, model_to_screen);
+            history.do(app_io, 
+                app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);
+        },
+
         transition: function(drag_type, app_io) {
             const model_to_screen_store = app_io.diagram.screen_frame_store;
 
@@ -41,10 +55,16 @@ function AppDragOperations(
             const is_canceled = drag_type.id != DragState.released && drag_type.id != app_io.drag_type.id;
 
             if (is_released || is_canceled) { 
+                // first commit existing state to the history so that it can be later retrieved
                 history.do(app_io, 
-                    app_io.drag_type.command(app_io.drag_state, is_released, is_canceled)(app_io.diagram), !is_released);
+                    app_io.drag_type.command(app_io.drag_state, is_released, is_canceled)(app_io.diagram), 
+                    !is_released);
+                // next modify application state that is not covered by the command history
                 app_io.drag_type = drag_type;
                 app_io.drag_state = drag_type.initialize();
+                // finally, modify the application state that's covered by history to reflect changes imposed by the new drag type
+                history.do(app_io, 
+                    app_io.drag_type.command(app_io.drag_state, false, false)(app_io.diagram), false);
             } else {
                 history.do(app_io, 
                     app_io.drag_type.command(app_io.drag_state, is_released, is_canceled)(app_io.diagram), false);

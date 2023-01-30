@@ -3,7 +3,8 @@
 function SvgArrowAttributes(dependencies, settings) {
     const screen_state_storage         = dependencies.screen_state_storage;
     const user_arcs_and_stored_arcs    = dependencies.user_arcs_and_stored_arcs;
-    const user_arcs_and_sampler_arcs   = dependencies.user_arcs_and_sampler_arcs;
+    const meta_user_arcs_and_flat_arcs = dependencies.meta_user_arcs_and_flat_arcs;
+    const flat_arcs_and_sampler_arcs   = dependencies.flat_arcs_and_sampler_arcs;
     const sampler_arc_resizing         = dependencies.sampler_arc_resizing;
     const sampler_arc_properties       = dependencies.sampler_arc_properties;
     const sampler_arc_rendering        = dependencies.sampler_arc_rendering;
@@ -29,9 +30,8 @@ function SvgArrowAttributes(dependencies, settings) {
 
     return {
 
-        stored_arc_to_trimmed_arc: function(stored_arc) {
-            const user_arc = user_arcs_and_stored_arcs.stored_arc_to_user_arc(stored_arc);
-            const sampler_arc = user_arcs_and_sampler_arcs.user_arc_to_sampler_arc(user_arc);
+        flat_arc_to_trimmed_arc: function(flat_arc) {
+            const sampler_arc = flat_arcs_and_sampler_arcs.flat_arc_to_sampler_arc(flat_arc)
             const trimmed_arc = sampler_arc_resizing.resize(sampler_arc, source_trim_length, -target_trim_length);
             return trimmed_arc;
         },
@@ -45,9 +45,8 @@ function SvgArrowAttributes(dependencies, settings) {
         head: function (trimmed_arc, screen_state_store) {
             const screen_state = screen_state_storage.unpack(screen_state_store);
             const arrowhead_mapping = 
-                AffineMapping(
-                    AffineRemapping(PanZoomMapping(screen_state)).apply(
-                        sampler_arc_properties.map(trimmed_arc, trimmed_arc.length_clockwise)));
+                AffineMapping(AffineRemapping(PanZoomMapping(screen_state)).apply(
+                    sampler_arc_properties.map(trimmed_arc, 1.0)));
 
             const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
             const screen_points = cell_points.map(point => arrowhead_mapping.position.revert(point));
@@ -55,7 +54,7 @@ function SvgArrowAttributes(dependencies, settings) {
         },
 
         sample: function (screen_arc, fraction) {
-            return sampler_arc_properties.position(screen_arc, fraction*screen_arc.length_clockwise);
+            return sampler_arc_properties.position(screen_arc, fraction);
         },
 
         path: function (screen_arc) {
