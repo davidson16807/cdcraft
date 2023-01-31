@@ -6,44 +6,11 @@ function ArrowDrags(
         curried_abstract_arrow_drag, 
         user_arcs_and_stored_arcs, 
         default_min_length_clockwise, 
-        min_length_clockwise_change_per_scroll
     ){
 
     return {
-        create: function(arrows, initial_model_position) {
-            return Object.assign({}, 
-                curried_abstract_arrow_drag(arrows), 
-                {
-                    initialize: () => 
-                        new DiagramArrow(
-                            user_arcs_and_stored_arcs.user_arc_to_stored_arc(
-                                new UserArc(
-                                    new Node(diagram_ids.cell_position_to_cell_id(initial_model_position)), 
-                                    new Node(diagram_ids.cell_position_to_cell_id(initial_model_position)),
-                                    default_min_length_clockwise,
-                                )
-                            ),
-                            true,
-                        ),
-                    // do nothing if not snapped, otherwise add the arrow
-                    command: (replacement_arrow, is_released, is_canceled) => 
-                        is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
-                                diagram => diagram.with({
-                                        arrows: arrows, 
-                                        arrow_selections: [], 
-                                        object_selections: [],
-                                        inferred_object_selections: [],
-                                    })
-                              : diagram => diagram.with({
-                                        arrows: [...arrows, replacement_arrow.with({is_edited: !is_released})],
-                                        arrow_selections: [],
-                                        object_selections: [],
-                                        inferred_object_selections: [],
-                                    })
-                });
-        },
 
-        create_2arrow: function(arrows, initial_model_position, initial_arrow) {
+        create: function(arrows, initial_model_position, initial_arrow) {
             const arrow_id = arrows.indexOf(initial_arrow);
             return Object.assign({}, 
                 curried_abstract_arrow_drag(arrows), 
@@ -51,11 +18,17 @@ function ArrowDrags(
                     initialize: () => 
                         new DiagramArrow(
                             user_arcs_and_stored_arcs.user_arc_to_stored_arc(
-                                new UserArc(
-                                    new Node(null, arrow_id), 
-                                    new Node(initial_model_position),
-                                    default_min_length_clockwise,
-                                )
+                                arrow_id >= 0?
+                                    new UserArc(
+                                        new Node(null, arrow_id), 
+                                        new Node(initial_model_position),
+                                        default_min_length_clockwise,
+                                    )
+                                  : new UserArc(
+                                        new Node(diagram_ids.cell_position_to_cell_id(initial_model_position)), 
+                                        new Node(diagram_ids.cell_position_to_cell_id(initial_model_position)),
+                                        default_min_length_clockwise,
+                                    )
                             ),
                             true,
                         ),

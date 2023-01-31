@@ -3,7 +3,9 @@
 function CurriedAbstractArrowDrag(
         user_arcs_and_stored_arcs, 
         curried_user_arcs_and_flat_arcs, 
-        math){
+        math,
+        min_length_clockwise_change_per_scroll,
+    ){
     const sign = math.sign;
     const abs = math.abs;
     const max = math.max;

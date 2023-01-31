@@ -308,7 +308,8 @@ function AppUpdater(
                 const screen_position = glm.vec2(event.clientX, event.clientY);
                 const screen_state = screen_state_storage.unpack(app_io.diagram.screen_frame_store);
                 const model_position = PanZoomMapping(screen_state).position.revert(screen_position);
-                drag_ops.transition(arrow_drags.create_2arrow(app_io.diagram.arrows, model_position, arrow), app_io);
+                // drag_ops.transition(arrow_drags.create_2arrow(app_io.diagram.arrows, model_position, arrow), app_io);
+                drag_ops.transition(arrow_drags.create(app_io.diagram.arrows, model_position, arrow), app_io);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },
