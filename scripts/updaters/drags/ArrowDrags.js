@@ -2,6 +2,7 @@
 
 function ArrowDrags(
         diagram_ids, 
+        node_hashing,
         node_metric_bundle,
         curried_abstract_arrow_drag, 
         arrow_reference_resource,
@@ -53,6 +54,7 @@ function ArrowDrags(
 
         edit: function(arrows, replaced_arrow) {
             const arrow_id = arrows.indexOf(replaced_arrow);
+            const arrow_hash = node_hashing.hash(new Node(null, arrow_id));
             const arrows_before = arrows.slice(0,arrow_id);
             const arrows_after = arrows.slice(arrow_id+1);
             return Object.assign({}, 
@@ -63,7 +65,7 @@ function ArrowDrags(
                     command: (replacement_arrow, is_released, is_canceled) => diagram => 
                         is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
                             diagram.with({
-                                    arrows: arrow_reference_resource.delete(arrows, {arrow_id: arrow_id}),
+                                    arrows: arrow_reference_resource.delete(arrows, Object.fromEntries([[arrow_hash, arrow_id]])),
                                     arrow_selections: [],
                                     object_selections: [],
                                     inferred_object_selections: [],

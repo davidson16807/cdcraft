@@ -43,27 +43,31 @@ function ArrowReferenceResource(node_hashing, user_arcs_and_stored_arcs){
         },
 
         delete: function(arrows, reference_map) {
-            const filtered = [];
-            const node_map = {};
+            let filtered = [];
+            const updated_window = {};
+            const deleted_window = {};
             for(let i = 0; i < arrows.length; i++){
                 const arrow = arrows[i];
                 const arc = arrow.arc;
                 const source_hash = node_hashing.hash(arc.source);
                 const target_hash = node_hashing.hash(arc.target);
-                if (reference_map[source_hash] == null && reference_map[target_hash] == null && reference_map[i] != null) {
+                const arrow_hash = node_hashing.hash(new Node(null, i));
+                if (reference_map[source_hash] == null && reference_map[target_hash] == null && reference_map[arrow_hash] == null) {
                     filtered.push(arrow);
+                    updated_window[arrow_hash] = filtered.length;
                 } else {
-                    const arrow_hash = node_hashing.hash(new Node(null, i));
-                    node_map[arrow_hash] = 0;
+                    deleted_window[arrow_hash] = filtered.length;
                 }
             }
             /*
             The arrows that were removed may be referenced by other arrows,
             so recursively call `delete()` for as long as arrows have been removed and there are more arrows available.
             */
-            return 0 < filtered.length && filtered.length < arrows.length? 
-                  this.delete(filtered, node_map)
-                : filtered;
+            filtered = this.put(filtered, updated_window);
+            filtered = 0 < filtered.length && filtered.length < arrows.length? 
+                this.delete(filtered, deleted_window) 
+              : filtered;
+            return filtered;
         },
 
     };
