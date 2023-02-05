@@ -68,6 +68,7 @@
     <script src="./scripts/updaters/drags/DragState.js"></script>
     <script src="./scripts/updaters/AppUpdater.js"></script>
     <script src="./scripts/resources/ArrowPositionsResource.js"></script>
+    <script src="./scripts/resources/ArrowReferenceResource.js"></script>
     <script src="./scripts/resources/ObjectPositionResource.js"></script>
     <script src="./scripts/resources/ResourceOperations.js"></script>
     <script src="./scripts/resources/PositionMapOperations.js"></script>
@@ -302,9 +303,11 @@ const svg_arrow_toolbar_view =
         view_event_deferal         : view_event_deferal,
     });
 
+const node_hashing = NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math));
+
 const arrow_positions_resource = 
     ArrowPositionsResource(
-        NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math)), 
+        node_hashing, 
         user_arcs_and_stored_arcs, true);
 
 const object_position_resource = 
@@ -332,6 +335,7 @@ const arrow_drags =
             Math,
             0.001 // min_length_clockwise_change_per_scroll
         ),
+        ArrowReferenceResource(node_hashing, user_arcs_and_stored_arcs),
         user_arcs_and_stored_arcs,
         1.0, // default_min_length_clockwise
     );

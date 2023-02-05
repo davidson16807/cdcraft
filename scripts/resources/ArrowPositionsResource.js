@@ -13,10 +13,10 @@ function ArrowPositionsResource(node_hashing, user_arcs_and_stored_arcs){
                 const stored_arc = arrow.arc;
                 const source_hash = node_hashing.hash(stored_arc.source);
                 const target_hash = node_hashing.hash(stored_arc.target);
-                if ((position_map == null || position_map[source_hash] != null) && stored_arc.source.position != null) {
+                if ((position_map == null || position_map[source_hash] != null) && stored_arc.source.reference == null) {
                     updated_position_map[source_hash] = stored_arc.source.position;
                 }
-                if ((position_map == null || position_map[target_hash] != null) && stored_arc.target.position != null) {
+                if ((position_map == null || position_map[target_hash] != null) && stored_arc.target.reference == null) {
                     updated_position_map[target_hash] = stored_arc.target.position;
                 }
             }

@@ -4,6 +4,7 @@ function ArrowDrags(
         diagram_ids, 
         node_metric_bundle,
         curried_abstract_arrow_drag, 
+        arrow_reference_resource,
         user_arcs_and_stored_arcs, 
         default_min_length_clockwise, 
     ){
@@ -20,7 +21,7 @@ function ArrowDrags(
                             user_arcs_and_stored_arcs.user_arc_to_stored_arc(
                                 arrow_id >= 0?
                                     new UserArc(
-                                        new Node(null, arrow_id), 
+                                        new Node(initial_model_position, arrow_id), 
                                         new Node(initial_model_position),
                                         default_min_length_clockwise,
                                     )
@@ -62,7 +63,7 @@ function ArrowDrags(
                     command: (replacement_arrow, is_released, is_canceled) => diagram => 
                         is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
                             diagram.with({
-                                    arrows: [...arrows_before, ...arrows_after],
+                                    arrows: arrow_reference_resource.delete(arrows, {arrow_id: arrow_id}),
                                     arrow_selections: [],
                                     object_selections: [],
                                     inferred_object_selections: [],
