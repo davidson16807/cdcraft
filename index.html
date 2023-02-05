@@ -189,7 +189,7 @@ const user_arcs_and_stored_arcs =
         0.08, // target offset distance
     );
 
-const curried_user_arcs_and_flat_arcs = 
+const curried_user_arcs_and_point_arcs = 
     CurriedUserArcsAndPointArcs(
         CurriedNodePointIndication(
             CurriedUserArcPointIndication(
@@ -200,7 +200,7 @@ const curried_user_arcs_and_flat_arcs =
                     SamplerArcProperties(),
                     0.5))));
 
-const flat_arcs_and_sampler_arcs = PointArcsAndSamplerArcs(ArcGeometry(), Math);
+const point_arcs_and_sampler_arcs = PointArcsAndSamplerArcs(ArcGeometry(), Math);
 
 const sampler_arc_properties = SamplerArcProperties();
 const sampler_arc_resizing = SamplerArcResizing(sampler_arc_properties);
@@ -230,8 +230,8 @@ const svg_arrow_attributes =
         SamplerArcMapping           : SamplerArcMapping,
         screen_state_storage        : screen_state_storage,
         user_arcs_and_stored_arcs   : user_arcs_and_stored_arcs,
-        curried_user_arcs_and_flat_arcs: curried_user_arcs_and_flat_arcs,
-        flat_arcs_and_sampler_arcs  : flat_arcs_and_sampler_arcs,
+        curried_user_arcs_and_point_arcs: curried_user_arcs_and_point_arcs,
+        point_arcs_and_sampler_arcs  : point_arcs_and_sampler_arcs,
         sampler_arc_resizing        : sampler_arc_resizing,
         sampler_arc_properties      : sampler_arc_properties,
         sampler_arc_rendering       : sampler_arc_rendering,
@@ -249,7 +249,7 @@ const svg_arrow_view = SvgArrowView({
         view_event_deferal         : view_event_deferal,
         screen_state_storage       : screen_state_storage,
         render                     : renderMathInElement,
-        curried_user_arcs_and_flat_arcs: curried_user_arcs_and_flat_arcs,
+        curried_user_arcs_and_point_arcs: curried_user_arcs_and_point_arcs,
     }, 0.2);
 
 const svg_arrow_selection_view = 
@@ -259,7 +259,7 @@ const svg_arrow_selection_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        curried_user_arcs_and_flat_arcs: curried_user_arcs_and_flat_arcs,
+        curried_user_arcs_and_point_arcs: curried_user_arcs_and_point_arcs,
     }, 0.2);
 
 const svg_arrow_midpoint_view = 
@@ -269,7 +269,7 @@ const svg_arrow_midpoint_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        curried_user_arcs_and_flat_arcs: curried_user_arcs_and_flat_arcs,
+        curried_user_arcs_and_point_arcs: curried_user_arcs_and_point_arcs,
     }, 0.5);
 
 const svg_object_view = 
@@ -328,7 +328,7 @@ const arrow_drags =
         node_metric_bundle,
         CurriedAbstractArrowDrag(
             user_arcs_and_stored_arcs, 
-            curried_user_arcs_and_flat_arcs, 
+            curried_user_arcs_and_point_arcs, 
             Math,
             0.001 // min_length_clockwise_change_per_scroll
         ),

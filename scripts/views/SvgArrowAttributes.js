@@ -3,8 +3,8 @@
 function SvgArrowAttributes(dependencies, settings) {
     const screen_state_storage         = dependencies.screen_state_storage;
     const user_arcs_and_stored_arcs    = dependencies.user_arcs_and_stored_arcs;
-    const curried_user_arcs_and_flat_arcs = dependencies.curried_user_arcs_and_flat_arcs;
-    const flat_arcs_and_sampler_arcs   = dependencies.flat_arcs_and_sampler_arcs;
+    const curried_user_arcs_and_point_arcs = dependencies.curried_user_arcs_and_point_arcs;
+    const point_arcs_and_sampler_arcs   = dependencies.point_arcs_and_sampler_arcs;
     const sampler_arc_resizing         = dependencies.sampler_arc_resizing;
     const sampler_arc_properties       = dependencies.sampler_arc_properties;
     const sampler_arc_rendering        = dependencies.sampler_arc_rendering;
@@ -30,8 +30,8 @@ function SvgArrowAttributes(dependencies, settings) {
 
     return {
 
-        flat_arc_to_trimmed_arc: function(flat_arc) {
-            const sampler_arc = flat_arcs_and_sampler_arcs.flat_arc_to_sampler_arc(flat_arc)
+        point_arc_to_trimmed_arc: function(point_arc) {
+            const sampler_arc = point_arcs_and_sampler_arcs.point_arc_to_sampler_arc(point_arc)
             const trimmed_arc = sampler_arc_resizing.resize(sampler_arc, source_trim_length, -target_trim_length);
             return trimmed_arc;
         },

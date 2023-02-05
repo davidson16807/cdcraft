@@ -2,7 +2,7 @@
 
 function CurriedAbstractArrowDrag(
         user_arcs_and_stored_arcs, 
-        curried_user_arcs_and_flat_arcs, 
+        curried_user_arcs_and_point_arcs, 
         math,
         min_length_clockwise_change_per_scroll,
     ){
@@ -25,13 +25,13 @@ function CurriedAbstractArrowDrag(
                 }),
 
             wheel: (arrow_in, screen_focus, scroll_count) => {
-                const flat_arc = curried_user_arcs_and_flat_arcs(arrows).user_arc_to_flat_arc(arrow_in.arc)
+                const point_arc = curried_user_arcs_and_point_arcs(arrows).user_arc_to_point_arc(arrow_in.arc)
                 const min_length_clockwise_change = min_length_clockwise_change_per_scroll * scroll_count;
-                const chord_length = glm.distance(flat_arc.source, flat_arc.target);
+                const chord_length = glm.distance(point_arc.source, point_arc.target);
                 const arc_length1 = 0.7;
                 const arc_length2 = max(arc_length1, chord_length);
-                const min_arc_length = abs(flat_arc.min_length_clockwise);
-                const clockwise_sign = sign(flat_arc.min_length_clockwise);
+                const min_arc_length = abs(point_arc.min_length_clockwise);
+                const clockwise_sign = sign(point_arc.min_length_clockwise);
                 const excess_in = clockwise_sign * max(min_arc_length - arc_length2, 0);
                 const excess_out = excess_in + min_length_clockwise_change;
                 const is_different_sign = sign(excess_in) * sign(excess_out) < 0;
