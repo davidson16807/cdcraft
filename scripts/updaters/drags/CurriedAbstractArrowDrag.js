@@ -2,7 +2,7 @@
 
 function CurriedAbstractArrowDrag(
         user_arcs_and_stored_arcs, 
-        curried_user_arcs_and_point_arcs, 
+        curried_stored_arcs_and_point_arcs, 
         math,
         min_length_clockwise_change_per_scroll,
     ){
@@ -25,7 +25,7 @@ function CurriedAbstractArrowDrag(
                 }),
 
             wheel: (arrow_in, screen_focus, scroll_count) => {
-                const point_arc = curried_user_arcs_and_point_arcs(arrows).user_arc_to_point_arc(arrow_in.arc)
+                const point_arc = curried_stored_arcs_and_point_arcs(arrows).stored_arc_to_point_arc(arrow_in.arc)
                 const min_length_clockwise_change = min_length_clockwise_change_per_scroll * scroll_count;
                 const chord_length = glm.distance(point_arc.source, point_arc.target);
                 const arc_length1 = 0.7;
@@ -46,10 +46,15 @@ function CurriedAbstractArrowDrag(
 
             objectenter: (arrow_in, object) => arrow_in,
 
-            arrowenter: (arrow_in, arrow) => 
+            arrowenter: (arrow_in, screen_positions, screen_state, arrow) => 
                 arrow_in.with({
                     arc: arrow_in.arc.with({
-                        target: new Node(null, arrows.indexOf(arrow))}) }),
+                        target: 
+                            new Node(
+                                PanZoomMapping(screen_state).position.revert(screen_positions[0]), 
+                                arrows.indexOf(arrow))
+                        })
+                }),
 
             arrowleave: (arrow_in, screen_positions, screen_state) => 
                 arrow_in.with({

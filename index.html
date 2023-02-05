@@ -33,8 +33,8 @@
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
     <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
-    <script src="./scripts/models/arcs/CurriedUserArcsAndPointArcs.js"></script>
-    <script src="./scripts/models/arcs/CurriedUserArcPointIndication.js"></script>
+    <script src="./scripts/models/arcs/CurriedStoredArcsAndPointArcs.js"></script>
+    <script src="./scripts/models/arcs/CurriedStoredArcPointIndication.js"></script>
     <script src="./scripts/models/arcs/PointArcsAndSamplerArcs.js"></script>
     <script src="./scripts/models/arcs/PointArcsAndSvgArcs.js"></script>
     <script src="./scripts/models/arcs/PointArcMapping.js"></script>
@@ -187,19 +187,21 @@ const user_arcs_and_stored_arcs =
     UserArcsAndStoredArcs(
         node_metric_bundle, diagram_ids, glm,
         0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
-        0.08, // target offset distance
+        0.08, // target offset distance for 1-arrows
     );
 
-const curried_user_arcs_and_point_arcs = 
-    CurriedUserArcsAndPointArcs(
+const curried_stored_arcs_and_point_arcs = 
+    CurriedStoredArcsAndPointArcs(
         CurriedNodePointIndication(
-            CurriedUserArcPointIndication(
+            CurriedStoredArcPointIndication(
                 PointArcPointIndication(
                     PointArcsAndSamplerArcs(
                         ArcGeometry(),
                         Math), 
                     SamplerArcProperties(),
-                    0.5))));
+                    0.5))),
+        0.08 // target offset distance for 2-arrows
+    );
 
 const point_arcs_and_sampler_arcs = PointArcsAndSamplerArcs(ArcGeometry(), Math);
 
@@ -231,7 +233,7 @@ const svg_arrow_attributes =
         SamplerArcMapping           : SamplerArcMapping,
         screen_state_storage        : screen_state_storage,
         user_arcs_and_stored_arcs   : user_arcs_and_stored_arcs,
-        curried_user_arcs_and_point_arcs: curried_user_arcs_and_point_arcs,
+        curried_stored_arcs_and_point_arcs: curried_stored_arcs_and_point_arcs,
         point_arcs_and_sampler_arcs  : point_arcs_and_sampler_arcs,
         sampler_arc_resizing        : sampler_arc_resizing,
         sampler_arc_properties      : sampler_arc_properties,
@@ -250,7 +252,7 @@ const svg_arrow_view = SvgArrowView({
         view_event_deferal         : view_event_deferal,
         screen_state_storage       : screen_state_storage,
         render                     : renderMathInElement,
-        curried_user_arcs_and_point_arcs: curried_user_arcs_and_point_arcs,
+        curried_stored_arcs_and_point_arcs: curried_stored_arcs_and_point_arcs,
     }, 0.2);
 
 const svg_arrow_selection_view = 
@@ -260,7 +262,7 @@ const svg_arrow_selection_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        curried_user_arcs_and_point_arcs: curried_user_arcs_and_point_arcs,
+        curried_stored_arcs_and_point_arcs: curried_stored_arcs_and_point_arcs,
     }, 0.2);
 
 const svg_arrow_midpoint_view = 
@@ -270,7 +272,7 @@ const svg_arrow_midpoint_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        curried_user_arcs_and_point_arcs: curried_user_arcs_and_point_arcs,
+        curried_stored_arcs_and_point_arcs: curried_stored_arcs_and_point_arcs,
     }, 0.5);
 
 const svg_object_view = 
@@ -332,7 +334,7 @@ const arrow_drags =
         node_metric_bundle,
         CurriedAbstractArrowDrag(
             user_arcs_and_stored_arcs, 
-            curried_user_arcs_and_point_arcs, 
+            curried_stored_arcs_and_point_arcs, 
             Math,
             0.001 // min_length_clockwise_change_per_scroll
         ),

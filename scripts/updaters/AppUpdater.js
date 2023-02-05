@@ -288,7 +288,7 @@ function AppUpdater(
                 }
                 if (event.buttons == 1 && !arrow.is_edited) {
                     event.stopPropagation();
-                    drag_ops.arrowenter(arrow, app_io);
+                    drag_ops.arrowenter([glm.vec2(event.clientX, event.clientY)], arrow, app_io);
                     drawing.redraw(undefined, app_io, dom_io);
                 }
             }

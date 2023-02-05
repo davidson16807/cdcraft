@@ -35,15 +35,15 @@ function ArrowDrags(
                             true,
                         ),
                     // do nothing if not snapped, otherwise add the arrow
-                    command: (replacement_arrow, is_released, is_canceled) => 
+                    command: (replacement_arrow, is_released, is_canceled) => diagram => 
                         is_canceled || (is_released && !replacement_arrow.arc.is_valid)? 
-                            diagram => diagram.with({
+                            diagram.with({
                                     arrows: arrows, 
                                     arrow_selections: [], 
                                     object_selections: [],
                                     inferred_object_selections: [],
                                 })
-                          : diagram => diagram.with({
+                          : diagram.with({
                                     arrows: [...arrows, replacement_arrow.with({is_edited: !is_released})],
                                     arrow_selections: [],
                                     object_selections: [],

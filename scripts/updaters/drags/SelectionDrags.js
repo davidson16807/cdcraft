@@ -15,7 +15,7 @@ function SelectionDrags(
                 move: (model_offset, screen_positions, cell_to_pixel) => 
                     PanZoomMapping(cell_to_pixel).offset.revert(screen_positions[0].sub(original_screen_position)),
                 wheel: (model_offset, screen_focus, scroll_count) => model_offset,
-                arrowenter: (model_offset, arrow) => model_offset,
+                arrowenter: (model_offset, screen_positions, screen_state, arrow) => model_offset,
                 arrowleave: (model_offset, screen_position, model_to_screen) => model_offset,
                 objectenter: (model_offset, object) => model_offset,
                 // delete the object and its arrows if canceled, otherwise move the object and its arrows

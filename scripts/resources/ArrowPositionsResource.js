@@ -27,10 +27,11 @@ function ArrowPositionsResource(node_hashing, user_arcs_and_stored_arcs){
             const updated_arrows = [];
             for(let arrow of arrows){
                 /*
-                Dragging objects and will affect objects and arrows whose positions or nodes share the same cells,
+                Dragging objects and arrows will affect other objects and arrows whose positions or nodes share the same cells,
                 so both keys and values of a resource window should be stored in a way that is agnostic between arrows and objects.
                 The only way to satisfy this constraint is to represent positions 
-                as they would appear in `StoredArc`s (what we call a "stored position").
+                as they would appear in `StoredArc`s (what we call a "stored position"),
+                where positions are standardized to fall at the midpoint of cells, where possible.
                 Sources and targets of arrows can be dragged by the user, 
                 and dragging these should allow users to change the directionality of loops represented by `target_offset_id`,
                 so behavior must be expressed to account for this feature. 
@@ -43,10 +44,11 @@ function ArrowPositionsResource(node_hashing, user_arcs_and_stored_arcs){
 
                 The approach we take here is to use values from `position_map` to modify the `StoredArc`s of arrows,
                 then convert the `StoredArc` to and from a `UserArc`.
-                It is important to note here that the maps to and from `StoredArc` and `UserArc` are not bijective - 
-                apply these maps allow the `target_offset_id` of the initial `StoredArc`
+                It is important to note here that the maps to and from `StoredArc` and `UserArc` 
+                are not bijective and serve an important function - 
+                applying these maps allow the `target_offset_id` of the initial `StoredArc`
                 to be properly considered when determining the position of the `UserArc`,
-                andl by extension the `target_offset_id` of the final `StoredArc`.
+                and by extension the `target_offset_id` of the final `StoredArc`.
                 */
                 const old_stored = arrow.arc;
                 const source_hash = node_hashing.hash(old_stored.source);

@@ -22,7 +22,7 @@ function UserArcsAndStoredArcs(
 
             const chord_length = node_metric_bundle.distance(arc.source, arc.target);
             const is_loop = chord_length < max_loop_chord_length;
-            const is_hidden = 0.0 < chord_length < min_loop_chord_length;
+            const is_hidden = arc.source != arc.target && chord_length < min_loop_chord_length;
             const max_snap_distance = (is_loop? max_loop_snap_distance : max_nonloop_snap_distance)
             const is_snapped = (
                 node_metric_bundle.distance(arc.source, source_cell) < max_snap_distance && 
@@ -30,12 +30,12 @@ function UserArcsAndStoredArcs(
             const is_valid = is_snapped && !is_hidden;
 
             /*
-            TODO: offsets should be calculated in *the reference frame determined by node.source.reference.
+            TODO: offsets should be calculated in the reference frame determined by source.reference.
             This will allow 2-loops to be oriented relative to coordinate system at the midpoint of their source/target arc.
             */
             const target_offset_id = 
                  !is_valid?  default_offset_id
-                : is_loop?   diagram_ids.offset_to_offset_id(arc.target.position.sub(arc.source.position))  
+                : is_loop?   diagram_ids.offset_to_offset_id(arc.target.position.sub(arc.source.position))
                 :            glm.vec2();
 
             const source = 
@@ -48,19 +48,18 @@ function UserArcsAndStoredArcs(
                 : is_snapped? target_cell
                 :             arc.target;
 
-            const stored_arc = new StoredArc(
+            return new StoredArc(
                 source, 
                 target, 
                 arc.min_length_clockwise, 
                 target_offset_id,
                 is_valid
             );
-            return stored_arc
         },
         stored_arc_to_user_arc: (arc) => {
             return new UserArc(
-                arc.source.with({position: arc.source.position == null? null : arc.target_offset_id.mul(-target_offset_distance).add(arc.source.position)}),
-                arc.target.with({position: arc.target.position == null? null : arc.target_offset_id.mul( target_offset_distance).add(arc.target.position)}),
+                arc.source.with({position: arc.target_offset_id.mul(-target_offset_distance).add(arc.source.position)}),
+                arc.target.with({position: arc.target_offset_id.mul( target_offset_distance).add(arc.target.position)}),
                 arc.min_length_clockwise
             );
         }

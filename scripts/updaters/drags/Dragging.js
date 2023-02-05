@@ -4,12 +4,12 @@ function Dragging(){
     return {
         initialize: (dragtype) => new Drag(dragtype, dragtype.initialize()),
         id: (drag) => drag.drag_behavior.id,
-        move: (drag, screen_positions, cell_to_pixel)        => new Drag(drag, drag.drag_behavior.move(drag.state, screen_positions, cell_to_pixel)),
-        wheel: (drag, screen_focus, scroll_count)            => new Drag(drag, drag.drag_behavior.wheel(drag.state, screen_focus, scroll_count)),
-        arrowenter: (drag, arrow)                            => new Drag(drag, drag.drag_behavior.arrowenter(drag.state, arrow)),
-        arrowleave: (drag, screen_position, model_to_screen) => new Drag(drag, drag.drag_behavior.arrowleave(drag.state, screen_position, model_to_screen)),
-        objectenter: (drag, object)                          => new Drag(drag, drag.drag_behavior.objectenter(drag.state, object)),
-        command: (drag, is_released, is_canceled)            => new Drag(drag, drag.drag_behavior.command(drag.state, is_released, is_canceled)),
+        move: (drag, screen_positions, cell_to_pixel)               => new Drag(drag, drag.drag_behavior.move(drag.state, screen_positions, cell_to_pixel)),
+        wheel: (drag, screen_focus, scroll_count)                   => new Drag(drag, drag.drag_behavior.wheel(drag.state, screen_focus, scroll_count)),
+        arrowenter: (drag, screen_position, model_to_screen, arrow) => new Drag(drag, drag.drag_behavior.arrowenter(drag.state, arrow)),
+        arrowleave: (drag, screen_position, model_to_screen)        => new Drag(drag, drag.drag_behavior.arrowleave(drag.state, screen_position, model_to_screen)),
+        objectenter: (drag, object)                                 => new Drag(drag, drag.drag_behavior.objectenter(drag.state, object)),
+        command: (drag, is_released, is_canceled)                   => new Drag(drag, drag.drag_behavior.command(drag.state, is_released, is_canceled)),
     };
 }
 
@@ -45,9 +45,9 @@ function NodeMetricBundle(){
 }
 
 function CurriedNodePointIndication(curried_arc_point_indication) {
-    return (user_arcs_and_point_arcs, arrows) => {
+    return (stored_arcs_and_point_arcs, arrows) => {
         return {
-            point: (node) => node.curried_node_point_indication(user_arcs_and_point_arcs, arrows).point(node.state),
+            point: (node) => node.curried_node_point_indication(stored_arcs_and_point_arcs, arrows).point(node.state),
         };
     }
 }
