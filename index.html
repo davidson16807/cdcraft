@@ -32,7 +32,7 @@
     <script src="./scripts/models/arcs/SamplerArcResizing.js"></script>
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
-    <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
+    <script src="./scripts/models/arcs/CurriedUserArcsAndStoredArcs.js"></script>
     <script src="./scripts/models/arcs/CurriedStoredArcsAndPointArcs.js"></script>
     <script src="./scripts/models/arcs/CurriedStoredArcPointIndication.js"></script>
     <script src="./scripts/models/arcs/PointArcsAndSamplerArcs.js"></script>
@@ -183,8 +183,8 @@ const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing(), Math)
 
 const node_metric_bundle = NodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
 
-const user_arcs_and_stored_arcs =
-    UserArcsAndStoredArcs(
+const curried_user_arcs_and_stored_arcs =
+    CurriedUserArcsAndStoredArcs(
         node_metric_bundle, diagram_ids, glm,
         0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
         0.08, // target offset distance for 1-arrows
@@ -232,9 +232,7 @@ const svg_arrow_attributes =
         AffineRemapping             : AffineRemapping,
         SamplerArcMapping           : SamplerArcMapping,
         screen_state_storage        : screen_state_storage,
-        user_arcs_and_stored_arcs   : user_arcs_and_stored_arcs,
-        curried_stored_arcs_and_point_arcs: curried_stored_arcs_and_point_arcs,
-        point_arcs_and_sampler_arcs  : point_arcs_and_sampler_arcs,
+        point_arcs_and_sampler_arcs : point_arcs_and_sampler_arcs,
         sampler_arc_resizing        : sampler_arc_resizing,
         sampler_arc_properties      : sampler_arc_properties,
         sampler_arc_rendering       : sampler_arc_rendering,
@@ -310,7 +308,7 @@ const node_hashing = NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Mat
 const arrow_positions_resource = 
     ArrowPositionsResource(
         node_hashing, 
-        user_arcs_and_stored_arcs, true);
+        curried_user_arcs_and_stored_arcs, true);
 
 const object_position_resource = 
     ObjectPositionResource(diagram_ids, true);
@@ -333,13 +331,13 @@ const arrow_drags =
         node_hashing, 
         node_metric_bundle,
         CurriedAbstractArrowDrag(
-            user_arcs_and_stored_arcs, 
+            curried_user_arcs_and_stored_arcs, 
             curried_stored_arcs_and_point_arcs, 
             Math,
             0.001 // min_length_clockwise_change_per_scroll
         ),
-        ArrowReferenceResource(node_hashing, user_arcs_and_stored_arcs),
-        user_arcs_and_stored_arcs,
+        ArrowReferenceResource(node_hashing, curried_user_arcs_and_stored_arcs),
+        curried_user_arcs_and_stored_arcs,
         1.0, // default_min_length_clockwise
     );
 

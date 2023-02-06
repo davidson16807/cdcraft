@@ -4,7 +4,7 @@
 A `ArrowReferenceResource` implements a REST-like interface
 on source and target positions within a list of arrows.
 */
-function ArrowReferenceResource(node_hashing, user_arcs_and_stored_arcs){
+function ArrowReferenceResource(node_hashing, curried_user_arcs_and_stored_arcs){
     return {
 
         get: function(arrows, reference_map){
@@ -24,6 +24,7 @@ function ArrowReferenceResource(node_hashing, user_arcs_and_stored_arcs){
         },
 
         put: function(arrows, reference_map) {
+            const user_arcs_and_stored_arcs = curried_user_arcs_and_stored_arcs(arrows);
             const updated_arrows = [];
             for(let arrow of arrows){
                 const old_stored = arrow.arc;

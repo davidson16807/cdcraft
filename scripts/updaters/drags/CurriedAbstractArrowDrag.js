@@ -1,7 +1,7 @@
 'use strict';
 
 function CurriedAbstractArrowDrag(
-        user_arcs_and_stored_arcs, 
+        curried_user_arcs_and_stored_arcs, 
         curried_stored_arcs_and_point_arcs, 
         math,
         min_length_clockwise_change_per_scroll,
@@ -10,6 +10,7 @@ function CurriedAbstractArrowDrag(
     const abs = math.abs;
     const max = math.max;
     return (arrows) => {
+        const user_arcs_and_stored_arcs = curried_user_arcs_and_stored_arcs(arrows);
         return {
             id: DragState.arrow,
             

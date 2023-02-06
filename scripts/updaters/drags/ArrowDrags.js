@@ -6,13 +6,14 @@ function ArrowDrags(
         node_metric_bundle,
         curried_abstract_arrow_drag, 
         arrow_reference_resource,
-        user_arcs_and_stored_arcs, 
+        curried_user_arcs_and_stored_arcs, 
         default_min_length_clockwise, 
     ){
 
     return {
 
         create: function(arrows, initial_model_position, initial_arrow) {
+            const user_arcs_and_stored_arcs = curried_user_arcs_and_stored_arcs(arrows);
             const arrow_id = arrows.indexOf(initial_arrow);
             return Object.assign({}, 
                 curried_abstract_arrow_drag(arrows), 

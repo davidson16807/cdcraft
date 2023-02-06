@@ -4,7 +4,7 @@
 A `ArrowPositionsResource` implements a REST-like interface
 on source and target positions within a list of arrows.
 */
-function ArrowPositionsResource(node_hashing, user_arcs_and_stored_arcs){
+function ArrowPositionsResource(node_hashing, curried_user_arcs_and_stored_arcs){
     return {
 
         get: function(arrows, position_map){
@@ -24,6 +24,7 @@ function ArrowPositionsResource(node_hashing, user_arcs_and_stored_arcs){
         },
 
         put: function(arrows, position_map) {
+            const user_arcs_and_stored_arcs = curried_user_arcs_and_stored_arcs(arrows);
             const updated_arrows = [];
             for(let arrow of arrows){
                 /*
