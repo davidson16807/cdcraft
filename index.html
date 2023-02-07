@@ -308,13 +308,17 @@ const svg_arrow_toolbar_view =
 
 const node_hashing = NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math));
 
+const arrow_reference_resource = 
+    ArrowReferenceResource(curried_user_arcs_and_stored_arcs, node_hashing);
+
 const arrow_positions_resource = 
     ArrowPositionsResource(
-        node_hashing, 
-        curried_user_arcs_and_stored_arcs, true);
+        arrow_reference_resource,
+        curried_user_arcs_and_stored_arcs,
+        node_hashing);
 
 const object_position_resource = 
-    ObjectPositionResource(diagram_ids, true);
+    ObjectPositionResource(diagram_ids);
 
 const resource_operations = ResourceOperations();
 
@@ -339,7 +343,7 @@ const arrow_drags =
             Math,
             0.001 // min_length_clockwise_change_per_scroll
         ),
-        ArrowReferenceResource(node_hashing, curried_user_arcs_and_stored_arcs),
+        arrow_reference_resource,
         curried_user_arcs_and_stored_arcs,
         1.0, // default_min_length_clockwise
     );

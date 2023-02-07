@@ -4,7 +4,11 @@
 A `ArrowPositionsResource` implements a REST-like interface
 on source and target positions within a list of arrows.
 */
-function ArrowPositionsResource(node_hashing, curried_user_arcs_and_stored_arcs){
+function ArrowPositionsResource(
+        arrow_reference_resource, 
+        curried_user_arcs_and_stored_arcs, 
+        node_hashing
+    ){
     return {
 
         get: function(arrows, position_map){
@@ -68,27 +72,32 @@ function ArrowPositionsResource(node_hashing, curried_user_arcs_and_stored_arcs)
         },
 
         delete: function(arrows, position_map) {
-            const filtered = [];
-            const node_map = {};
+            let filtered = [];
+            const updated_window = {};
+            const deleted_window = {};
             for(let i = 0; i < arrows.length; i++){
                 const arrow = arrows[i];
                 const arc = arrow.arc;
                 const source_hash = node_hashing.hash(arc.source);
                 const target_hash = node_hashing.hash(arc.target);
+                const arrow_hash = node_hashing.hash(new Node(null, i));
                 if (position_map[source_hash] == null && position_map[target_hash] == null) {
                     filtered.push(arrow);
+                    updated_window[arrow_hash] = filtered.length;
                 } else {
                     const arrow_hash = node_hashing.hash(new Node(null, i));
-                    node_map[arrow_hash] = 0;
+                    deleted_window[arrow_hash] = filtered.length;
                 }
             }
             /*
             The arrows that were removed may be referenced by other arrows,
             so recursively call `delete()` for as long as arrows have been removed and there are more arrows available.
             */
-            return 0 < filtered.length && filtered.length < arrows.length? 
-                  this.delete(filtered, node_map)
-                : filtered;
+            filtered = arrow_reference_resource.put(filtered, updated_window);
+            filtered = 0 < filtered.length && filtered.length < arrows.length? 
+                arrow_reference_resource.delete(filtered, deleted_window) 
+              : filtered;
+            return filtered;
         },
 
     };
