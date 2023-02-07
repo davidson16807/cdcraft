@@ -4,9 +4,12 @@
 `CurriedUserArcsAndStoredArcs` returns a namespace of pure functions that describe maps between `UserArc`s and `StoredArc`s
 */
 function CurriedUserArcsAndStoredArcs(
+    curried_stored_arcs_and_point_arcs,
+    point_arcs_properties,
     node_metric_bundle, 
     diagram_ids,
     glm,
+    math,
     min_loop_chord_length, 
     max_loop_chord_length, 
     max_loop_snap_distance, 
@@ -14,6 +17,7 @@ function CurriedUserArcsAndStoredArcs(
     target_offset_distance,
 ) {
     return arrows => {
+        const stored_arcs_and_point_arcs = curried_stored_arcs_and_point_arcs(arrows);
         return {
             user_arc_to_stored_arc: (arc, default_offset_id) => {
                 default_offset_id = default_offset_id || glm.vec2();
@@ -30,14 +34,21 @@ function CurriedUserArcsAndStoredArcs(
                     node_metric_bundle.distance(arc.target, target_cell) < max_snap_distance);
                 const is_valid = is_snapped && !is_hidden;
 
-                /*
-                TODO: offsets should be calculated in the reference frame determined by source.reference.
-                This will allow 2-loops to be oriented relative to coordinate system at the midpoint of their source/target arc.
-                */
+                const chord_offset = glm.sub(arc.target.position, arc.source.position);
                 const target_offset_id = 
                      !is_valid?  default_offset_id
-                    : is_loop?   diagram_ids.offset_to_offset_id(arc.target.position.sub(arc.source.position))
-                    :            glm.vec2();
+                    : is_loop?   
+                        diagram_ids.offset_to_offset_id(
+                            arc.source.reference != null?
+                                glm.vec2(
+                                    glm.dot(
+                                        point_arcs_properties.chord_offset(
+                                            stored_arcs_and_point_arcs.stored_arc_to_point_arc(
+                                                arrows[arc.source.reference].arc)), 
+                                        chord_offset), 
+                                    0)
+                              : chord_offset)
+                    : glm.vec2();
 
                 const source = 
                       is_hidden?     source_cell
