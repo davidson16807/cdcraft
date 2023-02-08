@@ -18,6 +18,18 @@ function CurriedUserArcsAndStoredArcs(
 ) {
     return arrows => {
         const stored_arcs_and_point_arcs = curried_stored_arcs_and_point_arcs(arrows);
+        // TODO: consolidate this with the copy in CurriedStoredArcsAndPointArcs
+        const target_offset_map = 
+            (node, is_loop) =>
+                is_loop && node.reference != null? 
+                    LinearMapping(
+                        new LinearMap(
+                            point_arcs_properties.chord_direction(
+                                stored_arcs_and_point_arcs.stored_arc_to_point_arc(
+                                    arrows[node.reference].arc)),
+                            glm.vec2(0)
+                        ))
+                  : IdentityMapping();
         return {
             user_arc_to_stored_arc: (arc, default_offset_id) => {
                 default_offset_id = default_offset_id || glm.vec2();
@@ -34,20 +46,12 @@ function CurriedUserArcsAndStoredArcs(
                     node_metric_bundle.distance(arc.target, target_cell) < max_snap_distance);
                 const is_valid = is_snapped && !is_hidden;
 
-                const chord_offset = glm.sub(arc.target.position, arc.source.position);
                 const target_offset_id = 
                      !is_valid?  default_offset_id
                     : is_loop?   
                         diagram_ids.offset_to_offset_id(
-                            arc.source.reference != null?
-                                glm.vec2(
-                                    glm.dot(
-                                        point_arcs_properties.chord_offset(
-                                            stored_arcs_and_point_arcs.stored_arc_to_point_arc(
-                                                arrows[arc.source.reference].arc)), 
-                                        chord_offset), 
-                                    0)
-                              : chord_offset)
+                            target_offset_map(arc.source, is_loop).offset.apply(
+                                glm.sub(arc.target.position, arc.source.position)))
                     : glm.vec2();
 
                 const source = 
@@ -69,9 +73,13 @@ function CurriedUserArcsAndStoredArcs(
                 );
             },
             stored_arc_to_user_arc: (arc) => {
+                const target_offset = 
+                    target_offset_map(arc.source, arc.source.reference == arc.target.reference).offset
+                        .revert(arc.target_offset_id)
+                        .mul(target_offset_distance);
                 return new UserArc(
-                    arc.source.with({position: arc.target_offset_id.mul(-target_offset_distance).add(arc.source.position)}),
-                    arc.target.with({position: arc.target_offset_id.mul( target_offset_distance).add(arc.target.position)}),
+                    arc.source.with({position: glm.sub(arc.source.position, target_offset)}),
+                    arc.target.with({position: glm.add(arc.target.position, target_offset)}),
                     arc.min_length_clockwise
                 );
             }
