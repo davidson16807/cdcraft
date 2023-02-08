@@ -34,6 +34,7 @@
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
     <script src="./scripts/models/arcs/CurriedUserArcsAndStoredArcs.js"></script>
     <script src="./scripts/models/arcs/CurriedStoredArcsAndPointArcs.js"></script>
+    <script src="./scripts/models/arcs/CurriedStoredArcProperties.js"></script>
     <script src="./scripts/models/arcs/CurriedStoredArcPointIndication.js"></script>
     <script src="./scripts/models/arcs/PointArcsAndSamplerArcs.js"></script>
     <script src="./scripts/models/arcs/PointArcsAndSvgArcs.js"></script>
@@ -184,6 +185,12 @@ const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing(), Math)
 
 const node_metric_bundle = NodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
 
+const curried_stored_arc_properties =
+    CurriedStoredArcProperties(
+        PointArcProperties(glm),
+        LinearMapping,
+        IdentityMapping);
+
 const curried_stored_arcs_and_point_arcs = 
     CurriedStoredArcsAndPointArcs(
         CurriedNodePointIndication(
@@ -194,15 +201,15 @@ const curried_stored_arcs_and_point_arcs =
                         Math), 
                     SamplerArcProperties(),
                     0.5))),
-        PointArcProperties(glm),
+        curried_stored_arc_properties,
         0.08 // target offset distance for 2-arrows
     );
 
 const curried_user_arcs_and_stored_arcs =
     CurriedUserArcsAndStoredArcs(
         curried_stored_arcs_and_point_arcs,
-        PointArcProperties(glm),
-        node_metric_bundle, diagram_ids, glm, Math,
+        curried_stored_arc_properties,
+        node_metric_bundle, diagram_ids, glm, 
         0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
         0.08, // target offset distance for 1-arrows
     );

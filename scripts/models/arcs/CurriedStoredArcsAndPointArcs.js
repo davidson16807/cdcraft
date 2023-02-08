@@ -5,22 +5,11 @@
 */
 function CurriedStoredArcsAndPointArcs(
         curried_node_point_indication, 
-        point_arcs_properties,
+        curried_stored_arc_properties,
         target_offset_distance) {
     return (arrows) => {
-        // TODO: consolidate this with the copy in CurriedUserArcsAndStoredArcs
-        const target_offset_map = 
-            (node, is_loop) =>
-                is_loop && node.reference != null? 
-                    LinearMapping(
-                        new LinearMap(
-                            point_arcs_properties.chord_direction(
-                                stored_arcs_and_point_arcs.stored_arc_to_point_arc(
-                                    arrows[node.reference].arc)),
-                            glm.vec2(0)
-                        ))
-                  : IdentityMapping();
         const stored_arcs_and_point_arcs = {};
+        const stored_arc_properties = curried_stored_arc_properties(stored_arcs_and_point_arcs, arrows);
         /*
         TODO:
         The logic concerning `target_offset_distance` here is duplicated from `CurriedUserArcsAndStoredArcs.stored_arc_to_user_arc()`.
@@ -32,7 +21,8 @@ function CurriedStoredArcsAndPointArcs(
         stored_arcs_and_point_arcs.stored_arc_to_point_arc = 
             (arc) => {
                 const target_offset = 
-                    target_offset_map(arc.source, arc.source.reference == arc.target.reference).offset
+                    stored_arc_properties.target_offset_to_global_map(arc, arc.source.reference == arc.target.reference)
+                        .offset
                         .revert(arc.target_offset_id)
                         .mul(target_offset_distance);
                 return new PointArc(
