@@ -13,7 +13,6 @@ function CurriedUserArcsAndStoredArcs(
     max_loop_chord_length, 
     max_loop_snap_distance, 
     max_nonloop_snap_distance,
-    target_offset_distance,
 ) {
     return arrows => {
         const stored_arcs_and_point_arcs = curried_stored_arcs_and_point_arcs(arrows);
@@ -38,8 +37,8 @@ function CurriedUserArcsAndStoredArcs(
                      !is_valid?  default_offset_id
                     : is_loop?   
                         diagram_ids.offset_to_offset_id(
-                            stored_arc_properties.target_offset_to_global_map(arc, is_loop).offset
-                                .apply(glm.sub(arc.target.position, arc.source.position)))
+                            stored_arc_properties.target_offset_to_global_mapping(arc, is_loop)
+                                .offset.apply(glm.sub(arc.target.position, arc.source.position)))
                     : glm.vec2();
 
                 const source = 
@@ -62,10 +61,8 @@ function CurriedUserArcsAndStoredArcs(
             },
             stored_arc_to_user_arc: (arc) => {
                 const target_offset = 
-                    stored_arc_properties.target_offset_to_global_map(arc, arc.source.reference == arc.target.reference)
-                        .offset
-                        .revert(arc.target_offset_id)
-                        .mul(target_offset_distance);
+                    stored_arc_properties.target_offset_to_global_mapping(arc, arc.source.reference == arc.target.reference)
+                        .offset.revert(arc.target_offset_id);
                 return new UserArc(
                     arc.source.with({position: glm.sub(arc.source.position, target_offset)}),
                     arc.target.with({position: glm.add(arc.target.position, target_offset)}),

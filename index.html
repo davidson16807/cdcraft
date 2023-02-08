@@ -189,7 +189,9 @@ const curried_stored_arc_properties =
     CurriedStoredArcProperties(
         PointArcProperties(glm),
         LinearMapping,
-        IdentityMapping);
+        ZoomRotateMapping,
+        0.08 // target offset distance for 2-arrows
+    );
 
 const curried_stored_arcs_and_point_arcs = 
     CurriedStoredArcsAndPointArcs(
@@ -202,7 +204,6 @@ const curried_stored_arcs_and_point_arcs =
                     SamplerArcProperties(),
                     0.5))),
         curried_stored_arc_properties,
-        0.08 // target offset distance for 2-arrows
     );
 
 const curried_user_arcs_and_stored_arcs =
@@ -211,7 +212,6 @@ const curried_user_arcs_and_stored_arcs =
         curried_stored_arc_properties,
         node_metric_bundle, diagram_ids, glm, 
         0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
-        0.08, // target offset distance for 1-arrows
     );
 
 const point_arcs_and_sampler_arcs = PointArcsAndSamplerArcs(ArcGeometry(), Math);

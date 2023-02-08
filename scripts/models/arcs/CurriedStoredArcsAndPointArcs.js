@@ -5,8 +5,7 @@
 */
 function CurriedStoredArcsAndPointArcs(
         curried_node_point_indication, 
-        curried_stored_arc_properties,
-        target_offset_distance) {
+        curried_stored_arc_properties) {
     return (arrows) => {
         const stored_arcs_and_point_arcs = {};
         const stored_arc_properties = curried_stored_arc_properties(stored_arcs_and_point_arcs, arrows);
@@ -21,10 +20,8 @@ function CurriedStoredArcsAndPointArcs(
         stored_arcs_and_point_arcs.stored_arc_to_point_arc = 
             (arc) => {
                 const target_offset = 
-                    stored_arc_properties.target_offset_to_global_map(arc, arc.source.reference == arc.target.reference)
-                        .offset
-                        .revert(arc.target_offset_id)
-                        .mul(target_offset_distance);
+                    stored_arc_properties.target_offset_to_global_mapping(arc, arc.source.reference == arc.target.reference)
+                        .offset.revert(arc.target_offset_id);
                 return new PointArc(
                     curried_node_point_indication(stored_arcs_and_point_arcs, arrows).point(arc.source).sub(target_offset),
                     curried_node_point_indication(stored_arcs_and_point_arcs, arrows).point(arc.target).add(target_offset),
