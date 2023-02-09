@@ -27,7 +27,6 @@
     <script src="./scripts/models/arcs/PointArc.js"></script>
     <script src="./scripts/models/arcs/SamplerArc.js"></script>
     <script src="./scripts/models/arcs/SvgArc.js"></script>
-    <script src="./scripts/models/arcs/ArcGeometry.js"></script>
     <script src="./scripts/models/arcs/SamplerArcRendering.js"></script>
     <script src="./scripts/models/arcs/SamplerArcResizing.js"></script>
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
@@ -185,9 +184,11 @@ const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing(), Math)
 
 const node_metric_bundle = NodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
 
+const point_arc_properties = PointArcProperties(glm, Math);
+
 const stored_curried_arc_properties =
     StoredArcPropertiesCurried(
-        PointArcProperties(glm),
+        point_arc_properties,
         LinearMapping,
         ZoomRotateMapping,
         0.08 // target offset distance for 2-arrows
@@ -199,7 +200,7 @@ const stored_curried_arcs_and_point_arcs =
             StoredArcPointIndicationCurried(
                 PointArcPointIndication(
                     PointArcsAndSamplerArcs(
-                        ArcGeometry(),
+                        point_arc_properties,
                         Math), 
                     SamplerArcProperties(),
                     0.5))),
@@ -239,7 +240,7 @@ const svg_arrow_attributes =
         sampler_arc_properties      : sampler_arc_properties,
         sampler_arc_resizing        : SamplerArcResizing(sampler_arc_properties),
         sampler_arc_rendering       : SamplerArcRendering(sampler_arc_properties),
-        point_arcs_and_sampler_arcs : PointArcsAndSamplerArcs(ArcGeometry(), Math),
+        point_arcs_and_sampler_arcs : PointArcsAndSamplerArcs(point_arc_properties, Math),
     }, 
     { 
         source_trim_length: 0.12,
