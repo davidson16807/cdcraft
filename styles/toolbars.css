@@ -268,8 +268,12 @@ These only appear when pointer precision indicates a desktop user.
 
 .group-dark {
   color: #fff;
-  background-color: #343a40;
-  border-color: #343a40;
+  background-color: #222;
+  border-color: #222;
+}
+
+.group-split {
+    padding: 0.5rem;
 }
 
 .group-round {

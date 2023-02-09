@@ -95,7 +95,7 @@ function SvgAppView(dependencies, onevents) {
             old_app.diagram.object_selections != new_app.diagram.object_selections || 
             old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
 
-            if (trigger != 'object-text'){
+            if (!(new Set(['object-text','object-description']).has(trigger))){
                 dom_io.getElementById('object-toolbar')
                     .replaceWith(html_object_toolbar_view.draw(dom_io, new_app, 
                         (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),

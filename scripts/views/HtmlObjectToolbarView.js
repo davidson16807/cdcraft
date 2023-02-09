@@ -23,7 +23,7 @@ function HtmlObjectToolbarView(dependencies) {
 
     const drawing = {};
     drawing.draw = function(dom, app, ontextinput, onbuttonclick) {
-        const panels = [];
+        let panels = [];
         const diagram = app.diagram;
 
         const is_single_object_selected = (
@@ -37,18 +37,56 @@ function HtmlObjectToolbarView(dependencies) {
                 diagram.inferred_object_selections[0]);
             const deferal = view_event_deferal(drawing, object, dom);
 
-            panels.push(
+            panels =[
                 html.div({class:'group-round',}, 
                     [
                         html.h5({},[],'Object'),
-                        html.input({
-                            id:      'object-text',
-                            type:    'text',
-                            class:   'form-control',
-                            value:   object.depiction || '\\[\\bullet\\]',
-                            oninput: deferal.callback(ontextinput),
-                        })
-                    ]));
+                        html.div({class:'horizontal-axis-group group-split'}, 
+                            [
+                                html.input({
+                                    id:      'object-text',
+                                    type:    'text',
+                                    class:   'form-control',
+                                    value:   object.depiction || '\\[\\bullet\\]',
+                                    oninput: deferal.callback(ontextinput),
+                                }),
+                            ]),
+                        html.div({class:'horizontal-axis-group group-split'}, 
+                            [
+                                html.input({
+                                    id:      'object-description',
+                                    type:    'text',
+                                    class:   'form-control',
+                                    value:   object.description || '',
+                                    placeholder: '\\[description\\]',
+                                    oninput: deferal.callback(ontextinput),
+                                }),
+                            ])
+                    ]),
+                /*
+                html.div({class:'group-round',}, 
+                    [
+                        html.div({class:'horizontal-axis-group'}, 
+                            [
+                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                            ]),
+                        html.div({class:'horizontal-axis-group'}, 
+                            [
+                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn group-dark'},[html.div({class:'img'}, [], '∙')]),
+                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                            ]),
+                        html.div({class:'horizontal-axis-group'}, 
+                            [
+                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                            ]),
+                    ]),
+                */
+            ];
         }
 
         return html.div(

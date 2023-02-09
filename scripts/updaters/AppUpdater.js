@@ -99,6 +99,37 @@ function AppUpdater(
             }
         },
 
+        object_description: function(app_io, event) {
+            const diagram_in = app_io.diagram;
+            const objects_in = diagram_in.objects;
+            if (diagram_in.inferred_object_selections.length == 1) {
+                // promote the inferred object to a discrete object
+                const object_in = diagram_in.inferred_object_selections[0];
+                const object_out = object_in.with({ 
+                    description: event.currentTarget.value, 
+                });
+                const diagram_out = diagram_in.with({
+                    objects: [...objects_in, object_out],
+                    inferred_object_selections: [],
+                    object_selections: [objects_in.length],
+                });
+                history.do(app_io, diagram_out, true);
+            } else if (diagram_in.object_selections.length == 1) {
+                // change the inferred object in place
+                const object_id = diagram_in.object_selections[0];
+                const objects_before = objects_in.slice(0,object_id);
+                const objects_after = objects_in.slice(object_id+1);
+                const object_in = objects_in[object_id];
+                const object_out = object_in.with({ 
+                    description: event.currentTarget.value, 
+                });
+                const diagram_out = diagram_in.with({
+                    objects: [...objects_before, object_out, ...objects_after],
+                });
+                history.do(app_io, diagram_out, true);
+            }
+        },
+
         arrow_text: function(app_io, event) {
             const diagram_in = app_io.diagram;
             const arrows_in = diagram_in.arrows;
@@ -158,6 +189,7 @@ function AppUpdater(
 
     const text_bindings = {
         'object-text': 'object_text',
+        'object-description': 'object_description',
         'arrow-text': 'arrow_text',
     }
 

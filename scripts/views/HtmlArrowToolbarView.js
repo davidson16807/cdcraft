@@ -3,9 +3,10 @@
 `
 <div class="group-round">
     <h5>Arrow</h5>
-    <input id="arrow-text" type="text" class="form-control" placeholder="Arrow Text" />
-    <div>&nbsp;</div>
-    <div class="horizontal-axis-group maybe-slider">
+    <div class="horizontal-axis-group group-split">
+        <input id="arrow-text" type="text" class="form-control" placeholder="Arrow Text" />
+    </div>
+    <div class="horizontal-axis-group group-split maybe-slider">
         <button id="toggle-grid" type="button" class="btn btn-dark">
             <img src="icons/lock.svg"/>
         </button>
