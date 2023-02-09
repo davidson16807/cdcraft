@@ -18,9 +18,7 @@ function CurriedUserArcsAndStoredArcs(
         const stored_arcs_and_point_arcs = curried_stored_arcs_and_point_arcs(arrows);
         const stored_arc_properties = curried_stored_arc_properties(stored_arcs_and_point_arcs, arrows);
         return {
-            user_arc_to_stored_arc: (arc, default_offset_id) => {
-                default_offset_id = default_offset_id || glm.vec2();
-
+            user_arc_to_stored_arc: (arc) => {
                 const source_cell = node_metric_bundle.bundle(arc.source);
                 const target_cell = node_metric_bundle.bundle(arc.target);
 
@@ -34,7 +32,7 @@ function CurriedUserArcsAndStoredArcs(
                 const is_valid = is_snapped && !is_hidden;
 
                 const target_offset_id = 
-                     !is_valid?  default_offset_id
+                     !is_valid?  glm.vec2()
                     : is_loop?   
                         diagram_ids.offset_to_offset_id(
                             stored_arc_properties.target_offset_to_global_mapping(arc, is_loop)

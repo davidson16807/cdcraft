@@ -65,7 +65,7 @@ function ArrowPositionsResource(
                             target: old_stored.target.with({position: position_map[target_hash] || old_stored.target.position}),
                         })
                     );
-                const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users, old_stored.target_offset_id);
+                const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users);
                 updated_arrows.push(arrow.with({arc:new_stored}));
             }
             return updated_arrows;

@@ -22,7 +22,6 @@ fix bug where dragging one named object on top of another causes overlap
 
 LOW PRIORITY:
 arrow/object label toggle for latex/plaintext default
-non-zero-length 2-loops
 arrow trim slider
 arrow offset slider
 arrow flip/reverse operations
@@ -35,4 +34,3 @@ rotate/flip/mirror selections
 REFACTOR:
 decouple state for model/view to support soft undo/redo
 refactor so app operations return new app objects
-refactor Node to resemble polymorphism used by drag types
