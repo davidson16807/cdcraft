@@ -1,11 +1,11 @@
 'use strict';
 
 /*
-`CurriedUserArcsAndStoredArcs` returns a namespace of pure functions that describe maps between `UserArc`s and `StoredArc`s
+`UserArcsAndStoredArcsCurried` returns a namespace of pure functions that describe maps between `UserArc`s and `StoredArc`s
 */
-function CurriedUserArcsAndStoredArcs(
-    curried_stored_arcs_and_point_arcs,
-    curried_stored_arc_properties,
+function UserArcsAndStoredArcsCurried(
+    stored_curried_arcs_and_point_arcs,
+    stored_curried_arc_properties,
     node_metric_bundle, 
     diagram_ids,
     glm,
@@ -15,8 +15,8 @@ function CurriedUserArcsAndStoredArcs(
     max_nonloop_snap_distance,
 ) {
     return arrows => {
-        const stored_arcs_and_point_arcs = curried_stored_arcs_and_point_arcs(arrows);
-        const stored_arc_properties = curried_stored_arc_properties(stored_arcs_and_point_arcs, arrows);
+        const stored_arcs_and_point_arcs = stored_curried_arcs_and_point_arcs(arrows);
+        const stored_arc_properties = stored_curried_arc_properties(stored_arcs_and_point_arcs, arrows);
         return {
             user_arc_to_stored_arc: (arc) => {
                 const source_cell = node_metric_bundle.bundle(arc.source);

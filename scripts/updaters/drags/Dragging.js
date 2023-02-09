@@ -44,10 +44,10 @@ function NodeMetricBundle(){
     }
 }
 
-function CurriedNodePointIndication(curried_arc_point_indication) {
+function NodePointIndicationCurried(arc_curried_point_indication) {
     return (stored_arcs_and_point_arcs, arrows) => {
         return {
-            point: (node) => node.curried_node_point_indication(stored_arcs_and_point_arcs, arrows).point(node.state),
+            point: (node) => node.node_curried_point_indication(stored_arcs_and_point_arcs, arrows).point(node.state),
         };
     }
 }

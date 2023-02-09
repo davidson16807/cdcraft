@@ -1,6 +1,6 @@
 'use strict';
 
-function CurriedStoredArcProperties(
+function StoredArcPropertiesCurried(
         point_arcs_properties,
         LinearMapping, 
         ZoomRotateMapping,

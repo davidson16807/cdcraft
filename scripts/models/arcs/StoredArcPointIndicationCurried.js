@@ -1,9 +1,9 @@
 'use strict';
 
-function CurriedStoredArcPointIndication(point_arc_point_indication) {
+function StoredArcPointIndicationCurried(point_arc_point_indication) {
     /*
     the `stored_arcs_and_point_arcs` dependency must be provided separate from other dependencies
-    since it may recursively use CurriedArcPointIndication as a dependency.
+    since it may recursively use ArcPointIndicationCurried as a dependency.
     */
     return (stored_arcs_and_point_arcs) => {
         return {
