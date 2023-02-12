@@ -7,7 +7,7 @@
 class DiagramArrow {
     constructor(
         arc, is_edited, label, label_offset_id, 
-        source_style_id, target_style_id, line_style_id, 
+        source_style_id, target_style_id, line_count, 
         color
     ){
         typecheck(arc,             'StoredArc');
@@ -16,7 +16,7 @@ class DiagramArrow {
         typecheck(label_offset_id, '1+glm_ivec2$class');
         typecheck(source_style_id, 'Number');
         typecheck(target_style_id, 'Number');
-        typecheck(line_style_id,   'Number');
+        typecheck(line_count,   'Number');
         typecheck(color,           '1+String');
         this.arc = Object.freeze(arc);
         this.is_edited = Object.freeze(is_edited);
@@ -24,7 +24,7 @@ class DiagramArrow {
         this.label_offset_id = Object.freeze(label_offset_id);
         this.source_style_id = Object.freeze(source_style_id);
         this.target_style_id = Object.freeze(target_style_id);
-        this.line_style_id = Object.freeze(line_style_id);
+        this.line_count = Object.freeze(line_count);
         this.color = Object.freeze(color);
     }
 
@@ -36,7 +36,7 @@ class DiagramArrow {
             attributes.label_offset_id  != null? attributes.label_offset_id  : this.label_offset_id,
             attributes.source_style_id  != null? attributes.source_style_id  : this.source_style_id,
             attributes.target_style_id  != null? attributes.target_style_id  : this.target_style_id,
-            attributes.line_style_id    != null? attributes.line_style_id    : this.line_style_id,
+            attributes.line_count    != null? attributes.line_count    : this.line_count,
         );
     }
 

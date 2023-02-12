@@ -46,8 +46,9 @@ function SvgArrowView(dependencies, settings) {
         const point_arc = stored_arcs_and_point_arcs_curried(arrows).stored_arc_to_point_arc(arrow.arc);
         const sampler_arc = point_arcs_and_sampler_arcs.point_arc_to_sampler_arc(point_arc);
         const trimmed_arc = sampler_arc_transforms.trim(sampler_arc, source_trim_length, -target_trim_length);
-        const screen_arc = SamplerArcMapping(PanZoomMapping(screen_state)).apply(trimmed_arc);
-        const screen_highlight_width = PanZoomMapping(screen_state).distance.apply(highlight_width);
+        const screen_mapping = PanZoomMapping(screen_state);
+        const screen_arc = SamplerArcMapping(screen_mapping).apply(trimmed_arc);
+        const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
         const text_width = 80;
         const arc_direction = glm.normalize(point_arc.target.sub(point_arc.source));
         const arc_midpoint = sampler_arc_properties.position(screen_arc, 0.5);
@@ -79,8 +80,8 @@ function SvgArrowView(dependencies, settings) {
                 // svg.circle({class:"arrow-handle", r:13} sampler_arc_properties.position(screen_arc,1)),
                 svg.path({class:"arrow", d: svg_arrow_attributes.head(trimmed_arc, screen_state_store)}),
                 svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc)}),
-                // svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc.with({source_offset: screen_arc.source_offset.add(glm.normalize(screen_arc.source_offset).mul(4))}))}),
-                // svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc.with({source_offset: screen_arc.source_offset.sub(glm.normalize(screen_arc.source_offset).mul(4))}))}),
+                svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc.with({source_offset: screen_arc.source_offset.add(glm.normalize(screen_arc.source_offset).mul(4))}))}),
+                svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc.with({source_offset: screen_arc.source_offset.sub(glm.normalize(screen_arc.source_offset).mul(4))}))}),
                 svg.foreignObject(
                     {class:"arrow-label-wrapper"}, [div], 
                     arc_midpoint

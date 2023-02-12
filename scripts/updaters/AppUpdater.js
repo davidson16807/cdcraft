@@ -118,7 +118,7 @@ function AppUpdater(
                     entity.label_offset_id.y != label_offset_id.y? 
                         label_offset_id : null
             }),
-        line_style_id: line_style_id => (arrow, event) => arrow.with({line_style_id: line_style_id}),
+        line_count: line_count => (arrow, event) => arrow.with({line_count: line_count}),
     }
 
     /*
@@ -162,10 +162,10 @@ function AppUpdater(
         arrow_label_outside:      selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,1))),
         arrow_label_inside:       selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,-1))),
 
-        arrow_line_style0:        selection_actions_curried.arrow(entity_actions_curried.line_style_id(0)),
-        arrow_line_style1:        selection_actions_curried.arrow(entity_actions_curried.line_style_id(1)),
-        arrow_line_style2:        selection_actions_curried.arrow(entity_actions_curried.line_style_id(2)),
-        arrow_line_style3:        selection_actions_curried.arrow(entity_actions_curried.line_style_id(3)),
+        arrow_line_style0:        selection_actions_curried.arrow(entity_actions_curried.line_count(0)),
+        arrow_line_style1:        selection_actions_curried.arrow(entity_actions_curried.line_count(1)),
+        arrow_line_style2:        selection_actions_curried.arrow(entity_actions_curried.line_count(2)),
+        arrow_line_style3:        selection_actions_curried.arrow(entity_actions_curried.line_count(3)),
     }
 
     const key_bindings = {

@@ -167,10 +167,10 @@ function HtmlArrowToolbarView(dependencies) {
                             ]),
                         html.div({class:'horizontal-axis-group'}, 
                             [
-                                html.button({type:'button', class:`btn ${arrow.line_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style0',}, [html.div({class:'img'}, [], '')]),
-                                html.button({type:'button', class:`btn ${arrow.line_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style1',}, [html.div({class:'img'}, [], '↑')]),
-                                html.button({type:'button', class:`btn ${arrow.line_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style2',}, [html.div({class:'img'}, [], '⇑')]),
-                                html.button({type:'button', class:`btn ${arrow.line_style_id == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style3',},[html.div({class:'img'}, [], '⤊')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style0',}, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style1',}, [html.div({class:'img'}, [], '↑')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style2',}, [html.div({class:'img'}, [], '⇑')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style3',},[html.div({class:'img'}, [], '⤊')]),
                             ]),
                     ]),
             );
