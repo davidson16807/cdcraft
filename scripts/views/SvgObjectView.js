@@ -26,7 +26,7 @@ function SvgObjectView(dependencies, highlight_width) {
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
         const object_screen_position = screen_mapping.position.apply(object.position);
-        const label_offset_id = object.label_offset_id || glm.vec2(1,-1);
+        const label_offset_id = object.label_offset_id || glm.ivec2(1,-1);
         const symbol = html.div({},[], object.symbol || '\\[\\bullet\\]');
         render(symbol, {throwOnError: false});
         const label = html.div({

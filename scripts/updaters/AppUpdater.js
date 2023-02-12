@@ -64,31 +64,31 @@ function AppUpdater(
     };
 
     /* 
-    functions mapping function→app→app
-    where the function represents a change in a selected entity
+    functions mapping function→app×event→app
+    where the function app×event→app is an action that represents a change to a selection of some kind
     */
-    const selection_actions = {
-        object: update_object => app_io => {
+    const selection_actions_curried = {
+        object: update_object => (app_io, event) => {
             const diagram = app_io.diagram;
             const inferred = diagram.inferred_object_selections;
             const explicit = diagram.object_selections;
             history.do(app_io, 
                 inferred.length == 1?
                     diagram_object_resources.inferred.put(diagram, 0, 
-                        update_object(inferred[0]))
+                        update_object(inferred[0], event))
               : explicit.length == 1?
                     diagram_object_resources.explicit.put(diagram, explicit[0],
-                        update_object(diagram.objects[explicit[0]]))
+                        update_object(diagram.objects[explicit[0]], event))
               : diagram,
                 true);
         },
-        arrow: update_arrow => app_io => {
+        arrow: update_arrow => (app_io, event) => {
             const diagram = app_io.diagram;
             const arrows = diagram.arrow_selections;
             history.do(app_io, 
                 arrows.length == 1?
                     diagram_arrow_resources.put(diagram, arrows[0],
-                        update_arrow(diagram.arrows[arrows[0]]))
+                        update_arrow(diagram.arrows[arrows[0]], event))
               : diagram,
                 true);
         }
@@ -99,16 +99,14 @@ function AppUpdater(
     where the event must represent a change in a text field
     */
     const text_actions = {
-        arrow_label: selection_actions.arrow(arrow => arrow.with({label: event.currentTarget.value})),
-        object_symbol: selection_actions.object(object => object.with({symbol: event.currentTarget.value})),
-        object_label: selection_actions.object(object => object.with({label: event.currentTarget.value})),
-        // object_label_left: selection_actions.object(object => object.with({label_offset_id: glm.vec2(0,-1)})),
-        // object_label_right: selection_actions.object(object => object.with({label_offset_id: glm.vec2(0,1)})),
+        arrow_label: selection_actions_curried.arrow((arrow,event) => arrow.with({label: event.currentTarget.value})),
+        object_symbol: selection_actions_curried.object((object,event) => object.with({symbol: event.currentTarget.value})),
+        object_label: selection_actions_curried.object((object,event) => object.with({label: event.currentTarget.value})),
     };
 
     /*
     // functions mapping app×event→app 
-    where the event needs no specialization
+    where the event need carry no information beyond the fact that it occurred, such as a button press
     */
     const generic_actions = {
 
@@ -137,24 +135,13 @@ function AppUpdater(
             }
         },
 
-        'object_label_left': (app_io, event) => {
-            console.log('object_label_left');
-        },
-        'object_label_right': (app_io, event) => {
-            console.log('object_label_right');
-        },
-        'object_label_topleft': (app_io, event) => {
-            console.log('object_label_topleft');
-        },
-        'object_label_topright': (app_io, event) => {
-            console.log('object_label_topright');
-        },
-        'object_label_bottomleft': (app_io, event) => {
-            console.log('object_label_bottomleft');
-        },
-        'object_label_bottomright': (app_io, event) => {
-            console.log('object_label_bottomright');
-        },
+        object_label_left: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(-1,0)})),
+        object_label_right: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(1,0)})),
+        object_label_topleft: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(-1,1)})),
+        object_label_topright: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(1,1)})),
+        object_label_bottomleft: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(-1,-1)})),
+        object_label_bottomright: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(1,-1)})),
+
     }
 
     const key_bindings = {

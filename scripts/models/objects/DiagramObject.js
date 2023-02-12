@@ -6,12 +6,17 @@
 class DiagramObject {
     constructor(position, symbol, label, label_offset_id, is_edited, is_valid){
         typecheck(position, 'glm_vec2$class+glm_ivec2$class');
+        typecheck(symbol, '1+String');
+        typecheck(label,  '1+String');
+        typecheck(label_offset_id, '1+glm_ivec2$class');
+        typecheck(is_edited, '1+Boolean');
+        typecheck(is_valid,  '1+Boolean');
         this.position = Object.freeze(position);
         this.symbol = Object.freeze(symbol);
         this.label = Object.freeze(label);
         this.label_offset_id = Object.freeze(label_offset_id);
-        this.is_edited = Object.freeze(is_edited);
-        this.is_valid = Object.freeze(is_valid);
+        this.is_edited = Object.freeze(is_edited||false);
+        this.is_valid = Object.freeze(is_valid||true);
     }
 
     with(attributes){
