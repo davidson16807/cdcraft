@@ -8,6 +8,7 @@ class DiagramArrow {
     constructor(
         arc, is_edited, label, label_offset_id, 
         source_style_id, target_style_id, line_style_id, 
+        color
     ){
         typecheck(arc,             'StoredArc');
         typecheck(is_edited,       'Boolean');
@@ -16,6 +17,7 @@ class DiagramArrow {
         typecheck(source_style_id, 'Number');
         typecheck(target_style_id, 'Number');
         typecheck(line_style_id,   'Number');
+        typecheck(color,           '1+String');
         this.arc = Object.freeze(arc);
         this.is_edited = Object.freeze(is_edited);
         this.label = Object.freeze(label);
@@ -23,6 +25,7 @@ class DiagramArrow {
         this.source_style_id = Object.freeze(source_style_id);
         this.target_style_id = Object.freeze(target_style_id);
         this.line_style_id = Object.freeze(line_style_id);
+        this.color = Object.freeze(color);
     }
 
     with(attributes){

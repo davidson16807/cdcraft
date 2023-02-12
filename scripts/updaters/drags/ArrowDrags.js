@@ -33,7 +33,7 @@ function ArrowDrags(
                                         default_min_length_clockwise,
                                     )
                             ),
-                            true, '', undefined, 0,0,0
+                            true, '', undefined, 0,0,0, undefined
                         ),
                     // do nothing if not snapped, otherwise add the arrow
                     command: (replacement_arrow, is_released, is_canceled) => diagram => 
