@@ -10,23 +10,23 @@ function ArrowReferenceResource(
     ){
     return {
 
-        get: function(arrows, reference_map){
-            let updated_reference_map = {};
+        get: function(arrows, reference_to_reference){
+            let updated_reference_to_reference = {};
             for(let arrow of arrows){
                 const stored_arc = arrow.arc;
                 const source_hash = node_hashing.hash(stored_arc.source);
                 const target_hash = node_hashing.hash(stored_arc.target);
-                if ((reference_map == null || reference_map[source_hash] != null) && stored_arc.source.reference != null) {
-                    updated_reference_map[source_hash] = stored_arc.source.reference;
+                if ((reference_to_reference == null || reference_to_reference[source_hash] != null) && stored_arc.source.reference != null) {
+                    updated_reference_to_reference[source_hash] = stored_arc.source.reference;
                 }
-                if ((reference_map == null || reference_map[target_hash] != null) && stored_arc.target.reference != null) {
-                    updated_reference_map[target_hash] = stored_arc.target.reference;
+                if ((reference_to_reference == null || reference_to_reference[target_hash] != null) && stored_arc.target.reference != null) {
+                    updated_reference_to_reference[target_hash] = stored_arc.target.reference;
                 }
             }
-            return updated_reference_map;
+            return updated_reference_to_reference;
         },
 
-        put: function(arrows, reference_map) {
+        put: function(arrows, reference_to_reference) {
             const user_arcs_and_stored_arcs = user_curried_arcs_and_stored_arcs(arrows);
             const updated_arrows = [];
             for(let arrow of arrows){
@@ -36,8 +36,8 @@ function ArrowReferenceResource(
                 const new_users = 
                     user_arcs_and_stored_arcs.stored_arc_to_user_arc(
                         old_stored.with({
-                            source: old_stored.source.with({reference: reference_map[source_hash] || old_stored.source.reference}),
-                            target: old_stored.target.with({reference: reference_map[target_hash] || old_stored.target.reference}),
+                            source: old_stored.source.with({reference: reference_to_reference[source_hash] || old_stored.source.reference}),
+                            target: old_stored.target.with({reference: reference_to_reference[target_hash] || old_stored.target.reference}),
                         })
                     );
                 const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users);
@@ -46,7 +46,7 @@ function ArrowReferenceResource(
             return updated_arrows;
         },
 
-        delete: function(arrows, reference_map) {
+        delete: function(arrows, reference_to_reference) {
             let filtered = [];
             const updated_window = {};
             const deleted_window = {};
@@ -56,7 +56,7 @@ function ArrowReferenceResource(
                 const source_hash = node_hashing.hash(arc.source);
                 const target_hash = node_hashing.hash(arc.target);
                 const arrow_hash = node_hashing.hash(new Node(null, i));
-                if (reference_map[source_hash] == null && reference_map[target_hash] == null && reference_map[arrow_hash] == null) {
+                if (reference_to_reference[source_hash] == null && reference_to_reference[target_hash] == null && reference_to_reference[arrow_hash] == null) {
                     filtered.push(arrow);
                     updated_window[arrow_hash] = filtered.length;
                 } else {

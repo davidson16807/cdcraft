@@ -14,9 +14,10 @@ function AppUpdater(
     const arrow_drags               = dependencies.arrow_drags;
     const view_drags                = dependencies.view_drags;
     const screen_state_storage      = dependencies.screen_state_storage;
-    const object_position_resources = dependencies.object_position_resources;
     const drag_ops                  = dependencies.drag_state_ops;
     const history                   = dependencies.app_history_traversal;
+    const diagram_object_resources  = dependencies.diagram_object_resources;
+    const diagram_arrow_resources   = dependencies.diagram_arrow_resources;
 
     /* 
     functions mapping app×event→app 
@@ -63,90 +64,46 @@ function AppUpdater(
     };
 
     /* 
+    functions mapping function→app→app
+    where the function represents a change in a selected entity
+    */
+    const selection_actions = {
+        object: update_object => app_io => {
+            const diagram = app_io.diagram;
+            const inferred = diagram.inferred_object_selections;
+            const explicit = diagram.object_selections;
+            history.do(app_io, 
+                inferred.length == 1?
+                    diagram_object_resources.inferred.put(diagram, 0, 
+                        update_object(inferred[0]))
+              : explicit.length == 1?
+                    diagram_object_resources.explicit.put(diagram, explicit[0],
+                        update_object(diagram.objects[explicit[0]]))
+              : diagram,
+                true);
+        },
+        arrow: update_arrow => app_io => {
+            const diagram = app_io.diagram;
+            const arrows = diagram.arrow_selections;
+            history.do(app_io, 
+                arrows.length == 1?
+                    diagram_arrow_resources.put(diagram, arrows[0],
+                        update_arrow(diagram.arrows[arrows[0]]))
+              : diagram,
+                true);
+        }
+    }
+
+    /* 
     functions mapping app×text→app 
     where the event must represent a change in a text field
     */
     const text_actions = {
-
-        object_text: function(app_io, event) {
-            const diagram_in = app_io.diagram;
-            const objects_in = diagram_in.objects;
-            if (diagram_in.inferred_object_selections.length == 1) {
-                // promote the inferred object to a discrete object
-                const object_in = diagram_in.inferred_object_selections[0];
-                const object_out = object_in.with({ 
-                    depiction: event.currentTarget.value, 
-                });
-                const diagram_out = diagram_in.with({
-                    objects: [...objects_in, object_out],
-                    inferred_object_selections: [],
-                    object_selections: [objects_in.length],
-                });
-                history.do(app_io, diagram_out, true);
-            } else if (diagram_in.object_selections.length == 1) {
-                // change the inferred object in place
-                const object_id = diagram_in.object_selections[0];
-                const objects_before = objects_in.slice(0,object_id);
-                const objects_after = objects_in.slice(object_id+1);
-                const object_in = objects_in[object_id];
-                const object_out = object_in.with({ 
-                    depiction: event.currentTarget.value, 
-                });
-                const diagram_out = diagram_in.with({
-                    objects: [...objects_before, object_out, ...objects_after],
-                });
-                history.do(app_io, diagram_out, true);
-            }
-        },
-
-        object_description: function(app_io, event) {
-            const diagram_in = app_io.diagram;
-            const objects_in = diagram_in.objects;
-            if (diagram_in.inferred_object_selections.length == 1) {
-                // promote the inferred object to a discrete object
-                const object_in = diagram_in.inferred_object_selections[0];
-                const object_out = object_in.with({ 
-                    description: event.currentTarget.value, 
-                });
-                const diagram_out = diagram_in.with({
-                    objects: [...objects_in, object_out],
-                    inferred_object_selections: [],
-                    object_selections: [objects_in.length],
-                });
-                history.do(app_io, diagram_out, true);
-            } else if (diagram_in.object_selections.length == 1) {
-                // change the inferred object in place
-                const object_id = diagram_in.object_selections[0];
-                const objects_before = objects_in.slice(0,object_id);
-                const objects_after = objects_in.slice(object_id+1);
-                const object_in = objects_in[object_id];
-                const object_out = object_in.with({ 
-                    description: event.currentTarget.value, 
-                });
-                const diagram_out = diagram_in.with({
-                    objects: [...objects_before, object_out, ...objects_after],
-                });
-                history.do(app_io, diagram_out, true);
-            }
-        },
-
-        arrow_text: function(app_io, event) {
-            const diagram_in = app_io.diagram;
-            const arrows_in = diagram_in.arrows;
-            if (diagram_in.arrow_selections.length == 1) {
-                const arrow_id = diagram_in.arrow_selections[0];
-                const arrow_in = diagram_in.arrows[arrow_id];
-                const arrows_before = arrows_in.slice(0,arrow_id);
-                const arrows_after = arrows_in.slice(arrow_id+1);
-                const arrow_out = arrow_in.with({ 
-                    label: event.currentTarget.value 
-                });
-                const diagram_out = diagram_in.with({
-                    arrows: [...arrows_before, arrow_out, ...arrows_after],
-                });
-                history.do(app_io, diagram_out, true);
-            }
-        }
+        arrow_label: selection_actions.arrow(arrow => arrow.with({label: event.currentTarget.value})),
+        object_symbol: selection_actions.object(object => object.with({symbol: event.currentTarget.value})),
+        object_label: selection_actions.object(object => object.with({label: event.currentTarget.value})),
+        // object_label_left: selection_actions.object(object => object.with({label_offset_id: glm.vec2(0,-1)})),
+        // object_label_right: selection_actions.object(object => object.with({label_offset_id: glm.vec2(0,1)})),
     };
 
     /*
@@ -179,6 +136,25 @@ function AppUpdater(
                 }), false);
             }
         },
+
+        'object_label_left': (app_io, event) => {
+            console.log('object_label_left');
+        },
+        'object_label_right': (app_io, event) => {
+            console.log('object_label_right');
+        },
+        'object_label_topleft': (app_io, event) => {
+            console.log('object_label_topleft');
+        },
+        'object_label_topright': (app_io, event) => {
+            console.log('object_label_topright');
+        },
+        'object_label_bottomleft': (app_io, event) => {
+            console.log('object_label_bottomleft');
+        },
+        'object_label_bottomright': (app_io, event) => {
+            console.log('object_label_bottomright');
+        },
     }
 
     const key_bindings = {
@@ -188,15 +164,21 @@ function AppUpdater(
     }
 
     const text_bindings = {
-        'object-text': 'object_text',
-        'object-description': 'object_description',
-        'arrow-text': 'arrow_text',
+        'object-symbol': 'object_symbol',
+        'object-label': 'object_label',
+        'arrow-label': 'arrow_label',
     }
 
     const button_bindings = {
         'undo': 'undo',
         'redo': 'redo',
         'toggle-grid': 'toggle_grid',
+        'object-label-left': 'object_label_left',
+        'object-label-right': 'object_label_right',
+        'object-label-topleft': 'object_label_topleft',
+        'object-label-topright': 'object_label_topright',
+        'object-label-bottomleft': 'object_label_bottomleft',
+        'object-label-bottomright': 'object_label_bottomright',
     }
 
     const mousedown_bindings = [

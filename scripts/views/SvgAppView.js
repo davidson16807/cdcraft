@@ -60,7 +60,7 @@ function SvgAppView(dependencies, onevents) {
             old_app.diagram.arrows != new_app.diagram.arrows ||
             old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
 
-            if (trigger != 'arrow-text'){
+            if (trigger != 'arrow-label'){
                 dom_io.getElementById('arrow-toolbar')
                     .replaceWith(html_arrow_toolbar_view.draw(dom_io, new_app, 
                         (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
@@ -95,7 +95,7 @@ function SvgAppView(dependencies, onevents) {
             old_app.diagram.object_selections != new_app.diagram.object_selections || 
             old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
 
-            if (!(new Set(['object-text','object-description']).has(trigger))){
+            if (!(new Set(['object-symbol','object-label']).has(trigger))){
                 dom_io.getElementById('object-toolbar')
                     .replaceWith(html_object_toolbar_view.draw(dom_io, new_app, 
                         (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
@@ -130,7 +130,7 @@ function SvgAppView(dependencies, onevents) {
             old_app.diagram.objects != new_app.diagram.objects || 
             old_app.drag_type != new_app.drag_type) {
             const inferred_objects = 
-                object_position_resource.post(
+                object_position_resource.post([],
                     resource_operations.delete(
                         arrow_positions_resource.get(new_app.diagram.arrows),
                         object_position_resource.get(new_app.diagram.objects)

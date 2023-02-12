@@ -160,7 +160,7 @@ In portrait orientations, it will expand from bottom right to bottom left.
     font-size: 423%;
 }
 .title, .subtitle {
-    padding-left: 0.5rem;
+    padding-left: 0.61rem;
     display: none;
 }
 @media (min-width: 640px) and ((pointer: fine) or (pointer: none)) {
@@ -199,7 +199,7 @@ This will be the case regardless of screen orientation.
     flex-flow : column nowrap;
     align-items: center;
     flex: 1 2 auto;
-    border-radius: 0.5rem;
+    border-radius: 0.61rem;
 }
 .btn img {
     width:  48px;
@@ -273,12 +273,12 @@ These only appear when pointer precision indicates a desktop user.
 }
 
 .group-split {
-    padding: 0.5rem;
+    padding: 0.23rem;
 }
 
 .group-round {
-    padding: 0.5rem;
-    border-radius: 0.5rem;
+    padding: 0.61rem;
+    border-radius: 0.61rem;
 }
 
 /* text is enlarged and placed beside the icon to save vertical space */
@@ -323,12 +323,12 @@ These only appear when pointer precision indicates a desktop user.
   border-bottom-right-radius : 0;
 }
 .horizontal-axis-group.group-joined .btn:first-of-type {
-  border-top-left-radius: 0.5rem;
-  border-bottom-left-radius: 0.5rem;
+  border-top-left-radius: 0.61rem;
+  border-bottom-left-radius: 0.61rem;
 }
 .horizontal-axis-group.group-joined .btn:last-of-type {
-  border-top-right-radius : 0.5rem;
-  border-bottom-right-radius : 0.5rem;
+  border-top-right-radius : 0.61rem;
+  border-bottom-right-radius : 0.61rem;
 }
 
 .vertical-axis-group.group-joined .btn {
@@ -338,12 +338,12 @@ These only appear when pointer precision indicates a desktop user.
   border-bottom-right-radius : 0;
 }
 .vertical-axis-group.group-joined .btn:first-of-type {
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
+  border-top-left-radius: 0.61rem;
+  border-top-right-radius: 0.61rem;
 }
 .vertical-axis-group.group-joined .btn:last-child {
-  border-bottom-left-radius : 0.5rem;
-  border-bottom-right-radius : 0.5rem;
+  border-bottom-left-radius : 0.61rem;
+  border-bottom-right-radius : 0.61rem;
 }
 
 /*
@@ -385,22 +385,22 @@ Since one of our core design principles is to prevent obstruction of the main fo
 }
 @media (orientation: portrait) or (pointer: fine) or (pointer: none) {
     .short-axis-group.group-joined > .btn:first-of-type {
-      border-top-left-radius: 0.5rem;
-      border-bottom-left-radius: 0.5rem;
+      border-top-left-radius: 0.61rem;
+      border-bottom-left-radius: 0.61rem;
     }
     .short-axis-group.group-joined > .btn:last-of-type {
-      border-top-right-radius : 0.5rem;
-      border-bottom-right-radius : 0.5rem;
+      border-top-right-radius : 0.61rem;
+      border-bottom-right-radius : 0.61rem;
     }
 }
 @media (orientation: landscape) and (pointer: coarse) {
     .short-axis-group.group-joined > .btn:first-of-type {
-      border-top-left-radius: 0.5rem;
-      border-top-right-radius: 0.5rem;
+      border-top-left-radius: 0.61rem;
+      border-top-right-radius: 0.61rem;
     }
     .short-axis-group.group-joined > .btn:last-of-type {
-      border-bottom-left-radius : 0.5rem;
-      border-bottom-right-radius : 0.5rem;
+      border-bottom-left-radius : 0.61rem;
+      border-bottom-right-radius : 0.61rem;
     }
 }
 
@@ -449,25 +449,25 @@ Use it only when you can guarantee the number of components you're dealing with 
 @media (orientation: landscape) and (pointer: coarse) {
     .long-axis-group.group-joined > .btn:first-of-type,
     .long-axis-group.group-joined .long-axis-group.group-joined:first-of-type > .btn:first-of-type {
-      border-top-left-radius: 0.5rem;
-      border-bottom-left-radius: 0.5rem;
+      border-top-left-radius: 0.61rem;
+      border-bottom-left-radius: 0.61rem;
     }
     .long-axis-group.group-joined > .btn:last-of-type,
     .long-axis-group.group-joined .long-axis-group.group-joined:last-of-type > .btn:last-of-type {
-      border-top-right-radius : 0.5rem;
-      border-bottom-right-radius : 0.5rem;
+      border-top-right-radius : 0.61rem;
+      border-bottom-right-radius : 0.61rem;
     }
 }
 @media (orientation: portrait) or (pointer: fine) or (pointer: none) {
     .long-axis-group.group-joined > .btn:first-of-type,
     .long-axis-group.group-joined .long-axis-group.group-joined:first-of-type > .btn:first-of-type {
-      border-top-left-radius: 0.5rem;
-      border-top-right-radius: 0.5rem;
+      border-top-left-radius: 0.61rem;
+      border-top-right-radius: 0.61rem;
     }
     .long-axis-group.group-joined > .btn:last-of-type,
     .long-axis-group.group-joined .long-axis-group.group-joined:last-of-type > .btn:last-of-type {
-      border-bottom-left-radius : 0.5rem;
-      border-bottom-right-radius : 0.5rem;
+      border-bottom-left-radius : 0.61rem;
+      border-bottom-right-radius : 0.61rem;
     }
 }
 
@@ -530,7 +530,7 @@ is-desktop only displays when the horizontal axis is shortest
 }
 
 .slider-label {
-    font-size: 0.75rem;
+    font-size: 0.61rem;
     line-height: 1.5;
     align-items     : center;
     justify-content : space-between;
@@ -555,7 +555,7 @@ is-desktop only displays when the horizontal axis is shortest
     .slider-label img {
         width    : 1rem;
         height   : 1rem;
-        margin   : 0.5rem;
+        margin   : 0.61rem;
     }
     .slider-label .vertical-axis-group {
         align-items     : flex-start;

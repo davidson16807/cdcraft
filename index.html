@@ -68,9 +68,12 @@
     <script src="./scripts/updaters/drags/ArrowDrags.js"></script>
     <script src="./scripts/updaters/drags/DragState.js"></script>
     <script src="./scripts/updaters/AppUpdater.js"></script>
+    <script src="./scripts/resources/ArrayResource.js"></script>
     <script src="./scripts/resources/ArrowPositionsResource.js"></script>
     <script src="./scripts/resources/ArrowReferenceResource.js"></script>
     <script src="./scripts/resources/ObjectPositionResource.js"></script>
+    <script src="./scripts/resources/DiagramObjectResource.js"></script>
+    <script src="./scripts/resources/DiagramArrowResource.js"></script>
     <script src="./scripts/resources/ResourceOperations.js"></script>
     <script src="./scripts/resources/PositionMapOperations.js"></script>
 </head>
@@ -194,15 +197,20 @@ const stored_curried_arc_properties =
         0.08 // target offset distance for 2-arrows
     );
 
+const point_arcs_and_sampler_arcs = 
+    PointArcsAndSamplerArcs(
+        point_arc_properties,
+        Math);
+
+const sampler_arc_properties = SamplerArcProperties();
+
 const stored_curried_arcs_and_point_arcs = 
     StoredArcsAndPointArcsCurried(
         NodePointIndicationCurried(
             StoredArcPointIndicationCurried(
                 PointArcPointIndication(
-                    PointArcsAndSamplerArcs(
-                        point_arc_properties,
-                        Math), 
-                    SamplerArcProperties(),
+                    point_arcs_and_sampler_arcs, 
+                    sampler_arc_properties,
                     0.5))),
         stored_curried_arc_properties,
     );
@@ -216,7 +224,6 @@ const user_curried_arcs_and_stored_arcs =
     );
 
 const screen_state_storage = ScreenStateStorage();
-const sampler_arc_properties = SamplerArcProperties();
 
 const svg  = Svg();
 const html = Html();
@@ -240,7 +247,7 @@ const svg_arrow_attributes =
         sampler_arc_properties      : sampler_arc_properties,
         sampler_arc_resizing        : SamplerArcResizing(sampler_arc_properties),
         sampler_arc_rendering       : SamplerArcRendering(sampler_arc_properties),
-        point_arcs_and_sampler_arcs : PointArcsAndSamplerArcs(point_arc_properties, Math),
+        point_arcs_and_sampler_arcs : point_arcs_and_sampler_arcs,
     }, 
     { 
         source_trim_length: 0.12,
@@ -283,9 +290,10 @@ const svg_object_view =
         PanZoomMapping             : PanZoomMapping,
         svg                        : svg,
         html                       : html,
+        render                     : renderMathInElement,
         screen_state_storage       : screen_state_storage,
         view_event_deferal         : view_event_deferal,
-        render                     : renderMathInElement,
+        svg_object_attributes      : SvgObjectAttributes(Math),
     }, 0.5);
 
 const svg_object_selection_view = 
@@ -362,6 +370,8 @@ const view_drags =
 const app_history_traversal = 
     AppHistoryTraversal(DiagramMetrics(), Infinity);
 
+const array_resource = ArrayResource();
+
 const app_updater = 
     AppUpdater({
         PanZoomMapping            : PanZoomMapping,
@@ -369,7 +379,8 @@ const app_updater =
         arrow_drags               : arrow_drags,
         view_drags                : view_drags,
         screen_state_storage      : screen_state_storage,
-        object_position_resource  : object_position_resource,
+        diagram_object_resources  : DiagramObjectResource(array_resource),
+        diagram_arrow_resources   : DiagramArrowResource(array_resource),
         drag_state_ops            : AppDragOperations(PanZoomMapping, screen_state_storage, app_history_traversal),
         app_history_traversal     : app_history_traversal,
     });
@@ -401,7 +412,7 @@ const app_state =
             initial_screen_frame_store), 
         disengaged_drag,
         disengaged_drag.initialize(),
-    )
+    );
 
 app_view.wire(app_state, document);
 

@@ -21,7 +21,7 @@ function SelectionDrags(
                 // delete the object and its arrows if canceled, otherwise move the object and its arrows
                 command: (model_offset, is_released, is_canceled) => diagram => {
                     const cell_positions = position_map_operations.offset(
-                        resource_operations.update(
+                        resource_operations.post(
                             arrow_positions_resource.get(initial_diagram.arrow_selections.map(id => initial_diagram.arrows[id])),
                             object_position_resource.get(initial_diagram.object_selections.map(id => initial_diagram.objects[id])),
                             object_position_resource.get(initial_diagram.inferred_object_selections),

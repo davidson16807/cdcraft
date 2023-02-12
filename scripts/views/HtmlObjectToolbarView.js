@@ -1,21 +1,6 @@
 'use strict';
 
 
-`
-<div class="group-round">
-    <h5>Object</h5>
-    <input id="object-text" type="text" class="form-control" placeholder="Object Text" />
-    <div class="horizontal-axis-group maybe-slider">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/lock.svg"/>
-        </button>
-        <div class="vertical-axis-group">
-            <label>Position</label>
-            <input type="range" class="form-range" min="-5" max="5" id="range" disabled>
-        </div>
-    </div>
-</div>
-`
 function HtmlObjectToolbarView(dependencies) {
 
     const html                       = dependencies.html;
@@ -44,47 +29,45 @@ function HtmlObjectToolbarView(dependencies) {
                         html.div({class:'horizontal-axis-group group-split'}, 
                             [
                                 html.input({
-                                    id:      'object-text',
+                                    id:      'object-symbol',
                                     type:    'text',
                                     class:   'form-control',
-                                    value:   object.depiction || '\\[\\bullet\\]',
+                                    value:   object.symbol || '\\[\\bullet\\]',
                                     oninput: deferal.callback(ontextinput),
                                 }),
                             ]),
                         html.div({class:'horizontal-axis-group group-split'}, 
                             [
                                 html.input({
-                                    id:      'object-description',
+                                    id:      'object-label',
                                     type:    'text',
                                     class:   'form-control',
-                                    value:   object.description || '',
+                                    value:   object.label || '',
                                     placeholder: '\\[description\\]',
                                     oninput: deferal.callback(ontextinput),
                                 }),
                             ])
                     ]),
-                /*
                 html.div({class:'group-round',}, 
                     [
                         html.div({class:'horizontal-axis-group'}, 
                             [
-                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
-                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
-                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-topleft',}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-topright',}, [html.div({class:'img'}, [])]),
                             ]),
                         html.div({class:'horizontal-axis-group'}, 
                             [
-                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-left',}, [html.div({class:'img'}, [])]),
                                 html.button({type:'button', class:'btn group-dark'},[html.div({class:'img'}, [], '∙')]),
-                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-right',},[html.div({class:'img'}, [])]),
                             ]),
                         html.div({class:'horizontal-axis-group'}, 
                             [
-                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
-                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
-                                html.button({type:'button', class:'btn btn-dark'}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-bottomleft',}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-bottomright',}, [html.div({class:'img'}, [])]),
                             ]),
                     ]),
+                /*
                 */
             ];
         }

@@ -11,23 +11,23 @@ function ArrowPositionsResource(
     ){
     return {
 
-        get: function(arrows, position_map){
-            let updated_position_map = {};
+        get: function(arrows, point_to_point){
+            let updated_point_to_point = {};
             for(let arrow of arrows){
                 const stored_arc = arrow.arc;
                 const source_hash = node_hashing.hash(stored_arc.source);
                 const target_hash = node_hashing.hash(stored_arc.target);
-                if ((position_map == null || position_map[source_hash] != null) && stored_arc.source.reference == null) {
-                    updated_position_map[source_hash] = stored_arc.source.position;
+                if ((point_to_point == null || point_to_point[source_hash] != null) && stored_arc.source.reference == null) {
+                    updated_point_to_point[source_hash] = stored_arc.source.position;
                 }
-                if ((position_map == null || position_map[target_hash] != null) && stored_arc.target.reference == null) {
-                    updated_position_map[target_hash] = stored_arc.target.position;
+                if ((point_to_point == null || point_to_point[target_hash] != null) && stored_arc.target.reference == null) {
+                    updated_point_to_point[target_hash] = stored_arc.target.position;
                 }
             }
-            return updated_position_map;
+            return updated_point_to_point;
         },
 
-        put: function(arrows, position_map) {
+        put: function(arrows, point_to_point) {
             const user_arcs_and_stored_arcs = user_curried_arcs_and_stored_arcs(arrows);
             const updated_arrows = [];
             for(let arrow of arrows){
@@ -44,10 +44,10 @@ function ArrowPositionsResource(
                 meaning that `target_offset_id` would be used as input to dragging behavior,
                 if at the very least to account for behavior where no drag occurs.
                 `target_offset_id` is a property that is specific to individual arrows,
-                and as mentioned above, resource windows (i.e. `position_map`) must represent positions in an arrow-neutral way, 
+                and as mentioned above, resource windows (i.e. `point_to_point`) must represent positions in an arrow-neutral way, 
                 using stored positions, so `target_offset_id` cannot be represented somehow using the window of the resource.
 
-                The approach we take here is to use values from `position_map` to modify the `StoredArc`s of arrows,
+                The approach we take here is to use values from `point_to_point` to modify the `StoredArc`s of arrows,
                 then convert the `StoredArc` to and from a `UserArc`.
                 It is important to note here that the maps to and from `StoredArc` and `UserArc` 
                 are not bijective and serve an important function - 
@@ -61,8 +61,8 @@ function ArrowPositionsResource(
                 const new_users = 
                     user_arcs_and_stored_arcs.stored_arc_to_user_arc(
                         old_stored.with({
-                            source: old_stored.source.with({position: position_map[source_hash] || old_stored.source.position}),
-                            target: old_stored.target.with({position: position_map[target_hash] || old_stored.target.position}),
+                            source: old_stored.source.with({position: point_to_point[source_hash] || old_stored.source.position}),
+                            target: old_stored.target.with({position: point_to_point[target_hash] || old_stored.target.position}),
                         })
                     );
                 const new_stored = user_arcs_and_stored_arcs.user_arc_to_stored_arc(new_users);
@@ -71,7 +71,7 @@ function ArrowPositionsResource(
             return updated_arrows;
         },
 
-        delete: function(arrows, position_map) {
+        delete: function(arrows, point_to_point) {
             let filtered = [];
             const updated_window = {};
             const deleted_window = {};
@@ -81,7 +81,7 @@ function ArrowPositionsResource(
                 const source_hash = node_hashing.hash(arc.source);
                 const target_hash = node_hashing.hash(arc.target);
                 const arrow_hash = node_hashing.hash(new Node(null, i));
-                if (position_map[source_hash] == null && position_map[target_hash] == null) {
+                if (point_to_point[source_hash] == null && point_to_point[target_hash] == null) {
                     filtered.push(arrow);
                     updated_window[arrow_hash] = filtered.length;
                 } else {

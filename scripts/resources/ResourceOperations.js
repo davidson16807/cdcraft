@@ -11,14 +11,14 @@ function ResourceOperations(){
     return {
 
         /*
-        `update` offsets all positions within a `position_map`.
+        `post` appends maps together.
         */
-        update: function(...maps) {
+        post: function(...maps) {
             return Object.assign({}, ...maps);
         },
 
         /*
-        `delete` removes all positions indexed by from a `position_map`.
+        `delete` removes all positions indexed by `map2` from `map1`.
         */
         delete: (map1, map2) => {
             const result = {};
@@ -28,10 +28,6 @@ function ResourceOperations(){
                 }
             }
             return result;
-        },
-
-        post: function(map1) {
-            return Object.values(map1);
         },
 
     };

@@ -149,7 +149,7 @@ function HtmlArrowToolbarView(dependencies) {
                     [
                         html.h5({},[],'Arrow'),
                         html.input({
-                            id:      'arrow-text',
+                            id:      'arrow-label',
                             type:    'text',
                             class:   'form-control',
                             value:   arrow.label || '',
