@@ -23,19 +23,13 @@ function SvgArrowSelectionView(dependencies, settings) {
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_arc = SamplerArcMapping(screen_mapping).apply(trimmed_arc);
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
-        const g = svg.g(
-            {},
-            [
-                svg.path({class:"arrow-highlight", d: svg_arrow_attributes.path(screen_arc), 'stroke-width':screen_highlight_width}),
-                svg.circle({class:"arrow-tip-highlight", r:screen_highlight_width/2.0}, sampler_arc_properties.position(screen_arc, 0)),
-                svg.circle({class:"arrow-tip-highlight", r:screen_highlight_width/2.0}, sampler_arc_properties.position(screen_arc, 1)),
-            ]);
+        const path = svg.path({class:"arrow-highlight", d: svg_arrow_attributes.path(screen_arc), 'stroke-width':screen_highlight_width, 'stroke-linecap':'round'});
         const deferal = view_event_deferal(drawing, arrow, dom);
         if (onclick != null) {
-            g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
-            g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
+            path.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
+            path.addEventListener('touchstart', deferal.callbackPrevent(onclick));
         }
-        return g;
+        return path;
     }
     return drawing;
 }

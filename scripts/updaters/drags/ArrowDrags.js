@@ -6,14 +6,14 @@ function ArrowDrags(
         node_metric_bundle,
         abstract_curried_arrow_drag, 
         arrow_reference_resource,
-        user_curried_arcs_and_stored_arcs, 
+        user_arcs_and_stored_arcs_curried, 
         default_min_length_clockwise, 
     ){
 
     return {
 
         create: function(arrows, initial_model_position, initial_arrow) {
-            const user_arcs_and_stored_arcs = user_curried_arcs_and_stored_arcs(arrows);
+            const user_arcs_and_stored_arcs = user_arcs_and_stored_arcs_curried(arrows);
             const arrow_id = arrows.indexOf(initial_arrow);
             return Object.assign({}, 
                 abstract_curried_arrow_drag(arrows), 
@@ -34,7 +34,7 @@ function ArrowDrags(
                                     )
                             ),
                             true, '', undefined, 
-                            0,0,1, undefined
+                            0,0, arrow_id<0?1:2, undefined
                         ),
                     // do nothing if not snapped, otherwise add the arrow
                     command: (replacement_arrow, is_released, is_canceled) => diagram => 

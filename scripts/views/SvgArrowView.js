@@ -82,11 +82,7 @@ function SvgArrowView(dependencies, settings) {
                 class: 'arrow-group ' + (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
             },
             [
-                svg.path({class:"arrow-highlight", d: svg_arrow_attributes.path(screen_arc), 'stroke-width':screen_highlight_width}),
-                svg.circle({class:"arrow-tip-highlight", r:screen_highlight_width/2.0}, sampler_arc_properties.position(screen_arc, 0)),
-                svg.circle({class:"arrow-tip-highlight", r:screen_highlight_width/2.0}, sampler_arc_properties.position(screen_arc, 1)),
-                // svg.circle({class:"arrow-handle", r:13} sampler_arc_properties.position(screen_arc,0)),
-                // svg.circle({class:"arrow-handle", r:13} sampler_arc_properties.position(screen_arc,1)),
+                svg.path({class:"arrow-highlight", d: svg_arrow_attributes.path(screen_arc), 'stroke-width':screen_highlight_width, 'stroke-linecap':'round'}),
                 svg.path({class:"arrow", d: svg_arrow_attributes.head(trimmed_arc, screen_state_store)}),
                 ...[...Array(arrow.line_count).keys()].map(
                     line_id => 
