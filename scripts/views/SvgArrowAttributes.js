@@ -1,18 +1,12 @@
 'use strict';
 
-function SvgArrowAttributes(dependencies, settings) {
-    const screen_state_storage         = dependencies.screen_state_storage;
-    const point_arcs_and_sampler_arcs   = dependencies.point_arcs_and_sampler_arcs;
-    const sampler_arc_resizing         = dependencies.sampler_arc_resizing;
-    const sampler_arc_properties       = dependencies.sampler_arc_properties;
-    const sampler_arc_rendering        = dependencies.sampler_arc_rendering;
-    const PanZoomMapping               = dependencies.PanZoomMapping;
-    const AffineMapping                = dependencies.AffineMapping;
-    const AffineRemapping              = dependencies.AffineRemapping;
-    const SamplerArcMapping            = dependencies.SamplerArcMapping;
-
-    const source_trim_length = settings.source_trim_length;
-    const target_trim_length = settings.target_trim_length;
+function SvgArrowAttributes(dependencies) {
+    const screen_state_storage   = dependencies.screen_state_storage;
+    const sampler_arc_properties = dependencies.sampler_arc_properties;
+    const sampler_arc_rendering  = dependencies.sampler_arc_rendering;
+    const PanZoomMapping         = dependencies.PanZoomMapping;
+    const AffineMapping          = dependencies.AffineMapping;
+    const AffineRemapping        = dependencies.AffineRemapping;
 
     function svg_bezier_path_attribute(bezier){
         const points = bezier.points;
@@ -28,18 +22,6 @@ function SvgArrowAttributes(dependencies, settings) {
 
     return {
 
-        point_arc_to_trimmed_arc: function(point_arc) {
-            const sampler_arc = point_arcs_and_sampler_arcs.point_arc_to_sampler_arc(point_arc)
-            const trimmed_arc = sampler_arc_resizing.resize(sampler_arc, source_trim_length, -target_trim_length);
-            return trimmed_arc;
-        },
-
-        trimmed_arc_to_screen_arc: function(trimmed_arc, screen_state_store) {
-            const screen_state = screen_state_storage.unpack(screen_state_store);
-            const screen_arc = SamplerArcMapping(PanZoomMapping(screen_state)).apply(trimmed_arc);
-            return screen_arc;
-        },
-
         head: function (trimmed_arc, screen_state_store) {
             const screen_state = screen_state_storage.unpack(screen_state_store);
             const arrowhead_mapping = 
@@ -49,10 +31,6 @@ function SvgArrowAttributes(dependencies, settings) {
             const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
             const screen_points = cell_points.map(point => arrowhead_mapping.position.revert(point));
             return 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
-        },
-
-        sample: function (screen_arc, fraction) {
-            return sampler_arc_properties.position(screen_arc, fraction);
         },
 
         path: function (screen_arc) {

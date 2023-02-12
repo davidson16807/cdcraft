@@ -28,7 +28,7 @@
     <script src="./scripts/models/arcs/SamplerArc.js"></script>
     <script src="./scripts/models/arcs/SvgArc.js"></script>
     <script src="./scripts/models/arcs/SamplerArcRendering.js"></script>
-    <script src="./scripts/models/arcs/SamplerArcResizing.js"></script>
+    <script src="./scripts/models/arcs/SamplerArcTransforms.js"></script>
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
     <script src="./scripts/models/arcs/UserArcsAndStoredArcsCurried.js"></script>
@@ -204,7 +204,7 @@ const point_arcs_and_sampler_arcs =
 
 const sampler_arc_properties = SamplerArcProperties();
 
-const stored_curried_arcs_and_point_arcs = 
+const stored_arcs_and_point_arcs_curried = 
     StoredArcsAndPointArcsCurried(
         NodePointIndicationCurried(
             StoredArcPointIndicationCurried(
@@ -217,7 +217,7 @@ const stored_curried_arcs_and_point_arcs =
 
 const user_curried_arcs_and_stored_arcs =
     UserArcsAndStoredArcsCurried(
-        stored_curried_arcs_and_point_arcs,
+        stored_arcs_and_point_arcs_curried,
         stored_curried_arc_properties,
         node_metric_bundle, diagram_ids, glm, 
         0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
@@ -237,43 +237,57 @@ const svg_grid_view =
         PanZoomMapping       : PanZoomMapping,
     });
 
+const sampler_arc_transforms = SamplerArcTransforms(sampler_arc_properties);
+
 const svg_arrow_attributes = 
     SvgArrowAttributes({
-        PanZoomMapping              : PanZoomMapping,
-        AffineMapping               : AffineMapping,
-        AffineRemapping             : AffineRemapping,
-        SamplerArcMapping           : SamplerArcMapping,
-        screen_state_storage        : screen_state_storage,
-        sampler_arc_properties      : sampler_arc_properties,
-        sampler_arc_resizing        : SamplerArcResizing(sampler_arc_properties),
-        sampler_arc_rendering       : SamplerArcRendering(sampler_arc_properties),
-        point_arcs_and_sampler_arcs : point_arcs_and_sampler_arcs,
-    }, 
-    { 
-        source_trim_length: 0.12,
-        target_trim_length: 0.10,
+        PanZoomMapping             : PanZoomMapping,
+        AffineMapping              : AffineMapping,
+        AffineRemapping            : AffineRemapping,
+        screen_state_storage       : screen_state_storage,
+        sampler_arc_properties     : sampler_arc_properties,
+        sampler_arc_transforms     : sampler_arc_transforms,
+        sampler_arc_rendering      : SamplerArcRendering(sampler_arc_properties),
+        point_arcs_and_sampler_arcs: point_arcs_and_sampler_arcs,
     });
 
 const svg_arrow_view = SvgArrowView({
         PanZoomMapping             : PanZoomMapping,
+        AffineMapping              : AffineMapping,
+        AffineRemapping            : AffineRemapping,
+        SamplerArcMapping          : SamplerArcMapping,
         svg                        : svg,
         html                       : html,
+        sampler_arc_properties     : sampler_arc_properties,
+        sampler_arc_transforms     : sampler_arc_transforms,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
         screen_state_storage       : screen_state_storage,
         render                     : renderMathInElement,
-        stored_curried_arcs_and_point_arcs: stored_curried_arcs_and_point_arcs,
-    }, 0.2);
+        point_arcs_and_sampler_arcs: point_arcs_and_sampler_arcs,
+        stored_arcs_and_point_arcs_curried: stored_arcs_and_point_arcs_curried,
+    }, 
+    { 
+        source_trim_length: 0.12,
+        target_trim_length: 0.10,
+        highlight_width:    0.2,
+    });
 
 const svg_arrow_selection_view = 
     SvgArrowSelectionView({
         PanZoomMapping             : PanZoomMapping,
+        SamplerArcMapping          : SamplerArcMapping,
         svg                        : svg,
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        stored_curried_arcs_and_point_arcs: stored_curried_arcs_and_point_arcs,
-    }, 0.2);
+        stored_arcs_and_point_arcs_curried: stored_arcs_and_point_arcs_curried,
+    }, 
+    { 
+        source_trim_length: 0.12,
+        target_trim_length: 0.10,
+        highlight_width:    0.2,
+    });
 
 const svg_arrow_midpoint_view = 
     SvgArrowMidpointView({
@@ -282,8 +296,16 @@ const svg_arrow_midpoint_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        stored_curried_arcs_and_point_arcs: stored_curried_arcs_and_point_arcs,
-    }, 0.5);
+        sampler_arc_properties     : sampler_arc_properties,
+        sampler_arc_transforms     : sampler_arc_transforms,
+        point_arcs_and_sampler_arcs: point_arcs_and_sampler_arcs,
+        stored_arcs_and_point_arcs_curried: stored_arcs_and_point_arcs_curried,
+    },
+    { 
+        source_trim_length: 0.12,
+        target_trim_length: 0.10,
+        midpoint_width:     0.5,
+    });
 
 const svg_object_view = 
     SvgObjectView({
@@ -349,7 +371,7 @@ const arrow_drags =
         node_metric_bundle,
         AbstractArrowDragCurried(
             user_curried_arcs_and_stored_arcs, 
-            stored_curried_arcs_and_point_arcs, 
+            stored_arcs_and_point_arcs_curried, 
             Math,
             0.001 // min_length_clockwise_change_per_scroll
         ),

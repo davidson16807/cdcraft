@@ -212,7 +212,7 @@ This will be the case regardless of screen orientation.
 .btn .img {
     width:  48px;
     height: 48px;
-    font-size: 161%;
+    font-size: 100%;
 }
 .btn.btn-sm .img {
     width:  24px;

@@ -155,7 +155,7 @@ function HtmlArrowToolbarView(dependencies) {
                             class:   'form-control',
                             value:   arrow.label || '',
                             oninput: deferal.callback(ontextinput),
-                        })
+                        }),
                     ]),
                 html.div({class:'group-round',}, 
                     [
@@ -164,6 +164,13 @@ function HtmlArrowToolbarView(dependencies) {
                                 html.button({type:'button', class:`btn ${offset.y<0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-label-inside',}, [html.div({class:'img'}, [])]),
                                 html.button({type:'button', class:'btn group-dark'}, [html.div({class:'img'}, [], '⤸')]),
                                 html.button({type:'button', class:`btn ${offset.y>0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-label-outside',},[html.div({class:'img'}, [])]),
+                            ]),
+                        html.div({class:'horizontal-axis-group'}, 
+                            [
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style0',}, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style1',}, [html.div({class:'img'}, [], '↑')]),
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style2',}, [html.div({class:'img'}, [], '⇑')]),
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style3',},[html.div({class:'img'}, [], '⤊')]),
                             ]),
                     ]),
             );
