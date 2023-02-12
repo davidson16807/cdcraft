@@ -21,12 +21,20 @@ function SvgArrowView(dependencies, settings) {
 
     const source_trim_length = settings.source_trim_length;
     const target_trim_length = settings.target_trim_length;
+    const arrow_line_spacing = settings.arrow_line_spacing;
+    const arrow_head_slope   = settings.arrow_head_slope;
     const highlight_width    = settings.highlight_width;
 
     const sign = Math.sign;
+    const ceil = Math.ceil;
+    const abs = Math.abs;
     function linearstep(lo,hi,x) {
         return x<=lo? 0.0 : x >= hi? 1.0 : ((x-lo)/(hi-lo));
     }
+
+    const offset_line_id = (line_id, line_count) => line_id+(line_count+1)%2;
+    const line_offset_id = (offset_line_id) => ceil(offset_line_id/2) * sign(offset_line_id%2-(1/2));
+    const line_offset    = (line_id, line_count) => line_offset_id(offset_line_id(line_id, line_count)) * arrow_line_spacing;
 
     function svg_bezier_path_attribute(bezier){
         const points = bezier.points;
@@ -39,6 +47,7 @@ function SvgArrowView(dependencies, settings) {
         }
         return output;
     }
+
 
     const drawing = {};
     drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter, onleave) {
@@ -79,9 +88,19 @@ function SvgArrowView(dependencies, settings) {
                 // svg.circle({class:"arrow-handle", r:13} sampler_arc_properties.position(screen_arc,0)),
                 // svg.circle({class:"arrow-handle", r:13} sampler_arc_properties.position(screen_arc,1)),
                 svg.path({class:"arrow", d: svg_arrow_attributes.head(trimmed_arc, screen_state_store)}),
-                svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc)}),
-                svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc.with({source_offset: screen_arc.source_offset.add(glm.normalize(screen_arc.source_offset).mul(4))}))}),
-                svg.path({class:"arrow", d: svg_arrow_attributes.path(screen_arc.with({source_offset: screen_arc.source_offset.sub(glm.normalize(screen_arc.source_offset).mul(4))}))}),
+                ...[...Array(arrow.line_count).keys()].map(
+                    line_id => 
+                        svg.path({
+                            class:"arrow", 
+                            d: svg_arrow_attributes.path(
+                                sampler_arc_transforms.trim(
+                                    sampler_arc_transforms.shift(
+                                        screen_arc, 
+                                        line_offset(line_id, arrow.line_count)),
+                                    0, -abs(line_offset(line_id, arrow.line_count) * arrow_head_slope)
+                                )),
+                        })
+                ),
                 svg.foreignObject(
                     {class:"arrow-label-wrapper"}, [div], 
                     arc_midpoint

@@ -6,6 +6,7 @@
 function SamplerArcTransforms(sampler_arc_properties){
     const sign = Math.sign;
     return {
+
         trim: function (sampler_arc, source_offset, target_offset){
             const clockwise_sign = sign(sampler_arc.length_clockwise);
             source_offset *= clockwise_sign;
@@ -16,12 +17,16 @@ function SamplerArcTransforms(sampler_arc_properties){
                 sampler_arc.length_clockwise - source_offset + target_offset
             );
         },
+
         shift: function (sampler_arc, radial_offset){
+            const length = glm.length(sampler_arc.source_offset);
+            const factor = (length+radial_offset)/length
             return new SamplerArc(
                 sampler_arc.origin, 
-                sampler_arc.source_offset.mul(radial_offset/glm.length(sampler_arc.source_offset)),
-                sampler_arc.length_clockwise * radial_offset/glm.length(sampler_arc.source_offset)
+                sampler_arc.source_offset.mul(factor),
+                sampler_arc.length_clockwise * factor
             );
         },
+
     }
 }
