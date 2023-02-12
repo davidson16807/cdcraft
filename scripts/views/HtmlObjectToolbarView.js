@@ -22,6 +22,7 @@ function HtmlObjectToolbarView(dependencies) {
                 diagram.inferred_object_selections[0]);
             const deferal = view_event_deferal(drawing, object, dom);
 
+            const offset = object.label_offset_id || glm.ivec2();
             panels =[
                 html.div({class:'group-round',}, 
                     [
@@ -52,19 +53,19 @@ function HtmlObjectToolbarView(dependencies) {
                     [
                         html.div({class:'horizontal-axis-group'}, 
                             [
-                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-topleft',}, [html.div({class:'img'}, [])]),
-                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-topright',}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:`btn ${offset.x<0 && offset.y>0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'object-label-topleft',}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:`btn ${offset.x>0 && offset.y>0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'object-label-topright',}, [html.div({class:'img'}, [])]),
                             ]),
                         html.div({class:'horizontal-axis-group'}, 
                             [
-                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-left',}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:`btn ${offset.x<0 && offset.y==0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'object-label-left',}, [html.div({class:'img'}, [])]),
                                 html.button({type:'button', class:'btn group-dark'},[html.div({class:'img'}, [], '∙')]),
-                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-right',},[html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:`btn ${offset.x>0 && offset.y==0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'object-label-right',},[html.div({class:'img'}, [])]),
                             ]),
                         html.div({class:'horizontal-axis-group'}, 
                             [
-                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-bottomleft',}, [html.div({class:'img'}, [])]),
-                                html.button({type:'button', class:'btn btn-dark', onclick:onbuttonclick, id:'object-label-bottomright',}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:`btn ${offset.x<0 && offset.y<0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'object-label-bottomleft',}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:`btn ${offset.x>0 && offset.y<0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'object-label-bottomright',}, [html.div({class:'img'}, [])]),
                             ]),
                     ]),
                 /*

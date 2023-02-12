@@ -21,12 +21,12 @@ class DiagramObject {
 
     with(attributes){
         return new DiagramObject(
-            attributes.position        != null? attributes.position        : this.position, 
-            attributes.symbol          != null? attributes.symbol          : this.symbol, 
-            attributes.label           != null? attributes.label           : this.label, 
-            attributes.label_offset_id != null? attributes.label_offset_id : this.label_offset_id, 
-            attributes.is_edited       != null? attributes.is_edited       : this.is_edited,
-            attributes.is_valid        != null? attributes.is_valid        : this.is_valid,
+            attributes.position        !=  null?      attributes.position        : this.position, 
+            attributes.symbol          !== undefined? attributes.symbol          : this.symbol, 
+            attributes.label           !== undefined? attributes.label           : this.label, 
+            attributes.label_offset_id !== undefined? attributes.label_offset_id : this.label_offset_id, 
+            attributes.is_edited       !== undefined? attributes.is_edited       : this.is_edited,
+            attributes.is_valid        !== undefined? attributes.is_valid        : this.is_valid,
         );
     }
 

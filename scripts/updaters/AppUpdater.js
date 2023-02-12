@@ -104,6 +104,15 @@ function AppUpdater(
         object_label: selection_actions_curried.object((object,event) => object.with({label: event.currentTarget.value})),
     };
 
+    const label_offset_id_toggle = label_offset_id => (object, event) => 
+        object.with({
+            label_offset_id: 
+                object.label_offset_id == null || 
+                object.label_offset_id.x != label_offset_id.x || 
+                object.label_offset_id.y != label_offset_id.y? 
+                    label_offset_id : null
+        });
+
     /*
     // functions mapping app×event→app 
     where the event need carry no information beyond the fact that it occurred, such as a button press
@@ -135,12 +144,12 @@ function AppUpdater(
             }
         },
 
-        object_label_left: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(-1,0)})),
-        object_label_right: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(1,0)})),
-        object_label_topleft: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(-1,1)})),
-        object_label_topright: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(1,1)})),
-        object_label_bottomleft: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(-1,-1)})),
-        object_label_bottomright: selection_actions_curried.object((object,event) => object.with({label_offset_id: glm.ivec2(1,-1)})),
+        object_label_left: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(-1,0))),
+        object_label_right: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(1,0))),
+        object_label_topleft: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(-1,1))),
+        object_label_topright: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(1,1))),
+        object_label_bottomleft: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(-1,-1))),
+        object_label_bottomright: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(1,-1))),
 
     }
 
