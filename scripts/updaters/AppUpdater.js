@@ -104,14 +104,21 @@ function AppUpdater(
         object_label: selection_actions_curried.object((object,event) => object.with({label: event.currentTarget.value})),
     };
 
-    const label_offset_id_toggle = label_offset_id => (object, event) => 
-        object.with({
-            label_offset_id: 
-                object.label_offset_id == null || 
-                object.label_offset_id.x != label_offset_id.x || 
-                object.label_offset_id.y != label_offset_id.y? 
-                    label_offset_id : null
-        });
+
+    /* 
+    functions mapping entity×text→app 
+    where `entity` is some entity in the diagram (e.g. an arrow or object)
+    */
+    const entity_actions_curried = {
+        label_offset_id_toggle: label_offset_id => (object, event) => 
+            object.with({
+                label_offset_id: 
+                    object.label_offset_id == null || 
+                    object.label_offset_id.x != label_offset_id.x || 
+                    object.label_offset_id.y != label_offset_id.y? 
+                        label_offset_id : null
+            }),
+    }
 
     /*
     // functions mapping app×event→app 
@@ -144,13 +151,15 @@ function AppUpdater(
             }
         },
 
-        object_label_left: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(-1,0))),
-        object_label_right: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(1,0))),
-        object_label_topleft: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(-1,1))),
-        object_label_topright: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(1,1))),
-        object_label_bottomleft: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(-1,-1))),
-        object_label_bottomright: selection_actions_curried.object(label_offset_id_toggle(glm.ivec2(1,-1))),
+        object_label_left: selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,0))),
+        object_label_right: selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,0))),
+        object_label_topleft: selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,1))),
+        object_label_topright: selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,1))),
+        object_label_bottomleft: selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,-1))),
+        object_label_bottomright: selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,-1))),
 
+        arrow_label_outside: selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,1))),
+        arrow_label_inside: selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,-1))),
     }
 
     const key_bindings = {
@@ -175,6 +184,8 @@ function AppUpdater(
         'object-label-topright': 'object_label_topright',
         'object-label-bottomleft': 'object_label_bottomleft',
         'object-label-bottomright': 'object_label_bottomright',
+        'arrow-label-inside': 'arrow_label_inside',
+        'arrow-label-outside': 'arrow_label_outside',
     }
 
     const mousedown_bindings = [

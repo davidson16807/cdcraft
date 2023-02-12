@@ -12,7 +12,7 @@ class DiagramArrow {
         typecheck(arc,             'StoredArc');
         typecheck(is_edited,       'Boolean');
         typecheck(label,           'String');
-        typecheck(label_offset_id, 'glm_ivec2$class');
+        typecheck(label_offset_id, '1+glm_ivec2$class');
         typecheck(source_style_id, 'Number');
         typecheck(target_style_id, 'Number');
         typecheck(line_style_id,   'Number');

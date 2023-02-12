@@ -41,6 +41,7 @@ function SvgArrowView(dependencies, highlight_width) {
         const label_height = div.offsetHeight;
         const label_width = div.offsetWidth;
         document.body.removeChild(div);
+        const label_offset_id = arrow.label_offset_id || glm.ivec2(0,1);
         const g = svg.g(
             {
                 class: 'arrow-group ' + (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
@@ -56,7 +57,7 @@ function SvgArrowView(dependencies, highlight_width) {
                 svg.foreignObject(
                     {class:"arrow-label-wrapper"}, [div], 
                     arc_midpoint
-                        .add(arc_midpoint_direction_from_origin.mul(15))
+                        .add(arc_midpoint_direction_from_origin.mul(15*label_offset_id.y))
                         .sub(glm.vec2(label_width * linearstep(-1, 1, -sign(arrow.arc.min_length_clockwise)*arc_direction.y), 
                                       label_height/2.0)),
                     glm.vec2(1, 1)),

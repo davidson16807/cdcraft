@@ -144,6 +144,7 @@ function HtmlArrowToolbarView(dependencies) {
             const arrow = diagram.arrows[diagram.arrow_selections[0]];
             const deferal = view_event_deferal(drawing, arrow, dom);
 
+            const offset = arrow.label_offset_id || glm.ivec2(0,1);
             panels.push(
                 html.div({class:'group-round',}, 
                     [
@@ -155,7 +156,17 @@ function HtmlArrowToolbarView(dependencies) {
                             value:   arrow.label || '',
                             oninput: deferal.callback(ontextinput),
                         })
-                    ]));
+                    ]),
+                html.div({class:'group-round',}, 
+                    [
+                        html.div({class:'horizontal-axis-group'}, 
+                            [
+                                html.button({type:'button', class:`btn ${offset.y<0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-label-inside',}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn group-dark'}, [html.div({class:'img'}, [], '⤸')]),
+                                html.button({type:'button', class:`btn ${offset.y>0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-label-outside',},[html.div({class:'img'}, [])]),
+                            ]),
+                    ]),
+            );
         }
 
         return html.div(
