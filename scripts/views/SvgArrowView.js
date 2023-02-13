@@ -87,7 +87,9 @@ function SvgArrowView(dependencies, settings) {
         const arc_midpoint_direction_from_origin = 
             glm.length(arc_midpoint_offset_from_origin) > 1? 
             glm.normalize(arc_midpoint_offset_from_origin) : glm.vec2(0,1);
-        const div = html.div({class:"arrow-label"},[], arrow.label);
+        const color_class = arrow.color.startsWith('#')? '':'arrow-'+arrow.color;
+        const drag_class = drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never';
+        const div = html.div({class:`arrow-label`},[], arrow.label);
         render(div, {throwOnError: false});
         /*
         Append the label, measure its dimensions, then remove.
@@ -101,11 +103,7 @@ function SvgArrowView(dependencies, settings) {
         const label_offset_id = arrow.label_offset_id || glm.ivec2(0,1);
         const g = svg.g(
             {
-                class: [
-                    'arrow-group', 
-                    (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
-                    (arrow.color.startsWith('#')? '':'arrow-'+arrow.color),
-                ].join(' '),
+                class: `arrow-group ${color_class} ${drag_class}`,
                 // color: arrow.color.startsWith('#')? arrow.color:'',
             },
             [
@@ -141,7 +139,9 @@ function SvgArrowView(dependencies, settings) {
                         })
                 ),
                 svg.foreignObject(
-                    {class:"arrow-label-wrapper"}, [div], 
+                    {
+                        class:`arrow-label-wrapper ${color_class}`
+                    }, [div], 
                     arc_midpoint
                         .add(arc_midpoint_direction_from_origin.mul(15*label_offset_id.y))
                         .sub(glm.vec2(label_width * linearstep(-1, 1, -sign(arrow.arc.min_length_clockwise)*arc_direction.y), 

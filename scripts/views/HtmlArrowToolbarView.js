@@ -70,7 +70,7 @@ function HtmlArrowToolbarView(dependencies) {
                             [
                                 html.button({type:'button', class:`btn ${arrow.head_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style0',}, [html.div({class:'img'}, [], '')]),
                                 html.button({type:'button', class:`btn ${arrow.head_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style1',}, [html.div({class:'img'}, [], '/')]),
-                                html.button({type:'button', class:`btn ${arrow.head_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style2',}, [html.div({class:'img'}, [], '∧')]),
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style2',}, [html.div({class:'img'}, [], 'ᐱ')]),
                                 html.button({type:'button', class:`btn ${arrow.head_style_id == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style3',}, [html.div({class:'img'}, [], '\\')]),
                                 html.button({type:'button', class:`btn ${arrow.head_style_id == 4? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style4',}, [html.div({class:'img'}, [], '‒')]),
                             ]),

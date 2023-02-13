@@ -95,8 +95,23 @@ function AppUpdater(
         multientity: update_entity => (app_io, event) => {
             const diagram = app_io.diagram;
             const arrows = [...diagram.arrows];
+            const objects = [...diagram.objects];
+            const object_selections = [...diagram.object_selections];
+            const inferred_object_selections = [...diagram.inferred_object_selections];
             diagram.arrow_selections.forEach(id => { arrows[id] = update_entity(arrows[id], event); });
-            history.do(app_io, diagram.with({arrows: arrows}), true);
+            diagram.object_selections.forEach(id => { objects[id] = update_entity(objects[id], event) });
+            diagram.inferred_object_selections.forEach((object, i) => { 
+                inferred_object_selections.splice(i, 1);
+                object_selections.push(objects.length);
+                objects.push(update_entity(object, event));
+            });
+            history.do(app_io, 
+                diagram.with({
+                    arrows: arrows,
+                    objects: objects,
+                    object_selections: object_selections,
+                    inferred_object_selections: inferred_object_selections,
+                }), true);
         }
     }
 

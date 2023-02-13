@@ -85,24 +85,30 @@ body{
 
 .arrow-green{
     stroke: #28a745;
+    color: #28a745;
 }
 .arrow-blue{
     stroke: #007bff;
+    color: #007bff;
 }
 .arrow-red{
     stroke: #dc3545;
+    color: #dc3545;
 }
 .arrow-yellow{
     stroke: #ffc107;
+    color: #ffc107;
 }
 .arrow-contrast{
     stroke: black;
+    color: black;
 }
 
 @media (prefers-color-scheme: dark){
 
     .arrow-contrast {
         stroke: white;
+        color: white;
     }
     .arrow-highlight {
         stroke: dimgrey;
@@ -116,9 +122,6 @@ body{
     .arrow-handle:hover {
         fill: lightgrey;
     }
-    .arrow-label {
-        color: white;
-    }
 
 }
 
@@ -130,10 +133,25 @@ body{
 }
 
 .object {
-    color: black;
     font-size: 161%;
     overflow: visible;
     visibility: visible;
+}
+
+.object-green{
+    color: #28a745;
+}
+.object-blue{
+    color: #007bff;
+}
+.object-red{
+    color: #dc3545;
+}
+.object-yellow{
+    color: #ffc107;
+}
+.object-contrast{
+    color: black;
 }
 
 .katex-display {
@@ -142,12 +160,12 @@ body{
 
 @media (prefers-color-scheme: dark){
 
-    .object-highlight {
-        fill: dimgrey;
+    .object-contrast {
+        color: white;
     }
 
-    .object {
-        color: white;
+    .object-highlight {
+        fill: dimgrey;
     }
 
 }

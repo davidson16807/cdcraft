@@ -22,6 +22,7 @@ function SvgObjectView(dependencies, highlight_width) {
 
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onenter) {
+        console.log(object.color)
         const screen_frame = screen_state_storage.unpack(screen_frame_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
@@ -32,23 +33,28 @@ function SvgObjectView(dependencies, highlight_width) {
         const label = html.div({
             style:svg_object_attributes.label_offset_id_to_style(label_offset_id),
         }, [], object.label || '');
+        const color_class = object.color.startsWith('#')? '':'object-'+object.color;
         const inner_g = svg.g(
             {
-                class: (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
+                class: drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
             },
             [
                 svg.circle(
                     {class:"object-highlight", r:screen_highlight_width/2.0}, 
                     object_screen_position),
                 svg.foreignObject(
-                    {class:"object"}, [symbol], 
+                    {
+                        class: `object ${color_class}`
+                    }, [symbol], 
                     object_screen_position.add(text_center),
                     glm.vec2(1, 1)),
             ]);
         const outer_g = svg.g({}, [
                 inner_g, 
                 svg.foreignObject(
-                    {class:"object"}, [label], 
+                    {
+                        class: `object ${color_class}`
+                    }, [label], 
                     object_screen_position.add(
                         svg_object_attributes.label_offset_id_to_offset(label_offset_id)),
                     glm.vec2(1, 1)),
