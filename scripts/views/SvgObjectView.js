@@ -22,7 +22,6 @@ function SvgObjectView(dependencies, highlight_width) {
 
     const drawing = {};
     drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onenter) {
-        console.log(object.color)
         const screen_frame = screen_state_storage.unpack(screen_frame_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);

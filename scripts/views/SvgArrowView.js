@@ -57,9 +57,9 @@ function SvgArrowView(dependencies, settings) {
 
     const head_style = [
         [],
-        [glm.vec2(-0.05,-0.05), glm.vec2(0,0)],
-        [glm.vec2(-0.05,-0.05), glm.vec2(0,0), glm.vec2(0.05,-0.05)],
-                               [glm.vec2(0,0), glm.vec2(0.05,-0.05)],
+        [glm.vec2(0.05,-0.05),  glm.vec2(0,0)],
+        [glm.vec2(0.05,-0.05), glm.vec2(0,0), glm.vec2(-0.05,-0.05)],
+                               [glm.vec2(0,0), glm.vec2(-0.05,-0.05)],
         [glm.vec2(-0.05,0), glm.vec2(0.05,0)],
     ];
 

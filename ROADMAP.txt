@@ -6,7 +6,6 @@ url export/import
 svg export
 
 MEDIUM PRIORITY:
-double click on arrow/object to focus on text box
 circle cursor on rmb
 add zoom support to touchpad
 add selection support to touchpad
@@ -36,12 +35,11 @@ about/welcome sidebar
 double arrow heads/tails
 redraw grid on window resize
 set trim of arrow heads and tails to reflect slope of the specified 
-set color toolbar group to display for arbitrary selections
 
 REFACTOR:
 decouple state for model/view to support soft undo/redo
 refactor so app operations return new app objects
 refactor so that toolbar buttons work through `data-*` variables
-rename: target→head, source→tail
 represent arrow heads and tails using svg paths and transforms
 gather all diagram object arrays into a single class
+remove calculation of offsetWidth/offsetHeight and use css floats in SvgArrowView

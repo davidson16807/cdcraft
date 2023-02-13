@@ -82,6 +82,7 @@ function SvgAppView(dependencies, onevents) {
                         (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
                         (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
                     ));
+                dom_io.getElementById('arrow-label')?.focus();
             }
 
             const arrow_selections_list = new_app.diagram.arrow_selections
@@ -117,6 +118,7 @@ function SvgAppView(dependencies, onevents) {
                         (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
                         (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
                     ));
+                dom_io.getElementById('object-label')?.focus();
             }
 
             const object_selections = [
