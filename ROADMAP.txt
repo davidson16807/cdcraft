@@ -28,7 +28,15 @@ copy/paste
 rotate/flip/mirror selections
 automatic object label positioning: use gradient of summed sdfs of objects/arrows in 1 cell's distance
 draggable arrow/object labels
+barred arrows
+squiggly arrows
+arrow adjoint symbol
+arrow pushout/pullback symbol
+tooltips
+internationalization
+about/welcome sidebar
 
 REFACTOR:
 decouple state for model/view to support soft undo/redo
 refactor so app operations return new app objects
+refactor so that toolbar buttons work through `data-*` variables

@@ -45,7 +45,6 @@ body{
 
 .arrow {
     fill: none;
-    stroke-width:2;
     stroke: black;
     pointer-events: all;
 }

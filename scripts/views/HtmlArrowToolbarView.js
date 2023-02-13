@@ -2,22 +2,6 @@
 
 `
 <div class="group-round">
-    <h5>Arrow</h5>
-    <div class="horizontal-axis-group group-split">
-        <input id="arrow-text" type="text" class="form-control" placeholder="Arrow Text" />
-    </div>
-    <div class="horizontal-axis-group group-split maybe-slider">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/lock.svg"/>
-        </button>
-        <div class="vertical-axis-group">
-            <label>Position</label>
-            <input type="range" class="form-range" min="-5" max="5" id="range" disabled>
-        </div>
-    </div>
-</div>
-
-<div class="group-round">
     <label>Curvature</label>
     <input type="range" class="form-range" min="-5" max="5" id="range">
     <label>Offset</label>
@@ -37,38 +21,9 @@
             <img src="icons/menu-right.svg"/>
         </button>
     </div>
-    <div class="horizontal-axis-group">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-left.svg"/>
-        </button>
-        <img src="icons/grid.svg"/>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-right.svg"/>
-        </button>
-    </div>
-    <div class="horizontal-axis-group">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-left.svg"/>
-        </button>
-        <img src="icons/grid.svg"/>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-right.svg"/>
-        </button>
-    </div>
 </div>
 
 <div class="group-round">
-    <div class="horizontal-axis-group group-joined">
-        <button id="toggle-grid" type="button" class="btn btn-dark active">
-            <div class="img">↑</div>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <div class="img">⇑</div>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <div class="img">⤊</div>
-        </button>
-    </div>
     <div class="horizontal-axis-group ">
         <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
             <div>Adjoint</div>
@@ -83,17 +38,14 @@
         <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
             <div>Flip</div>
             <div class="img" >⥦</div>
-            <img src="icons/swap-horizontal.svg"/>
         </button>
         <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
             <div>Rotate</div>
             <div class="img" >⥢</div>
-            <img src="icons/rotate-ccw.svg"/>
         </button>
         <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
             <div>Rotate</div>
             <div class="img" >↻</div>
-            <img src="icons/rotate-cw.svg"/>
         </button>
     </div>
 </div>
@@ -156,21 +108,27 @@ function HtmlArrowToolbarView(dependencies) {
                             value:   arrow.label || '',
                             oninput: deferal.callback(ontextinput),
                         }),
-                    ]),
-                html.div({class:'group-round',}, 
-                    [
                         html.div({class:'horizontal-axis-group'}, 
                             [
                                 html.button({type:'button', class:`btn ${offset.y<0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-label-inside',}, [html.div({class:'img'}, [])]),
                                 html.button({type:'button', class:'btn group-dark'}, [html.div({class:'img'}, [], '⤸')]),
                                 html.button({type:'button', class:`btn ${offset.y>0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-label-outside',},[html.div({class:'img'}, [])]),
                             ]),
+                    ]),
+                html.div({class:'group-round',}, 
+                    [
                         html.div({class:'horizontal-axis-group'}, 
                             [
-                                html.button({type:'button', class:`btn ${arrow.line_count == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style0',}, [html.div({class:'img'}, [], '')]),
-                                html.button({type:'button', class:`btn ${arrow.line_count == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style1',}, [html.div({class:'img'}, [], '↑')]),
-                                html.button({type:'button', class:`btn ${arrow.line_count == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style2',}, [html.div({class:'img'}, [], '⇑')]),
-                                html.button({type:'button', class:`btn ${arrow.line_count == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style3',},[html.div({class:'img'}, [], '⤊')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count0',}, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count1',}, [html.div({class:'img'}, [], '|')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count2',}, [html.div({class:'img'}, [], '‖')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count3',}, [html.div({class:'img'}, [], '⫼')]),
+                            ]),
+                        html.div({class:'horizontal-axis-group'}, 
+                            [
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style0',}, [html.div({class:'img'}, [], '|')]),
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style1',}, [html.div({class:'img'}, [], '╎')]),
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style2',}, [html.div({class:'img'}, [], '⁞')]),
                             ]),
                     ]),
             );

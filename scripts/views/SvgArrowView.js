@@ -23,6 +23,7 @@ function SvgArrowView(dependencies, settings) {
     const target_trim_length = settings.target_trim_length;
     const arrow_line_spacing = settings.arrow_line_spacing;
     const arrow_head_slope   = settings.arrow_head_slope;
+    const arrow_line_width   = settings.arrow_line_width;
     const highlight_width    = settings.highlight_width;
 
     const sign = Math.sign;
@@ -48,6 +49,11 @@ function SvgArrowView(dependencies, settings) {
         return output;
     }
 
+    const line_style = [
+        '',
+        `${2*arrow_line_width} ${arrow_line_width}`,
+        `${arrow_line_width} ${arrow_line_width}`,
+    ];
 
     const drawing = {};
     drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter, onleave) {
@@ -82,11 +88,22 @@ function SvgArrowView(dependencies, settings) {
                 class: 'arrow-group ' + (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
             },
             [
-                svg.path({class:"arrow-highlight", d: svg_arrow_attributes.path(screen_arc), 'stroke-width':screen_highlight_width, 'stroke-linecap':'round'}),
-                svg.path({class:"arrow", d: svg_arrow_attributes.head(trimmed_arc, screen_state_store)}),
+                svg.path({
+                    'stroke-width':screen_highlight_width, 
+                    'stroke-linecap':'round', 
+                    class:"arrow-highlight", 
+                    d: svg_arrow_attributes.path(screen_arc), 
+                }),
+                svg.path({
+                    'stroke-width':     arrow_line_width,
+                    class:"arrow", 
+                    d: svg_arrow_attributes.head(trimmed_arc, screen_state_store)
+                }),
                 ...[...Array(arrow.line_count).keys()].map(
                     line_id => 
                         svg.path({
+                            'stroke-dasharray': line_style[arrow.line_style_id],
+                            'stroke-width':     arrow_line_width,
                             class:"arrow", 
                             d: svg_arrow_attributes.path(
                                 sampler_arc_transforms.trim(
