@@ -182,6 +182,12 @@ function AppUpdater(
         arrow_tail_style2:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 2)),
         arrow_tail_style3:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 3)),
         arrow_tail_style4:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 4)),
+        
+        arrow_color_green:        selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'green')),
+        arrow_color_blue:         selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'blue')),
+        arrow_color_red:          selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'red')),
+        arrow_color_yellow:       selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'yellow')),
+        arrow_color_contrast:     selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'contrast')),
     }
 
     const key_bindings = {

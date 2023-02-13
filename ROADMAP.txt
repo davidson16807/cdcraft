@@ -35,6 +35,7 @@ tooltips
 internationalization
 about/welcome sidebar
 double arrow heads/tails
+redraw grid on window resize
 
 REFACTOR:
 decouple state for model/view to support soft undo/redo

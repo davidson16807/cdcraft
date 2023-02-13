@@ -101,7 +101,12 @@ function SvgArrowView(dependencies, settings) {
         const label_offset_id = arrow.label_offset_id || glm.ivec2(0,1);
         const g = svg.g(
             {
-                class: 'arrow-group ' + (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
+                class: [
+                    'arrow-group', 
+                    (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
+                    (arrow.color.startsWith('#')? '':'arrow-'+arrow.color),
+                ].join(' '),
+                // color: arrow.color.startsWith('#')? arrow.color:'',
             },
             [
                 svg.path({

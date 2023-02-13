@@ -45,7 +45,6 @@ body{
 
 .arrow {
     fill: none;
-    stroke: black;
     pointer-events: all;
 }
 
@@ -84,9 +83,25 @@ body{
     width: fit-content; /*needed for js to find width using offsetWidth*/
 }
 
+.arrow-green{
+    stroke: #28a745;
+}
+.arrow-blue{
+    stroke: #007bff;
+}
+.arrow-red{
+    stroke: #dc3545;
+}
+.arrow-yellow{
+    stroke: #ffc107;
+}
+.arrow-contrast{
+    stroke: black;
+}
+
 @media (prefers-color-scheme: dark){
 
-    .arrow {
+    .arrow-contrast {
         stroke: white;
     }
     .arrow-highlight {

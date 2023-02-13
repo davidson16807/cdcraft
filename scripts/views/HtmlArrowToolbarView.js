@@ -106,6 +106,7 @@ function HtmlArrowToolbarView(dependencies) {
                             type:    'text',
                             class:   'form-control',
                             value:   arrow.label || '',
+                            placeholder: '\\[description\\]',
                             oninput: deferal.callback(ontextinput),
                         }),
                         html.div({class:'horizontal-axis-group group-joined'}, 
@@ -147,9 +148,53 @@ function HtmlArrowToolbarView(dependencies) {
                                 html.button({type:'button', class:`btn ${arrow.tail_style_id == 4? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style4',}, [html.div({class:'img'}, [], '‒')]),
                             ]),
                     ]),
+                html.div({class:'group-round',}, 
+                    [
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn btn-success  ${arrow.color == 'green'?  'active':''}`, onclick:onbuttonclick, id:'arrow-color-green' }, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn btn-primary  ${arrow.color == 'blue'?   'active':''}`, onclick:onbuttonclick, id:'arrow-color-blue'  }, [html.div({class:'img'}, [], '')]),
+                            ]),
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn btn-danger   ${arrow.color == 'red'?    'active':''}`, onclick:onbuttonclick, id:'arrow-color-red'   }, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn btn-warning  ${arrow.color == 'yellow'? 'active':''}`, onclick:onbuttonclick, id:'arrow-color-yellow'}, [html.div({class:'img'}, [], '')]),
+                                // html.button({type:'button', class:`btn btn-rainbow`, onclick:onbuttonclick, id:'arrow-line-count2',}, [html.div({class:'img'}, [], '‖')]),
+                            ]),
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn btn-contrast ${arrow.color == 'contrast'?  'active':''}`, onclick:onbuttonclick, id:'arrow-color-contrast' }, [html.div({class:'img'}, [], '')]),
+                            ]),
+                    ]),
             );
         }
-
+`
+<div class="group-round">
+    <label>Color</label>
+    <div class="horizontal-axis-group group-joined">
+        <button id="toggle-grid" type="button" class="btn btn-success">
+            <div class="img" />
+        </button>
+        <button id="toggle-grid" type="button" class="btn btn-primary">
+            <div class="img" />
+        </button>
+        <button id="toggle-grid" type="button" class="btn btn-contrast active">
+            <div class="img" />
+        </button>
+    </div>
+    <div class="horizontal-axis-group group-joined">
+        <button id="toggle-grid" type="button" class="btn btn-danger">
+            <div class="img" />
+        </button>
+        <button id="toggle-grid" type="button" class="btn btn-warning">
+            <div class="img" />
+        </button>
+        <button id="toggle-grid" type="button" class="btn btn-rainbow">
+            <div class="img" />
+        </button>
+    </div>
+</div>
+`
         return html.div(
             {
                 id: 'arrow-toolbar',
