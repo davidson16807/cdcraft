@@ -10,19 +10,6 @@
     <input type="range" class="form-range" min="-5" max="5" id="range">
 </div>
 
-<div class="mobile group-round">
-    <label>Styling</label>
-    <div class="horizontal-axis-group">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-left.svg"/>
-        </button>
-        <img src="icons/grid.svg"/>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-right.svg"/>
-        </button>
-    </div>
-</div>
-
 <div class="group-round">
     <div class="horizontal-axis-group ">
         <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
@@ -32,46 +19,6 @@
         <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
             <div>Pullback/Pushout</div>
             <div class="img" >⌜</div>
-        </button>
-    </div>
-    <div class="horizontal-axis-group ">
-        <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
-            <div>Flip</div>
-            <div class="img" >⥦</div>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
-            <div>Rotate</div>
-            <div class="img" >⥢</div>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
-            <div>Rotate</div>
-            <div class="img" >↻</div>
-        </button>
-    </div>
-</div>
-
-<div class="group-round">
-    <label>Color</label>
-    <div class="horizontal-axis-group group-joined">
-        <button id="toggle-grid" type="button" class="btn btn-success">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-primary">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-contrast active">
-            <div class="img" />
-        </button>
-    </div>
-    <div class="horizontal-axis-group group-joined">
-        <button id="toggle-grid" type="button" class="btn btn-danger">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-warning">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-rainbow">
-            <div class="img" />
         </button>
     </div>
 </div>
@@ -168,33 +115,6 @@ function HtmlArrowToolbarView(dependencies) {
                     ]),
             );
         }
-`
-<div class="group-round">
-    <label>Color</label>
-    <div class="horizontal-axis-group group-joined">
-        <button id="toggle-grid" type="button" class="btn btn-success">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-primary">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-contrast active">
-            <div class="img" />
-        </button>
-    </div>
-    <div class="horizontal-axis-group group-joined">
-        <button id="toggle-grid" type="button" class="btn btn-danger">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-warning">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-rainbow">
-            <div class="img" />
-        </button>
-    </div>
-</div>
-`
         return html.div(
             {
                 id: 'arrow-toolbar',
