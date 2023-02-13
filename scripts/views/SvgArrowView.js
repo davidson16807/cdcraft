@@ -55,6 +55,22 @@ function SvgArrowView(dependencies, settings) {
         `${arrow_line_width} ${arrow_line_width}`,
     ];
 
+    const head_style = [
+        [],
+        [glm.vec2(-0.05,-0.05), glm.vec2(0,0)],
+        [glm.vec2(-0.05,-0.05), glm.vec2(0,0), glm.vec2(0.05,-0.05)],
+                               [glm.vec2(0,0), glm.vec2(0.05,-0.05)],
+        [glm.vec2(-0.05,0), glm.vec2(0.05,0)],
+    ];
+
+    const tail_style = [
+        [],
+                                                   [glm.vec2(0.05,0), glm.vec2(0.04,-0.02), glm.vec2(0.01,-0.02), glm.vec2(0,0)],
+                           [glm.vec2(-0.05,-0.05),  glm.vec2(0,0), glm.vec2(0.05,-0.05)],
+        [glm.vec2(-0.05,0), glm.vec2(-0.04,-0.02), glm.vec2(-0.01,-0.02), glm.vec2(0,0)],
+        [glm.vec2(-0.05,0), glm.vec2(0.05,0)],
+    ];
+
     const drawing = {};
     drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter, onleave) {
         const screen_state = screen_state_storage.unpack(screen_state_store);
@@ -89,15 +105,20 @@ function SvgArrowView(dependencies, settings) {
             },
             [
                 svg.path({
-                    'stroke-width':screen_highlight_width, 
+                    'stroke-width': screen_highlight_width, 
                     'stroke-linecap':'round', 
                     class:"arrow-highlight", 
                     d: svg_arrow_attributes.path(screen_arc), 
                 }),
                 svg.path({
-                    'stroke-width':     arrow_line_width,
+                    'stroke-width': arrow_line_width,
                     class:"arrow", 
-                    d: svg_arrow_attributes.head(trimmed_arc, screen_state_store)
+                    d: svg_arrow_attributes.head(trimmed_arc, screen_state_store, head_style[arrow.head_style_id]),
+                }),
+                svg.path({
+                    'stroke-width': arrow_line_width,
+                    class:"arrow", 
+                    d: svg_arrow_attributes.tail(trimmed_arc, screen_state_store, tail_style[arrow.tail_style_id]),
                 }),
                 ...[...Array(arrow.line_count).keys()].map(
                     line_id => 

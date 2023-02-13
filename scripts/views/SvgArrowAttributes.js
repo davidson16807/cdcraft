@@ -22,13 +22,11 @@ function SvgArrowAttributes(dependencies) {
 
     return {
 
-        head: function (trimmed_arc, screen_state_store) {
+        head: function (trimmed_arc, screen_state_store, cell_points) {
             const screen_state = screen_state_storage.unpack(screen_state_store);
             const arrowhead_mapping = 
                 AffineMapping(AffineRemapping(PanZoomMapping(screen_state)).apply(
-                    sampler_arc_properties.map(trimmed_arc, 1.0)));
-
-            const cell_points = [glm.vec2(-0.04,-0.04), glm.vec2(0,0), glm.vec2(0.04,-0.04)];
+                    sampler_arc_properties.map(trimmed_arc, 1)));
             const screen_points = cell_points.map(point => arrowhead_mapping.position.revert(point));
             return 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
         },
@@ -36,6 +34,15 @@ function SvgArrowAttributes(dependencies) {
         path: function (screen_arc) {
             const svg_bezier = sampler_arc_rendering.sampler_arc_to_svg_bezier(screen_arc, 10);
             return svg_bezier_path_attribute(svg_bezier);
+        },
+
+        tail: function (trimmed_arc, screen_state_store, cell_points) {
+            const screen_state = screen_state_storage.unpack(screen_state_store);
+            const arrowhead_mapping = 
+                AffineMapping(AffineRemapping(PanZoomMapping(screen_state)).apply(
+                    sampler_arc_properties.map(trimmed_arc, 0)));
+            const screen_points = cell_points.map(point => arrowhead_mapping.position.revert(point));
+            return 'M ' + screen_points.map(point => `${point.x} ${point.y}`).join(' L ');
         },
 
     };

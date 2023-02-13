@@ -10,7 +10,6 @@ double click on arrow/object to focus on text box
 circle cursor on rmb
 arrow curvature slider
 arrow color select
-arrow decorations
 add zoom support to touchpad
 add selection support to touchpad
 fix bug where panning with touchpad resets the display
@@ -35,8 +34,11 @@ arrow pushout/pullback symbol
 tooltips
 internationalization
 about/welcome sidebar
+double arrow heads/tails
 
 REFACTOR:
 decouple state for model/view to support soft undo/redo
 refactor so app operations return new app objects
 refactor so that toolbar buttons work through `data-*` variables
+rename: target→head, source→tail
+fix naming on "curried_arcs"

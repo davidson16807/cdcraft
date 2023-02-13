@@ -118,8 +118,7 @@ function AppUpdater(
                     entity.label_offset_id.y != label_offset_id.y? 
                         label_offset_id : null
             }),
-        line_count:    line_count => (arrow, event) => arrow.with({line_count: line_count}),
-        line_style_id: line_style_id => (arrow, event) => arrow.with({line_style_id: line_style_id}),
+        set_property: (property, value) => (arrow, event) => arrow.with(Object.fromEntries([[property, value]])),
     }
 
     /*
@@ -163,15 +162,26 @@ function AppUpdater(
         arrow_label_outside:      selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,1))),
         arrow_label_inside:       selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,-1))),
 
-        arrow_line_count0:        selection_actions_curried.arrow(entity_actions_curried.line_count(0)),
-        arrow_line_count1:        selection_actions_curried.arrow(entity_actions_curried.line_count(1)),
-        arrow_line_count2:        selection_actions_curried.arrow(entity_actions_curried.line_count(2)),
-        arrow_line_count3:        selection_actions_curried.arrow(entity_actions_curried.line_count(3)),
+        arrow_head_style0:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 0)),
+        arrow_head_style1:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 1)),
+        arrow_head_style2:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 2)),
+        arrow_head_style3:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 3)),
+        arrow_head_style4:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 4)),
 
-        arrow_line_style0:        selection_actions_curried.arrow(entity_actions_curried.line_style_id(0)),
-        arrow_line_style1:        selection_actions_curried.arrow(entity_actions_curried.line_style_id(1)),
-        arrow_line_style2:        selection_actions_curried.arrow(entity_actions_curried.line_style_id(2)),
+        arrow_line_count0:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 0)),
+        arrow_line_count1:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 1)),
+        arrow_line_count2:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 2)),
+        arrow_line_count3:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 3)),
+
+        arrow_line_style0:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 0)),
+        arrow_line_style1:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 1)),
+        arrow_line_style2:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 2)),
         
+        arrow_tail_style0:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 0)),
+        arrow_tail_style1:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 1)),
+        arrow_tail_style2:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 2)),
+        arrow_tail_style3:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 3)),
+        arrow_tail_style4:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 4)),
     }
 
     const key_bindings = {
@@ -184,27 +194,6 @@ function AppUpdater(
         'object-symbol': 'object_symbol',
         'object-label': 'object_label',
         'arrow-label': 'arrow_label',
-    }
-
-    const button_bindings = {
-        'undo': 'undo',
-        'redo': 'redo',
-        'toggle-grid': 'toggle_grid',
-        'object-label-left': 'object_label_left',
-        'object-label-right': 'object_label_right',
-        'object-label-topleft': 'object_label_topleft',
-        'object-label-topright': 'object_label_topright',
-        'object-label-bottomleft': 'object_label_bottomleft',
-        'object-label-bottomright': 'object_label_bottomright',
-        'arrow-label-inside': 'arrow_label_inside',
-        'arrow-label-outside': 'arrow_label_outside',
-        'arrow-line-count0': 'arrow_line_count0',
-        'arrow-line-count1': 'arrow_line_count1',
-        'arrow-line-count2': 'arrow_line_count2',
-        'arrow-line-count3': 'arrow_line_count3',
-        'arrow-line-style0': 'arrow_line_style0',
-        'arrow-line-style1': 'arrow_line_style1',
-        'arrow-line-style2': 'arrow_line_style2',
     }
 
     const mousedown_bindings = [
@@ -284,13 +273,11 @@ function AppUpdater(
         },
 
         buttonclick: function(event, drawing, app_io, dom_io){
-            const action_id = button_bindings[event.currentTarget.id];
-            if (action_id!=null) {
-                const action = generic_actions[action_id];
-                if (action!=null) {
-                    action(app_io, event);
-                    drawing.redraw(undefined, app_io, dom_io);
-                }
+            console.log(event.currentTarget.id.replace('-','_'))
+            const action = generic_actions[event.currentTarget.id.replaceAll('-','_')];
+            if (action!=null) {
+                action(app_io, event);
+                drawing.redraw(undefined, app_io, dom_io);
             }
         },
 

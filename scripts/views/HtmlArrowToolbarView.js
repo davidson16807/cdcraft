@@ -108,7 +108,7 @@ function HtmlArrowToolbarView(dependencies) {
                             value:   arrow.label || '',
                             oninput: deferal.callback(ontextinput),
                         }),
-                        html.div({class:'horizontal-axis-group'}, 
+                        html.div({class:'horizontal-axis-group group-joined'}, 
                             [
                                 html.button({type:'button', class:`btn ${offset.y<0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-label-inside',}, [html.div({class:'img'}, [])]),
                                 html.button({type:'button', class:'btn group-dark'}, [html.div({class:'img'}, [], '⤸')]),
@@ -117,18 +117,34 @@ function HtmlArrowToolbarView(dependencies) {
                     ]),
                 html.div({class:'group-round',}, 
                     [
-                        html.div({class:'horizontal-axis-group'}, 
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style0',}, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style1',}, [html.div({class:'img'}, [], '/')]),
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style2',}, [html.div({class:'img'}, [], '∧')]),
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style3',}, [html.div({class:'img'}, [], '\\')]),
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 4? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style4',}, [html.div({class:'img'}, [], '‒')]),
+                            ]),
+                        html.div({class:'horizontal-axis-group group-joined'}, 
                             [
                                 html.button({type:'button', class:`btn ${arrow.line_count == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count0',}, [html.div({class:'img'}, [], '')]),
                                 html.button({type:'button', class:`btn ${arrow.line_count == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count1',}, [html.div({class:'img'}, [], '|')]),
                                 html.button({type:'button', class:`btn ${arrow.line_count == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count2',}, [html.div({class:'img'}, [], '‖')]),
                                 html.button({type:'button', class:`btn ${arrow.line_count == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count3',}, [html.div({class:'img'}, [], '⫼')]),
                             ]),
-                        html.div({class:'horizontal-axis-group'}, 
+                        html.div({class:'horizontal-axis-group group-joined'}, 
                             [
                                 html.button({type:'button', class:`btn ${arrow.line_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style0',}, [html.div({class:'img'}, [], '|')]),
                                 html.button({type:'button', class:`btn ${arrow.line_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style1',}, [html.div({class:'img'}, [], '╎')]),
                                 html.button({type:'button', class:`btn ${arrow.line_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style2',}, [html.div({class:'img'}, [], '⁞')]),
+                            ]),
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style0',}, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style1',}, [html.div({class:'img'}, [], 'ᒍ')]),
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style2',}, [html.div({class:'img'}, [], '∧')]),
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style3',}, [html.div({class:'img'}, [], 'ᒐ')]),
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 4? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style4',}, [html.div({class:'img'}, [], '‒')]),
                             ]),
                     ]),
             );
