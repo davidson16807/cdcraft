@@ -6,7 +6,7 @@ Arcs can be represented in numerous ways, and different behaviors can be best im
   They are what is stored in application state objects such as `Diagram` or `AppState`.
 * `UserArc` represents arcs in a way that can be easily manipulated by user input. 
   `UserArc`s may be nested since nodes can represent other arcs.
-* `FlatArc` represents a `UserArc` in a "flattened" way, i.e. without nesting.
+* `PointArc` represents a directed arc using points in space.
   They are specified similar to `UserArcs`, but source and target are always the locations at which the arc starts or ends.
 * `SamplerArc` represents a directed arc in a way that allows finding properties along the arc for use in rendering.
 * `SvgArc` represents arcs in the same manner as the svg path "arc" directive.

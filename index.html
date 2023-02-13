@@ -18,26 +18,28 @@
     <script src="./scripts/models/positions/DiagramIds.js"></script>
     <script src="./scripts/models/positions/CellHashing.js"></script>
     <script src="./scripts/models/positions/PositionMetricBundle.js"></script>
-    <script src="./scripts/models/nodes/UserNode.js"></script>
-    <script src="./scripts/models/nodes/MetaUserNodePointIndication.js"></script>
-    <script src="./scripts/models/nodes/UserNodeMetricBundle.js"></script>
+    <script src="./scripts/models/nodes/Node.js"></script>
+    <script src="./scripts/models/nodes/NodeHashing.js"></script>
+    <script src="./scripts/models/nodes/NodePointIndicationCurried.js"></script>
+    <script src="./scripts/models/nodes/NodeMetricBundle.js"></script>
     <script src="./scripts/models/arcs/StoredArc.js"></script>
     <script src="./scripts/models/arcs/UserArc.js"></script>
-    <script src="./scripts/models/arcs/FlatArc.js"></script>
+    <script src="./scripts/models/arcs/PointArc.js"></script>
     <script src="./scripts/models/arcs/SamplerArc.js"></script>
     <script src="./scripts/models/arcs/SvgArc.js"></script>
-    <script src="./scripts/models/arcs/ArcGeometry.js"></script>
     <script src="./scripts/models/arcs/SamplerArcRendering.js"></script>
-    <script src="./scripts/models/arcs/SamplerArcResizing.js"></script>
+    <script src="./scripts/models/arcs/SamplerArcTransforms.js"></script>
     <script src="./scripts/models/arcs/SamplerArcProperties.js"></script>
     <script src="./scripts/models/arcs/SamplerArcMapping.js"></script>
-    <script src="./scripts/models/arcs/UserArcsAndStoredArcs.js"></script>
-    <script src="./scripts/models/arcs/MetaUserArcsAndFlatArcs.js"></script>
-    <script src="./scripts/models/arcs/MetaUserArcPointIndication.js"></script>
-    <script src="./scripts/models/arcs/FlatArcsAndSamplerArcs.js"></script>
-    <script src="./scripts/models/arcs/FlatArcsAndSvgArcs.js"></script>
-    <script src="./scripts/models/arcs/FlatArcMapping.js"></script>
-    <script src="./scripts/models/arcs/FlatArcPointIndication.js"></script>
+    <script src="./scripts/models/arcs/UserArcsAndStoredArcsCurried.js"></script>
+    <script src="./scripts/models/arcs/StoredArcsAndPointArcsCurried.js"></script>
+    <script src="./scripts/models/arcs/StoredArcPropertiesCurried.js"></script>
+    <script src="./scripts/models/arcs/StoredArcPointIndicationCurried.js"></script>
+    <script src="./scripts/models/arcs/PointArcsAndSamplerArcs.js"></script>
+    <script src="./scripts/models/arcs/PointArcsAndSvgArcs.js"></script>
+    <script src="./scripts/models/arcs/PointArcProperties.js"></script>
+    <script src="./scripts/models/arcs/PointArcMapping.js"></script>
+    <script src="./scripts/models/arcs/PointArcPointIndication.js"></script>
     <script src="./scripts/models/arrows/Arrow.js"></script>
     <script src="./scripts/models/arrows/DiagramArrow.js"></script>
     <script src="./scripts/models/objects/DiagramObject.js"></script>
@@ -56,17 +58,23 @@
     <script src="./scripts/views/SvgArrowMidpointView.js"></script>
     <script src="./scripts/views/HtmlObjectToolbarView.js"></script>
     <script src="./scripts/views/HtmlArrowToolbarView.js"></script>
+    <script src="./scripts/views/HtmlMultientityToolbarView.js"></script>
     <script src="./scripts/views/SvgGridView.js"></script>
     <script src="./scripts/views/SvgAppView.js"></script>
     <script src="./scripts/dom/Html.js"></script>
     <script src="./scripts/dom/Svg.js"></script>
+    <script src="./scripts/updaters/drags/AbstractArrowDragCurried.js"></script>
     <script src="./scripts/updaters/drags/ViewDrags.js"></script>
     <script src="./scripts/updaters/drags/SelectionDrags.js"></script>
     <script src="./scripts/updaters/drags/ArrowDrags.js"></script>
     <script src="./scripts/updaters/drags/DragState.js"></script>
     <script src="./scripts/updaters/AppUpdater.js"></script>
+    <script src="./scripts/resources/ArrayResource.js"></script>
     <script src="./scripts/resources/ArrowPositionsResource.js"></script>
+    <script src="./scripts/resources/ArrowReferenceResource.js"></script>
     <script src="./scripts/resources/ObjectPositionResource.js"></script>
+    <script src="./scripts/resources/DiagramObjectResource.js"></script>
+    <script src="./scripts/resources/DiagramArrowResource.js"></script>
     <script src="./scripts/resources/ResourceOperations.js"></script>
     <script src="./scripts/resources/PositionMapOperations.js"></script>
 </head>
@@ -163,50 +171,56 @@
 
 <div class="bottom right mobile-logo">∙⇆∙</div>
 
-
-<div id="object-toolbar" class="bottom right short-axis-group group-dark group-round control hidden">
+<div class="bottom right short-axis-group group-dark group-round control">
+    <div id="object-toolbar" class="hidden"></div>
+    <div id="arrow-toolbar" class="hidden"></div>
+    <div id="multientity-toolbar" class="hidden"></div>
 </div>
-
-
-<div id="arrow-toolbar" class="bottom right short-axis-group group-dark group-round control hidden">
-</div>
-
-
 
 <script type="text/javascript">
 'use strict';
 
 const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing(), Math), Math);
 
-const user_node_metric_bundle = UserNodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
+const node_metric_bundle = NodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
 
-const user_arcs_and_stored_arcs =
-    UserArcsAndStoredArcs(
-        user_node_metric_bundle, diagram_ids, glm,
-        0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
-        0.08, // target offset distance
+const point_arc_properties = PointArcProperties(glm, Math);
+
+const stored_curried_arc_properties =
+    StoredArcPropertiesCurried(
+        point_arc_properties,
+        LinearMapping,
+        ZoomRotateMapping,
+        0.08 // target offset distance for 2-arrows
     );
 
-const meta_user_arcs_and_flat_arcs = 
-    MetaUserArcsAndFlatArcs(
-        MetaUserNodePointIndication(
-            MetaUserArcPointIndication(
-                FlatArcPointIndication(
-                    FlatArcsAndSamplerArcs(
-                        ArcGeometry(),
-                        Math), 
-                    SamplerArcProperties(),
-                    0.5))));
-
-const flat_arcs_and_sampler_arcs = FlatArcsAndSamplerArcs(ArcGeometry(), Math);
+const point_arcs_and_sampler_arcs = 
+    PointArcsAndSamplerArcs(
+        point_arc_properties,
+        Math);
 
 const sampler_arc_properties = SamplerArcProperties();
-const sampler_arc_resizing = SamplerArcResizing(sampler_arc_properties);
-const sampler_arc_rendering = SamplerArcRendering(sampler_arc_properties);
+
+const stored_arcs_and_point_arcs_curried = 
+    StoredArcsAndPointArcsCurried(
+        NodePointIndicationCurried(
+            StoredArcPointIndicationCurried(
+                PointArcPointIndication(
+                    point_arcs_and_sampler_arcs, 
+                    sampler_arc_properties,
+                    0.5))),
+        stored_curried_arc_properties,
+    );
+
+const user_arcs_curried_and_stored_arcs =
+    UserArcsAndStoredArcsCurried(
+        stored_arcs_and_point_arcs_curried,
+        stored_curried_arc_properties,
+        node_metric_bundle, diagram_ids, glm, 
+        0.025, 0.5, 0.25, 0.25, // min loop, max loop, loop snap, nonloop snap
+    );
 
 const screen_state_storage = ScreenStateStorage();
-
-const diagram_object_set_ops = DiagramObjectSetOperations(diagram_ids);
 
 const svg  = Svg();
 const html = Html();
@@ -220,45 +234,60 @@ const svg_grid_view =
         PanZoomMapping       : PanZoomMapping,
     });
 
+const sampler_arc_transforms = SamplerArcTransforms(sampler_arc_properties);
+
 const svg_arrow_attributes = 
     SvgArrowAttributes({
-        PanZoomMapping              : PanZoomMapping,
-        AffineMapping               : AffineMapping,
-        AffineRemapping             : AffineRemapping,
-        SamplerArcMapping           : SamplerArcMapping,
-        screen_state_storage        : screen_state_storage,
-        user_arcs_and_stored_arcs   : user_arcs_and_stored_arcs,
-        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
-        flat_arcs_and_sampler_arcs  : flat_arcs_and_sampler_arcs,
-        sampler_arc_resizing        : sampler_arc_resizing,
-        sampler_arc_properties      : sampler_arc_properties,
-        sampler_arc_rendering       : sampler_arc_rendering,
-    }, 
-    { 
-        source_trim_length: 0.12,
-        target_trim_length: 0.10,
+        PanZoomMapping             : PanZoomMapping,
+        AffineMapping              : AffineMapping,
+        AffineRemapping            : AffineRemapping,
+        screen_state_storage       : screen_state_storage,
+        sampler_arc_properties     : sampler_arc_properties,
+        sampler_arc_transforms     : sampler_arc_transforms,
+        sampler_arc_rendering      : SamplerArcRendering(sampler_arc_properties),
+        point_arcs_and_sampler_arcs: point_arcs_and_sampler_arcs,
     });
 
 const svg_arrow_view = SvgArrowView({
         PanZoomMapping             : PanZoomMapping,
+        AffineMapping              : AffineMapping,
+        AffineRemapping            : AffineRemapping,
+        SamplerArcMapping          : SamplerArcMapping,
         svg                        : svg,
         html                       : html,
+        sampler_arc_properties     : sampler_arc_properties,
+        sampler_arc_transforms     : sampler_arc_transforms,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
         screen_state_storage       : screen_state_storage,
         render                     : renderMathInElement,
-        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
-    }, 0.2);
+        point_arcs_and_sampler_arcs: point_arcs_and_sampler_arcs,
+        stored_arcs_and_point_arcs_curried: stored_arcs_and_point_arcs_curried,
+    }, 
+    { 
+        source_trim_length: 0.13,
+        target_trim_length: 0.13,
+        arrow_line_spacing: 3,
+        arrow_head_slope:   1,
+        arrow_line_width:   2,
+        highlight_width:    0.2,
+    });
 
 const svg_arrow_selection_view = 
     SvgArrowSelectionView({
         PanZoomMapping             : PanZoomMapping,
+        SamplerArcMapping          : SamplerArcMapping,
         svg                        : svg,
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
-    }, 0.2);
+        stored_arcs_and_point_arcs_curried: stored_arcs_and_point_arcs_curried,
+    }, 
+    { 
+        source_trim_length: 0.13,
+        target_trim_length: 0.13,
+        highlight_width:    0.2,
+    });
 
 const svg_arrow_midpoint_view = 
     SvgArrowMidpointView({
@@ -267,17 +296,26 @@ const svg_arrow_midpoint_view =
         screen_state_storage       : screen_state_storage,
         svg_arrow_attributes       : svg_arrow_attributes,
         view_event_deferal         : view_event_deferal,
-        meta_user_arcs_and_flat_arcs: meta_user_arcs_and_flat_arcs,
-    }, 0.5);
+        sampler_arc_properties     : sampler_arc_properties,
+        sampler_arc_transforms     : sampler_arc_transforms,
+        point_arcs_and_sampler_arcs: point_arcs_and_sampler_arcs,
+        stored_arcs_and_point_arcs_curried: stored_arcs_and_point_arcs_curried,
+    },
+    { 
+        source_trim_length: 0.13,
+        target_trim_length: 0.13,
+        midpoint_width:     0.5,
+    });
 
 const svg_object_view = 
     SvgObjectView({
         PanZoomMapping             : PanZoomMapping,
         svg                        : svg,
         html                       : html,
+        render                     : renderMathInElement,
         screen_state_storage       : screen_state_storage,
         view_event_deferal         : view_event_deferal,
-        render                     : renderMathInElement,
+        svg_object_attributes      : SvgObjectAttributes(Math),
     }, 0.5);
 
 const svg_object_selection_view = 
@@ -288,25 +326,20 @@ const svg_object_selection_view =
         view_event_deferal         : view_event_deferal,
     }, 0.5);
 
-const svg_object_toolbar_view = 
-    HtmlObjectToolbarView({
-        html                       : html,
-        view_event_deferal         : view_event_deferal,
-    });
 
-const svg_arrow_toolbar_view = 
-    HtmlArrowToolbarView({
-        html                       : html,
-        view_event_deferal         : view_event_deferal,
-    });
+const node_hashing = NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math));
+
+const arrow_reference_resource = 
+    ArrowReferenceResource(user_arcs_curried_and_stored_arcs, node_hashing);
 
 const arrow_positions_resource = 
     ArrowPositionsResource(
-        NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math)), 
-        user_arcs_and_stored_arcs, true);
+        arrow_reference_resource,
+        user_arcs_curried_and_stored_arcs,
+        node_hashing);
 
 const object_position_resource = 
-    ObjectPositionResource(diagram_ids, true);
+    ObjectPositionResource(diagram_ids);
 
 const resource_operations = ResourceOperations();
 
@@ -317,17 +350,23 @@ const selection_drags =
         object_position_resource,
         resource_operations,
         PositionMapOperations(diagram_ids),
-        diagram_object_set_ops,
+        DiagramObjectSetOperations(diagram_ids),
     );
 
 const arrow_drags = 
     ArrowDrags(
         diagram_ids,
-        user_node_metric_bundle,
-        user_arcs_and_stored_arcs,
-        meta_user_arcs_and_flat_arcs,
+        node_hashing, 
+        node_metric_bundle,
+        AbstractArrowDragCurried(
+            user_arcs_curried_and_stored_arcs, 
+            stored_arcs_and_point_arcs_curried, 
+            Math,
+            0.001 // min_length_clockwise_change_per_scroll
+        ),
+        arrow_reference_resource,
+        user_arcs_curried_and_stored_arcs,
         1.0, // default_min_length_clockwise
-        0.001 // min_length_clockwise_change_per_scroll
     );
 
 const view_drags = 
@@ -342,55 +381,64 @@ const view_drags =
 const app_history_traversal = 
     AppHistoryTraversal(DiagramMetrics(), Infinity);
 
-const drag_state_ops = 
-    AppDragOperations(
-        PanZoomMapping,
-        screen_state_storage,
-        app_history_traversal,
-    );
+const array_resource = ArrayResource();
 
 const app_updater = 
     AppUpdater({
-        PanZoomMapping               : PanZoomMapping,
-        selection_drags              : selection_drags,
-        arrow_drags                  : arrow_drags,
-        view_drags                   : view_drags,
-        screen_state_storage         : screen_state_storage,
-        object_position_resource     : object_position_resource,
-        drag_state_ops               : drag_state_ops,
-        app_history_traversal        : app_history_traversal,
+        PanZoomMapping            : PanZoomMapping,
+        selection_drags           : selection_drags,
+        arrow_drags               : arrow_drags,
+        view_drags                : view_drags,
+        screen_state_storage      : screen_state_storage,
+        diagram_object_resources  : DiagramObjectResource(array_resource),
+        diagram_arrow_resources   : DiagramArrowResource(array_resource),
+        drag_state_ops            : AppDragOperations(PanZoomMapping, screen_state_storage, app_history_traversal),
+        app_history_traversal     : app_history_traversal,
     });
 
 const app_view = 
     SvgAppView({
-        screen_state_storage         : screen_state_storage,
-        arrow_positions_resource     : arrow_positions_resource, 
-        object_position_resource     : object_position_resource,
-        resource_operations          : resource_operations,
-        svg_grid_view                : svg_grid_view,
-        svg_arrow_view               : svg_arrow_view,
-        svg_object_view              : svg_object_view,
-        svg_object_selection_view    : svg_object_selection_view,
-        svg_arrow_selection_view     : svg_arrow_selection_view,
-        svg_arrow_midpoint_view      : svg_arrow_midpoint_view,
-        html_object_toolbar_view     : svg_object_toolbar_view,
-        html_arrow_toolbar_view      : svg_arrow_toolbar_view,
-        view_event_deferal           : view_event_deferal,
+        screen_state_storage      : screen_state_storage,
+        arrow_positions_resource  : arrow_positions_resource, 
+        object_position_resource  : object_position_resource,
+        resource_operations       : resource_operations,
+        svg_grid_view             : svg_grid_view,
+        svg_arrow_view            : svg_arrow_view,
+        svg_object_view           : svg_object_view,
+        svg_object_selection_view : svg_object_selection_view,
+        svg_arrow_selection_view  : svg_arrow_selection_view,
+        svg_arrow_midpoint_view   : svg_arrow_midpoint_view,
+        view_event_deferal        : view_event_deferal,
+        html_object_toolbar_view  : 
+            HtmlObjectToolbarView({
+                html                       : html,
+                view_event_deferal         : view_event_deferal,
+            }),
+        html_arrow_toolbar_view   : 
+            HtmlArrowToolbarView({
+                html                       : html,
+                view_event_deferal         : view_event_deferal,
+            }),
+        html_multientity_toolbar_view : 
+            HtmlMultientityToolbarView({
+                html                       : html,
+                view_event_deferal         : view_event_deferal,
+            }),
     }, app_updater);
 
 const initial_screen_frame_store = new ScreenStateStore(glm.vec2(), Math.log2(150));
 const disengaged_drag = view_drags.release(initial_screen_frame_store)
-const disengaged_drag_state = disengaged_drag.initialize();
-const app = new AppState(
+const app_state = 
+    new AppState(
         new Diagram(
             [], [], 
             [], [], [], 
             initial_screen_frame_store), 
         disengaged_drag,
-        disengaged_drag_state,
+        disengaged_drag.initialize(),
     );
 
-app_view.wire(app, document);
+app_view.wire(app_state, document);
 
 </script>
 </body>

@@ -2,21 +2,6 @@
 
 `
 <div class="group-round">
-    <h5>Arrow</h5>
-    <input id="arrow-text" type="text" class="form-control" placeholder="Arrow Text" />
-    <div>&nbsp;</div>
-    <div class="horizontal-axis-group maybe-slider">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/lock.svg"/>
-        </button>
-        <div class="vertical-axis-group">
-            <label>Position</label>
-            <input type="range" class="form-range" min="-5" max="5" id="range" disabled>
-        </div>
-    </div>
-</div>
-
-<div class="group-round">
     <label>Curvature</label>
     <input type="range" class="form-range" min="-5" max="5" id="range">
     <label>Offset</label>
@@ -25,49 +10,7 @@
     <input type="range" class="form-range" min="-5" max="5" id="range">
 </div>
 
-<div class="mobile group-round">
-    <label>Styling</label>
-    <div class="horizontal-axis-group">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-left.svg"/>
-        </button>
-        <img src="icons/grid.svg"/>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-right.svg"/>
-        </button>
-    </div>
-    <div class="horizontal-axis-group">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-left.svg"/>
-        </button>
-        <img src="icons/grid.svg"/>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-right.svg"/>
-        </button>
-    </div>
-    <div class="horizontal-axis-group">
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-left.svg"/>
-        </button>
-        <img src="icons/grid.svg"/>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <img src="icons/menu-right.svg"/>
-        </button>
-    </div>
-</div>
-
 <div class="group-round">
-    <div class="horizontal-axis-group group-joined">
-        <button id="toggle-grid" type="button" class="btn btn-dark active">
-            <div class="img">↑</div>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <div class="img">⇑</div>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-dark">
-            <div class="img">⤊</div>
-        </button>
-    </div>
     <div class="horizontal-axis-group ">
         <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
             <div>Adjoint</div>
@@ -76,49 +19,6 @@
         <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
             <div>Pullback/Pushout</div>
             <div class="img" >⌜</div>
-        </button>
-    </div>
-    <div class="horizontal-axis-group ">
-        <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
-            <div>Flip</div>
-            <div class="img" >⥦</div>
-            <img src="icons/swap-horizontal.svg"/>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
-            <div>Rotate</div>
-            <div class="img" >⥢</div>
-            <img src="icons/rotate-ccw.svg"/>
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-round btn-dark">
-            <div>Rotate</div>
-            <div class="img" >↻</div>
-            <img src="icons/rotate-cw.svg"/>
-        </button>
-    </div>
-</div>
-
-<div class="group-round">
-    <label>Color</label>
-    <div class="horizontal-axis-group group-joined">
-        <button id="toggle-grid" type="button" class="btn btn-success">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-primary">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-contrast active">
-            <div class="img" />
-        </button>
-    </div>
-    <div class="horizontal-axis-group group-joined">
-        <button id="toggle-grid" type="button" class="btn btn-danger">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-warning">
-            <div class="img" />
-        </button>
-        <button id="toggle-grid" type="button" class="btn btn-rainbow">
-            <div class="img" />
         </button>
     </div>
 </div>
@@ -140,27 +40,68 @@ function HtmlArrowToolbarView(dependencies) {
             app.diagram.arrow_selections.length == 1);
 
         if (is_single_arrow_selected) {
+            
             const arrow = diagram.arrows[diagram.arrow_selections[0]];
             const deferal = view_event_deferal(drawing, arrow, dom);
 
+            const offset = arrow.label_offset_id || glm.ivec2(0,1);
             panels.push(
                 html.div({class:'group-round',}, 
                     [
                         html.h5({},[],'Arrow'),
                         html.input({
-                            id:      'arrow-text',
+                            id:      'arrow-label',
                             type:    'text',
                             class:   'form-control',
                             value:   arrow.label || '',
+                            placeholder: '\\[description\\]',
                             oninput: deferal.callback(ontextinput),
-                        })
-                    ]));
+                        }),
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn ${offset.y<0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-label-inside',}, [html.div({class:'img'}, [])]),
+                                html.button({type:'button', class:'btn group-dark'}, [html.div({class:'img'}, [], '⤸')]),
+                                html.button({type:'button', class:`btn ${offset.y>0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-label-outside',},[html.div({class:'img'}, [])]),
+                            ]),
+                    ]),
+                html.div({class:'group-round',}, 
+                    [
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style0',}, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style1',}, [html.div({class:'img'}, [], '/')]),
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style2',}, [html.div({class:'img'}, [], 'ᐱ')]),
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style3',}, [html.div({class:'img'}, [], '\\')]),
+                                html.button({type:'button', class:`btn ${arrow.head_style_id == 4? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-head-style4',}, [html.div({class:'img'}, [], '‒')]),
+                            ]),
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn ${arrow.line_count == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count0',}, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count1',}, [html.div({class:'img'}, [], '|')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count2',}, [html.div({class:'img'}, [], '‖')]),
+                                html.button({type:'button', class:`btn ${arrow.line_count == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-count3',}, [html.div({class:'img'}, [], '⫼')]),
+                            ]),
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style0',}, [html.div({class:'img'}, [], '|')]),
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style1',}, [html.div({class:'img'}, [], '╎')]),
+                                html.button({type:'button', class:`btn ${arrow.line_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-line-style2',}, [html.div({class:'img'}, [], '⁞')]),
+                            ]),
+                        html.div({class:'horizontal-axis-group group-joined'}, 
+                            [
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 0? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style0',}, [html.div({class:'img'}, [], '')]),
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 1? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style1',}, [html.div({class:'img'}, [], 'ᒍ')]),
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 2? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style2',}, [html.div({class:'img'}, [], '∧')]),
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 3? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style3',}, [html.div({class:'img'}, [], 'ᒐ')]),
+                                html.button({type:'button', class:`btn ${arrow.tail_style_id == 4? 'btn-secondary':'btn-dark'}`, onclick:onbuttonclick, id:'arrow-tail-style4',}, [html.div({class:'img'}, [], '‒')]),
+                            ]),
+                    ]),
+            );
         }
-
         return html.div(
             {
                 id: 'arrow-toolbar',
-                class: 'bottom right short-axis-group group-dark group-round control',
+                class: 'short-axis-group',
             },
             panels);
     }

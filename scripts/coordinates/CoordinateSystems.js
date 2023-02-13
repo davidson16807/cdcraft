@@ -55,6 +55,39 @@ function AffineRemapping(mapping){
 }
 
 /*
+`LinearMap` defines an linear coordinate system in terms of another linear coordinate system.
+An alternate name could be `PanZoomRotateFlipShear`, but we avoid this name for brevity.
+*/
+class LinearMap {
+    constructor(ihat, jhat){
+        this.ihat = ihat;
+        this.jhat = jhat;
+    }
+}
+
+/*
+`LinearMapping` describes how objects expressed in one linear coordinate system 
+can be reexpressed in terms of another (`apply()`) and vice versa (`revert()`) 
+Here, an "object" can refer to a position, an offset, or another linear coordinate system.
+NOTE: `apply()` exists but is not implemented yet
+*/
+function LinearMapping(map) {
+    const namespace = {}
+
+    namespace.position = {
+        apply:  (position) => glm.vec2(glm.dot(map.ihat, position), glm.dot(map.jhat, position)),
+        revert: (position) => glm.add(map.ihat.mul(position.x), map.jhat.mul(position.y)),
+    };
+
+    namespace.offset = {
+        apply:  (offset) => glm.vec2(glm.dot(map.ihat, offset), glm.dot(map.jhat, offset)),
+        revert: (offset) => glm.add(map.ihat.mul(offset.x), map.jhat.mul(offset.y)),
+    };
+
+    return namespace;
+}
+
+/*
 `PanZoomRotateFlipMap` defines a cartesian coordinate system that can be expressed
 in terms of another cartesian coordinate system using only translation and orthogonal transformations.
 */
@@ -188,6 +221,72 @@ function PanZoomRemapping(mapping){
             ),
     }
 
+}
+
+/*
+`PanZoomRotateMap` defines a cartesian coordinate system that can be expressed
+in terms of another cartesian coordinate system using only translation and orthonormal transformations.
+*/
+class ZoomRotateMap {
+    constructor(ihat){
+        this.ihat = ihat;
+    }
+}
+
+/*
+`ZoomRotateMapping` describes how objects expressed in one coordinate system 
+can be reexpressed in terms of another (`apply()`) and vice versa (`revert()`) 
+when the other coordinate system is defined using only scaling and orthonormal translation.
+Here, an "object" can refer to a position, an offset, or another coordinate system.
+*/
+function ZoomRotateMapping(map) {
+    const namespace = {}
+    const jhat = glm.vec2(-map.ihat.y, map.ihat.x);
+
+    namespace.position = {
+        apply:  (position) => glm.vec2(glm.dot(map.ihat, position), glm.dot(jhat, position)),
+        revert: (position) => glm.add(map.ihat.mul(position.x), jhat.mul(position.y)),
+    };
+
+    namespace.offset = {
+        apply:  (offset) => glm.vec2(glm.dot(map.ihat, offset), glm.dot(jhat, offset)),
+        revert: (offset) => glm.add(map.ihat.mul(offset.x), jhat.mul(offset.y)),
+    };
+
+    namespace.distance = {
+        apply:  (distance) => distance / glm.length(ihat),
+        revert: (distance) => distance * glm.length(ihat),
+    }
+
+    return namespace;
+}
+
+
+/*
+`IdentityMapping` describes how objects expressed in one linear coordinate system 
+can be reexpressed in terms of another (`apply()`) and vice versa (`revert()`) 
+Here, an "object" can refer to a position, an offset, or another linear coordinate system.
+NOTE: `apply()` exists but is not implemented yet
+*/
+function IdentityMapping() {
+    const namespace = {}
+
+    namespace.position = {
+        apply:  (position) => position,
+        revert: (position) => position,
+    };
+
+    namespace.offset = {
+        apply:  (offset) => offset,
+        revert: (offset) => offset,
+    };
+
+    namespace.distance = {
+        apply:  (distance) => distance,
+        revert: (distance) => distance,
+    }
+
+    return namespace;
 }
 
 class CartesianToRadialMap {

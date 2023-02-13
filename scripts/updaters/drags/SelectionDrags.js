@@ -15,13 +15,13 @@ function SelectionDrags(
                 move: (model_offset, screen_positions, cell_to_pixel) => 
                     PanZoomMapping(cell_to_pixel).offset.revert(screen_positions[0].sub(original_screen_position)),
                 wheel: (model_offset, screen_focus, scroll_count) => model_offset,
-                arrowenter: (model_offset, arrow) => model_offset,
+                arrowenter: (model_offset, screen_positions, screen_state, arrow) => model_offset,
                 arrowleave: (model_offset, screen_position, model_to_screen) => model_offset,
                 objectenter: (model_offset, object) => model_offset,
                 // delete the object and its arrows if canceled, otherwise move the object and its arrows
                 command: (model_offset, is_released, is_canceled) => diagram => {
                     const cell_positions = position_map_operations.offset(
-                        resource_operations.update(
+                        resource_operations.post(
                             arrow_positions_resource.get(initial_diagram.arrow_selections.map(id => initial_diagram.arrows[id])),
                             object_position_resource.get(initial_diagram.object_selections.map(id => initial_diagram.objects[id])),
                             object_position_resource.get(initial_diagram.inferred_object_selections),

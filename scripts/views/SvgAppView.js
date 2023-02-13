@@ -10,11 +10,12 @@ function SvgAppView(dependencies, onevents) {
     const svg_object_view            = dependencies.svg_object_view;
     const svg_arrow_view             = dependencies.svg_arrow_view;
     const svg_object_selection_view  = dependencies.svg_object_selection_view;
-    const html_object_toolbar_view   = dependencies.html_object_toolbar_view;
-    const html_arrow_toolbar_view    = dependencies.html_arrow_toolbar_view;
     const svg_arrow_selection_view   = dependencies.svg_arrow_selection_view;
     const svg_arrow_midpoint_view    = dependencies.svg_arrow_midpoint_view;
     const view_event_deferal         = dependencies.view_event_deferal;
+    const html_object_toolbar_view   = dependencies.html_object_toolbar_view;
+    const html_arrow_toolbar_view    = dependencies.html_arrow_toolbar_view;
+    const html_multientity_toolbar_view = dependencies.html_multientity_toolbar_view;
 
     onevents = onevents || {};
 
@@ -58,19 +59,35 @@ function SvgAppView(dependencies, onevents) {
 
         if (old_app == null || 
             old_app.diagram.arrows != new_app.diagram.arrows ||
+            old_app.diagram.arrow_selections != new_app.diagram.arrow_selections ||
+            old_app.diagram.objects != new_app.diagram.objects ||
+            old_app.diagram.object_selections != new_app.diagram.object_selections || 
+            old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
+
+            if (!(new Set(['arrow-label','object-symbol','object-label']).has(trigger))){
+                dom_io.getElementById('multientity-toolbar')
+                    .replaceWith(html_multientity_toolbar_view.draw(dom_io, new_app, 
+                        (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
+                    ));
+            }
+        }
+
+        if (old_app == null || 
+            old_app.diagram.arrows != new_app.diagram.arrows ||
             old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
 
-            if (trigger != 'arrow-text'){
+            if (trigger != 'arrow-label'){
                 dom_io.getElementById('arrow-toolbar')
                     .replaceWith(html_arrow_toolbar_view.draw(dom_io, new_app, 
                         (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
                         (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
                     ));
+                dom_io.getElementById('arrow-label')?.focus();
             }
 
             const arrow_selections_list = new_app.diagram.arrow_selections
-                    .map(id => new_app.diagram.arrows[id])
-                    .filter(arrow => arrow != null);
+                .map(id => new_app.diagram.arrows[id])
+                .filter(arrow => arrow != null);
             dom_io.getElementById('arrow-selections')
                 .replaceChildren(...arrow_selections_list
                     .map(arrow => 
@@ -95,12 +112,13 @@ function SvgAppView(dependencies, onevents) {
             old_app.diagram.object_selections != new_app.diagram.object_selections || 
             old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
 
-            if (trigger != 'object-text'){
+            if (!(new Set(['object-symbol','object-label']).has(trigger))){
                 dom_io.getElementById('object-toolbar')
                     .replaceWith(html_object_toolbar_view.draw(dom_io, new_app, 
                         (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
                         (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
                     ));
+                dom_io.getElementById('object-label')?.focus();
             }
 
             const object_selections = [
@@ -130,7 +148,7 @@ function SvgAppView(dependencies, onevents) {
             old_app.diagram.objects != new_app.diagram.objects || 
             old_app.drag_type != new_app.drag_type) {
             const inferred_objects = 
-                object_position_resource.post(
+                object_position_resource.post([],
                     resource_operations.delete(
                         arrow_positions_resource.get(new_app.diagram.arrows),
                         object_position_resource.get(new_app.diagram.objects)

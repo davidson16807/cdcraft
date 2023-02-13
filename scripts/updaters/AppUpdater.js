@@ -14,9 +14,10 @@ function AppUpdater(
     const arrow_drags               = dependencies.arrow_drags;
     const view_drags                = dependencies.view_drags;
     const screen_state_storage      = dependencies.screen_state_storage;
-    const object_position_resources = dependencies.object_position_resources;
     const drag_ops                  = dependencies.drag_state_ops;
     const history                   = dependencies.app_history_traversal;
+    const diagram_object_resources  = dependencies.diagram_object_resources;
+    const diagram_arrow_resources   = dependencies.diagram_arrow_resources;
 
     /* 
     functions mapping app×event→app 
@@ -63,64 +64,86 @@ function AppUpdater(
     };
 
     /* 
+    functions mapping function→app×event→app
+    where the function app×event→app is an action that represents a change to a selection of some kind
+    */
+    const selection_actions_curried = {
+        object: update_object => (app_io, event) => {
+            const diagram = app_io.diagram;
+            const inferred = diagram.inferred_object_selections;
+            const explicit = diagram.object_selections;
+            history.do(app_io, 
+                inferred.length == 1?
+                    diagram_object_resources.inferred.put(diagram, 0, 
+                        update_object(inferred[0], event))
+              : explicit.length == 1?
+                    diagram_object_resources.explicit.put(diagram, explicit[0],
+                        update_object(diagram.objects[explicit[0]], event))
+              : diagram,
+                true);
+        },
+        arrow: update_arrow => (app_io, event) => {
+            const diagram = app_io.diagram;
+            const arrows = diagram.arrow_selections;
+            history.do(app_io, 
+                arrows.length == 1?
+                    diagram_arrow_resources.put(diagram, arrows[0],
+                        update_arrow(diagram.arrows[arrows[0]], event))
+              : diagram,
+                true);
+        },
+        multientity: update_entity => (app_io, event) => {
+            const diagram = app_io.diagram;
+            const arrows = [...diagram.arrows];
+            const objects = [...diagram.objects];
+            const object_selections = [...diagram.object_selections];
+            const inferred_object_selections = [...diagram.inferred_object_selections];
+            diagram.arrow_selections.forEach(id => { arrows[id] = update_entity(arrows[id], event); });
+            diagram.object_selections.forEach(id => { objects[id] = update_entity(objects[id], event) });
+            diagram.inferred_object_selections.forEach((object, i) => { 
+                inferred_object_selections.splice(i, 1);
+                object_selections.push(objects.length);
+                objects.push(update_entity(object, event));
+            });
+            history.do(app_io, 
+                diagram.with({
+                    arrows: arrows,
+                    objects: objects,
+                    object_selections: object_selections,
+                    inferred_object_selections: inferred_object_selections,
+                }), true);
+        }
+    }
+
+    /* 
     functions mapping app×text→app 
     where the event must represent a change in a text field
     */
     const text_actions = {
-
-        object_text: function(app_io, event) {
-            const diagram_in = app_io.diagram;
-            const objects_in = diagram_in.objects;
-            if (diagram_in.inferred_object_selections.length == 1) {
-                // promote the inferred object to a discrete object
-                const object_in = diagram_in.inferred_object_selections[0];
-                const object_out = object_in.with({ 
-                    depiction: event.currentTarget.value, 
-                });
-                const diagram_out = diagram_in.with({
-                    objects: [...objects_in, object_out],
-                    inferred_object_selections: [],
-                    object_selections: [objects_in.length],
-                });
-                history.do(app_io, diagram_out, true);
-            } else if (diagram_in.object_selections.length == 1) {
-                // change the inferred object in place
-                const object_id = diagram_in.object_selections[0];
-                const objects_before = objects_in.slice(0,object_id);
-                const objects_after = objects_in.slice(object_id+1);
-                const object_in = objects_in[object_id];
-                const object_out = object_in.with({ 
-                    depiction: event.currentTarget.value, 
-                });
-                const diagram_out = diagram_in.with({
-                    objects: [...objects_before, object_out, ...objects_after],
-                });
-                history.do(app_io, diagram_out, true);
-            }
-        },
-
-        arrow_text: function(app_io, event) {
-            const diagram_in = app_io.diagram;
-            const arrows_in = diagram_in.arrows;
-            if (diagram_in.arrow_selections.length == 1) {
-                const arrow_id = diagram_in.arrow_selections[0];
-                const arrow_in = diagram_in.arrows[arrow_id];
-                const arrows_before = arrows_in.slice(0,arrow_id);
-                const arrows_after = arrows_in.slice(arrow_id+1);
-                const arrow_out = arrow_in.with({ 
-                    label: event.currentTarget.value 
-                });
-                const diagram_out = diagram_in.with({
-                    arrows: [...arrows_before, arrow_out, ...arrows_after],
-                });
-                history.do(app_io, diagram_out, true);
-            }
-        }
+        arrow_label: selection_actions_curried.arrow((arrow,event) => arrow.with({label: event.currentTarget.value})),
+        object_symbol: selection_actions_curried.object((object,event) => object.with({symbol: event.currentTarget.value})),
+        object_label: selection_actions_curried.object((object,event) => object.with({label: event.currentTarget.value})),
     };
+
+    /* 
+    functions mapping entity×text→app 
+    where `entity` is some entity in the diagram (e.g. an arrow or object)
+    */
+    const entity_actions_curried = {
+        label_offset_id_toggle: label_offset_id => (entity, event) => 
+            entity.with({
+                label_offset_id: 
+                    entity.label_offset_id == null || 
+                    entity.label_offset_id.x != label_offset_id.x || 
+                    entity.label_offset_id.y != label_offset_id.y? 
+                        label_offset_id : null
+            }),
+        set_property: (property, value) => (arrow, event) => arrow.with(Object.fromEntries([[property, value]])),
+    }
 
     /*
     // functions mapping app×event→app 
-    where the event needs no specialization
+    where the event need carry no information beyond the fact that it occurred, such as a button press
     */
     const generic_actions = {
 
@@ -148,6 +171,43 @@ function AppUpdater(
                 }), false);
             }
         },
+
+        object_label_left:          selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,0))),
+        object_label_right:         selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,0))),
+        object_label_topleft:       selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,1))),
+        object_label_topright:      selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,1))),
+        object_label_bottomleft:    selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,-1))),
+        object_label_bottomright:   selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,-1))),
+
+        arrow_label_outside:        selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,1))),
+        arrow_label_inside:         selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,-1))),
+
+        arrow_head_style0:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 0)),
+        arrow_head_style1:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 1)),
+        arrow_head_style2:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 2)),
+        arrow_head_style3:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 3)),
+        arrow_head_style4:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 4)),
+
+        arrow_line_count0:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 0)),
+        arrow_line_count1:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 1)),
+        arrow_line_count2:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 2)),
+        arrow_line_count3:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 3)),
+
+        arrow_line_style0:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 0)),
+        arrow_line_style1:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 1)),
+        arrow_line_style2:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 2)),
+        
+        arrow_tail_style0:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 0)),
+        arrow_tail_style1:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 1)),
+        arrow_tail_style2:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 2)),
+        arrow_tail_style3:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 3)),
+        arrow_tail_style4:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 4)),
+        
+        multientity_color_green:    selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'green')),
+        multientity_color_blue:     selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'blue')),
+        multientity_color_red:      selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'red')),
+        multientity_color_yellow:   selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'yellow')),
+        multientity_color_contrast: selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'contrast')),
     }
 
     const key_bindings = {
@@ -157,14 +217,9 @@ function AppUpdater(
     }
 
     const text_bindings = {
-        'object-text': 'object_text',
-        'arrow-text': 'arrow_text',
-    }
-
-    const button_bindings = {
-        'undo': 'undo',
-        'redo': 'redo',
-        'toggle-grid': 'toggle_grid',
+        'object-symbol': 'object_symbol',
+        'object-label': 'object_label',
+        'arrow-label': 'arrow_label',
     }
 
     const mousedown_bindings = [
@@ -244,13 +299,10 @@ function AppUpdater(
         },
 
         buttonclick: function(event, drawing, app_io, dom_io){
-            const action_id = button_bindings[event.currentTarget.id];
-            if (action_id!=null) {
-                const action = generic_actions[action_id];
-                if (action!=null) {
-                    action(app_io, event);
-                    drawing.redraw(undefined, app_io, dom_io);
-                }
+            const action = generic_actions[event.currentTarget.id.replaceAll('-','_')];
+            if (action!=null) {
+                action(app_io, event);
+                drawing.redraw(undefined, app_io, dom_io);
             }
         },
 
@@ -288,7 +340,7 @@ function AppUpdater(
                 }
                 if (event.buttons == 1 && !arrow.is_edited) {
                     event.stopPropagation();
-                    drag_ops.arrowenter(arrow, app_io);
+                    drag_ops.arrowenter([glm.vec2(event.clientX, event.clientY)], arrow, app_io);
                     drawing.redraw(undefined, app_io, dom_io);
                 }
             }
@@ -308,7 +360,8 @@ function AppUpdater(
                 const screen_position = glm.vec2(event.clientX, event.clientY);
                 const screen_state = screen_state_storage.unpack(app_io.diagram.screen_frame_store);
                 const model_position = PanZoomMapping(screen_state).position.revert(screen_position);
-                drag_ops.transition(arrow_drags.create_2arrow(app_io.diagram.arrows, model_position, arrow), app_io);
+                // drag_ops.transition(arrow_drags.create_2arrow(app_io.diagram.arrows, model_position, arrow), app_io);
+                drag_ops.transition(arrow_drags.create(app_io.diagram.arrows, model_position, arrow), app_io);
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },

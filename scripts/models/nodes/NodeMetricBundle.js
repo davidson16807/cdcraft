@@ -1,7 +1,7 @@
 'use strict';
 
 
-function UserNodeMetricBundle(position_metric_bundle){
+function NodeMetricBundle(position_metric_bundle){
     const vectors = position_metric_bundle;
     return {
         /*
@@ -19,7 +19,7 @@ function UserNodeMetricBundle(position_metric_bundle){
         */
         bundle: (node) => {
             return (node.reference == null? 
-                new UserNode(position_metric_bundle.bundle(node.position), null) : 
+                new Node(position_metric_bundle.bundle(node.position), null) : 
                 node);
         },
     }

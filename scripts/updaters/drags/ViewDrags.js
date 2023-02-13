@@ -49,7 +49,7 @@ function ViewDrags(
                     });
                 },
                 wheel: (cell_to_pixel_store, screen_focus, scroll_count) => cell_to_pixel_store,
-                arrowenter: (state, arrow) => state,
+                arrowenter: (state, screen_positions, screen_state, arrow) => state,
                 arrowleave: (state, screen_position, model_to_screen) => state,
                 objectenter: (state, object) => state,
                 command: (cell_to_pixel_store, is_released, is_canceled) => 
@@ -87,7 +87,7 @@ function ViewDrags(
                             updated_log2_cell_width
                         );
                 },
-                arrowenter: (state, arrow) => state,
+                arrowenter: (state, screen_positions, screen_state, arrow) => state,
                 arrowleave: (state, screen_position, model_to_screen) => state,
                 objectenter: (state, object) => state,
                 command: (cell_to_pixel_store, is_released, is_canceled) => 

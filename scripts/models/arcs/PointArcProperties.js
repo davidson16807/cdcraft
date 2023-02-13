@@ -1,33 +1,36 @@
 'use strict';
 
 /*
-`ArcGeometry` returns a namespace of pure functions describing useful analytic geometry of arcs
+`PointArcProperties` returns a namespace of pure functions describing properties for any point along a `SamplerArc`
 */
-function ArcGeometry(){
-    const pi = Math.PI;
-    const pow = Math.pow;
-    const acos = Math.acos;
-    const cos = Math.cos;
-    const sin = Math.sin;
-    const min = Math.min;
-    const max = Math.max;
-    const sign = Math.sign;
-    const abs = Math.abs;
+function PointArcProperties(glm, math){
+    const pi = math.PI;
+    const pow = math.pow;
+    const acos = math.acos;
+    const cos = math.cos;
+    const sin = math.sin;
+    const min = math.min;
+    const max = math.max;
+    const sign = math.sign;
+    const abs = math.abs;
     const epsilon = 1e-6;
     return {
-        origin: function(source, target, min_length_clockwise, radius){
-            const chord = target.sub(source);
+        chord_length: (arc) => glm.distance(arc.target, arc.source),
+        chord_offset: (arc) => glm.sub(arc.target, arc.source),
+        chord_direction: (arc) => glm.normalize(glm.sub(arc.target, arc.source)),
+        origin: function(arc, radius){
+            const chord = arc.target.sub(arc.source);
             const chord_length = glm.length(chord);
             const chord_direction = glm.normalize(chord);
-            const min_radius = abs(min_length_clockwise) / pi;
+            const min_radius = abs(arc.min_length_clockwise) / pi;
             const v = chord_direction.mul(radius);
-            const theta = acos(chord_length/(2*radius)) * (chord_length < 2*min_radius? 1:-1) * -sign(min_length_clockwise);
+            const theta = acos(chord_length/(2*radius)) * (chord_length < 2*min_radius? 1:-1) * -sign(arc.min_length_clockwise);
             return glm.vec2(
                 v.x * cos(theta) - v.y * sin(theta),
                 v.x * sin(theta) + v.y * cos(theta),
-            ).add(source);
+            ).add(arc.source);
         },
-        radius: function(source, target, min_length_clockwise){
+        radius: function(arc){
             /*
             NOTE: 
             Given the source position, target position, and length of an arc, we want to find the radius of the circle that is traced by the arc.
@@ -51,10 +54,10 @@ function ArcGeometry(){
             And our solution is:
               r ≈ A / (2 (1-a(x/A)ᵇ) acos(x/A))
             */
-            const arc_length = abs(min_length_clockwise);
+            const arc_length = abs(arc.min_length_clockwise);
             const a = 0.147;
             const b = 0.650;
-            const x = glm.distance(source, target) / 2.0;
+            const x = glm.distance(arc.source, arc.target) / 2.0;
             const A = max(x, arc_length/2 );
             const xA = min(x/A, 1-epsilon);
             const r = A / (2.0 * (1.0 - a*pow(xA, b)) * acos(xA));
