@@ -76,7 +76,7 @@ function HtmlObjectToolbarView(dependencies) {
         return html.div(
             {
                 id: 'object-toolbar',
-                class: 'bottom right short-axis-group group-dark group-round control',
+                class: 'short-axis-group',
             },
             panels);
     }

@@ -91,6 +91,12 @@ function AppUpdater(
                         update_arrow(diagram.arrows[arrows[0]], event))
               : diagram,
                 true);
+        },
+        multientity: update_entity => (app_io, event) => {
+            const diagram = app_io.diagram;
+            const arrows = [...diagram.arrows];
+            diagram.arrow_selections.forEach(id => { arrows[id] = update_entity(arrows[id], event); });
+            history.do(app_io, diagram.with({arrows: arrows}), true);
         }
     }
 
@@ -103,7 +109,6 @@ function AppUpdater(
         object_symbol: selection_actions_curried.object((object,event) => object.with({symbol: event.currentTarget.value})),
         object_label: selection_actions_curried.object((object,event) => object.with({label: event.currentTarget.value})),
     };
-
 
     /* 
     functions mapping entity×text→app 
@@ -152,42 +157,42 @@ function AppUpdater(
             }
         },
 
-        object_label_left:        selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,0))),
-        object_label_right:       selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,0))),
-        object_label_topleft:     selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,1))),
-        object_label_topright:    selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,1))),
-        object_label_bottomleft:  selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,-1))),
-        object_label_bottomright: selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,-1))),
+        object_label_left:          selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,0))),
+        object_label_right:         selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,0))),
+        object_label_topleft:       selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,1))),
+        object_label_topright:      selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,1))),
+        object_label_bottomleft:    selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(-1,-1))),
+        object_label_bottomright:   selection_actions_curried.object(entity_actions_curried.label_offset_id_toggle(glm.ivec2(1,-1))),
 
-        arrow_label_outside:      selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,1))),
-        arrow_label_inside:       selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,-1))),
+        arrow_label_outside:        selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,1))),
+        arrow_label_inside:         selection_actions_curried.arrow(entity_actions_curried.label_offset_id_toggle(glm.ivec2(0,-1))),
 
-        arrow_head_style0:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 0)),
-        arrow_head_style1:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 1)),
-        arrow_head_style2:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 2)),
-        arrow_head_style3:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 3)),
-        arrow_head_style4:        selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 4)),
+        arrow_head_style0:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 0)),
+        arrow_head_style1:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 1)),
+        arrow_head_style2:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 2)),
+        arrow_head_style3:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 3)),
+        arrow_head_style4:          selection_actions_curried.arrow(entity_actions_curried.set_property('head_style_id', 4)),
 
-        arrow_line_count0:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 0)),
-        arrow_line_count1:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 1)),
-        arrow_line_count2:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 2)),
-        arrow_line_count3:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 3)),
+        arrow_line_count0:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 0)),
+        arrow_line_count1:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 1)),
+        arrow_line_count2:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 2)),
+        arrow_line_count3:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_count', 3)),
 
-        arrow_line_style0:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 0)),
-        arrow_line_style1:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 1)),
-        arrow_line_style2:        selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 2)),
+        arrow_line_style0:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 0)),
+        arrow_line_style1:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 1)),
+        arrow_line_style2:          selection_actions_curried.arrow(entity_actions_curried.set_property('line_style_id', 2)),
         
-        arrow_tail_style0:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 0)),
-        arrow_tail_style1:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 1)),
-        arrow_tail_style2:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 2)),
-        arrow_tail_style3:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 3)),
-        arrow_tail_style4:        selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 4)),
+        arrow_tail_style0:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 0)),
+        arrow_tail_style1:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 1)),
+        arrow_tail_style2:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 2)),
+        arrow_tail_style3:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 3)),
+        arrow_tail_style4:          selection_actions_curried.arrow(entity_actions_curried.set_property('tail_style_id', 4)),
         
-        arrow_color_green:        selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'green')),
-        arrow_color_blue:         selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'blue')),
-        arrow_color_red:          selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'red')),
-        arrow_color_yellow:       selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'yellow')),
-        arrow_color_contrast:     selection_actions_curried.arrow(entity_actions_curried.set_property('color', 'contrast')),
+        multientity_color_green:    selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'green')),
+        multientity_color_blue:     selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'blue')),
+        multientity_color_red:      selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'red')),
+        multientity_color_yellow:   selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'yellow')),
+        multientity_color_contrast: selection_actions_curried.multientity(entity_actions_curried.set_property('color', 'contrast')),
     }
 
     const key_bindings = {
