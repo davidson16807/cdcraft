@@ -215,7 +215,7 @@ const stored_arcs_and_point_arcs_curried =
         stored_curried_arc_properties,
     );
 
-const user_curried_arcs_and_stored_arcs =
+const user_arcs_curried_and_stored_arcs =
     UserArcsAndStoredArcsCurried(
         stored_arcs_and_point_arcs_curried,
         stored_curried_arc_properties,
@@ -344,12 +344,12 @@ const svg_arrow_toolbar_view =
 const node_hashing = NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math));
 
 const arrow_reference_resource = 
-    ArrowReferenceResource(user_curried_arcs_and_stored_arcs, node_hashing);
+    ArrowReferenceResource(user_arcs_curried_and_stored_arcs, node_hashing);
 
 const arrow_positions_resource = 
     ArrowPositionsResource(
         arrow_reference_resource,
-        user_curried_arcs_and_stored_arcs,
+        user_arcs_curried_and_stored_arcs,
         node_hashing);
 
 const object_position_resource = 
@@ -373,13 +373,13 @@ const arrow_drags =
         node_hashing, 
         node_metric_bundle,
         AbstractArrowDragCurried(
-            user_curried_arcs_and_stored_arcs, 
+            user_arcs_curried_and_stored_arcs, 
             stored_arcs_and_point_arcs_curried, 
             Math,
             0.001 // min_length_clockwise_change_per_scroll
         ),
         arrow_reference_resource,
-        user_curried_arcs_and_stored_arcs,
+        user_arcs_curried_and_stored_arcs,
         1.0, // default_min_length_clockwise
     );
 

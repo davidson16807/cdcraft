@@ -52,7 +52,7 @@ function SvgArrowView(dependencies, settings) {
     const line_style = [
         '',
         `${2*arrow_line_width} ${arrow_line_width}`,
-        `${arrow_line_width} ${arrow_line_width}`,
+        `${arrow_line_width} ${2*arrow_line_width}`,
     ];
 
     const head_style = [

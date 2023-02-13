@@ -1,8 +1,8 @@
 'use strict';
 
 function AbstractArrowDragCurried(
-        user_curried_arcs_and_stored_arcs, 
-        stored_curried_arcs_and_point_arcs, 
+        user_arcs_curried_and_stored_arcs, 
+        stored_arcs_curried_and_point_arcs, 
         math,
         min_length_clockwise_change_per_scroll,
     ){
@@ -10,7 +10,7 @@ function AbstractArrowDragCurried(
     const abs = math.abs;
     const max = math.max;
     return (arrows) => {
-        const user_arcs_and_stored_arcs = user_curried_arcs_and_stored_arcs(arrows);
+        const user_arcs_and_stored_arcs = user_arcs_curried_and_stored_arcs(arrows);
         return {
             id: DragState.arrow,
             
@@ -26,7 +26,7 @@ function AbstractArrowDragCurried(
                 }),
 
             wheel: (arrow_in, screen_focus, scroll_count) => {
-                const point_arc = stored_curried_arcs_and_point_arcs(arrows).stored_arc_to_point_arc(arrow_in.arc)
+                const point_arc = stored_arcs_curried_and_point_arcs(arrows).stored_arc_to_point_arc(arrow_in.arc)
                 const min_length_clockwise_change = min_length_clockwise_change_per_scroll * scroll_count;
                 const chord_length = glm.distance(point_arc.source, point_arc.target);
                 const arc_length1 = 0.7;

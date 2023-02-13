@@ -273,7 +273,6 @@ function AppUpdater(
         },
 
         buttonclick: function(event, drawing, app_io, dom_io){
-            console.log(event.currentTarget.id.replace('-','_'))
             const action = generic_actions[event.currentTarget.id.replaceAll('-','_')];
             if (action!=null) {
                 action(app_io, event);

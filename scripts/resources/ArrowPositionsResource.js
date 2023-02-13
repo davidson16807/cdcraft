@@ -6,7 +6,7 @@ on source and target positions within a list of arrows.
 */
 function ArrowPositionsResource(
         arrow_reference_resource, 
-        user_curried_arcs_and_stored_arcs, 
+        user_arcs_curried_and_stored_arcs, 
         node_hashing
     ){
     return {
@@ -28,7 +28,7 @@ function ArrowPositionsResource(
         },
 
         put: function(arrows, point_to_point) {
-            const user_arcs_and_stored_arcs = user_curried_arcs_and_stored_arcs(arrows);
+            const user_arcs_and_stored_arcs = user_arcs_curried_and_stored_arcs(arrows);
             const updated_arrows = [];
             for(let arrow of arrows){
                 /*

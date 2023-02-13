@@ -41,4 +41,4 @@ decouple state for model/view to support soft undo/redo
 refactor so app operations return new app objects
 refactor so that toolbar buttons work through `data-*` variables
 rename: target→head, source→tail
-fix naming on "curried_arcs"
+represent arrow heads and tails using svg paths and transforms

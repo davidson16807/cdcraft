@@ -4,7 +4,7 @@
 `UserArcsAndStoredArcsCurried` returns a namespace of pure functions that describe maps between `UserArc`s and `StoredArc`s
 */
 function UserArcsAndStoredArcsCurried(
-    stored_curried_arcs_and_point_arcs,
+    stored_arcs_curried_and_point_arcs,
     stored_curried_arc_properties,
     node_metric_bundle, 
     diagram_ids,
@@ -15,7 +15,7 @@ function UserArcsAndStoredArcsCurried(
     max_nonloop_snap_distance,
 ) {
     return arrows => {
-        const stored_arcs_and_point_arcs = stored_curried_arcs_and_point_arcs(arrows);
+        const stored_arcs_and_point_arcs = stored_arcs_curried_and_point_arcs(arrows);
         const stored_arc_properties = stored_curried_arc_properties(stored_arcs_and_point_arcs, arrows);
         return {
             user_arc_to_stored_arc: (arc) => {
