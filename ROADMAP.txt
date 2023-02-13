@@ -4,13 +4,10 @@ HIGH PRIORITY:
 latex export/import 
 url export/import
 svg export
-object labels should float over bullet point when they are too big to fit where the bullet point is
 
 MEDIUM PRIORITY:
 double click on arrow/object to focus on text box
 circle cursor on rmb
-object label positioning
-arrow label positioning
 arrow curvature slider
 arrow color select
 arrow decorations
@@ -21,7 +18,6 @@ fix bug where dragging one named object on top of another causes overlap
 	we likely need to store objects in a structure indexed by cell hash, so this problem could not fundamentally occur
 
 LOW PRIORITY:
-arrow/object label toggle for latex/plaintext default
 arrow trim slider
 arrow offset slider
 arrow flip/reverse operations
@@ -30,6 +26,8 @@ refresh grids on window resize
 ctrl+A to select all
 copy/paste
 rotate/flip/mirror selections
+automatic object label positioning: use gradient of summed sdfs of objects/arrows in 1 cell's distance
+draggable arrow/object labels
 
 REFACTOR:
 decouple state for model/view to support soft undo/redo
