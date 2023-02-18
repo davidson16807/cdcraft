@@ -1,17 +1,21 @@
 TODO:
 
+SUMMARY:
+import/export formats
+arrow/object features
+user interface
+
 HIGH PRIORITY:
 latex export/import 
 url export/import
 svg export
 
 MEDIUM PRIORITY:
+fix bug where explicit objects persist after deletion
 circle cursor on rmb
 add zoom support to touchpad
 add selection support to touchpad
 fix bug where panning with touchpad resets the display
-fix bug where dragging one named object on top of another causes overlap
-	we likely need to store objects in a structure indexed by cell hash, so this problem could not fundamentally occur
 
 LOW PRIORITY:
 arrow curvature slider
@@ -23,7 +27,8 @@ refresh grids on window resize
 ctrl+A to select all
 copy/paste
 rotate/flip/mirror selections
-automatic object label positioning: use gradient of summed sdfs of objects/arrows in 1 cell's distance
+automatic object label positioning: 
+	use gradient of summed sdfs of objects/arrows in 1 cell's distance
 draggable arrow/object labels
 barred arrows
 squiggly arrows
@@ -35,6 +40,9 @@ about/welcome sidebar
 double arrow heads/tails
 redraw grid on window resize
 set trim of arrow heads and tails to reflect slope of the specified 
+set scroll wheel to zoom in/out during pan drags
+modify multientity toolbar to always display
+	so that it can be used to specify defaults for arrows/objects
 
 REFACTOR:
 decouple state for model/view to support soft undo/redo
@@ -43,3 +51,5 @@ refactor so that toolbar buttons work through `data-*` variables
 represent arrow heads and tails using svg paths and transforms
 gather all diagram object arrays into a single class
 remove calculation of offsetWidth/offsetHeight and use css floats in SvgArrowView
+refactor so that arrow drags are degenerate selection drags, 
+	and add head/tail handles to drag arrow source and target

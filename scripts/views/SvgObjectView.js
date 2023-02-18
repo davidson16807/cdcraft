@@ -32,7 +32,8 @@ function SvgObjectView(dependencies, highlight_width) {
         const label = html.div({
             style:svg_object_attributes.label_offset_id_to_style(label_offset_id),
         }, [], object.label || '');
-        const color_class = object.color.startsWith('#')? '':'object-'+object.color;
+        const object_color = object.color??'contrast';
+        const color_class = object_color.startsWith('#')? '':'object-'+object_color;
         const inner_g = svg.g(
             {
                 class: drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',

@@ -5,7 +5,7 @@
 in a way that can be easily manipulated by the application 
 while guaranteeing correctness for all real valued attributes.
 "Correctness" here entails the user expectations will not be violated,
-namely that the screen is not inverted, so cell_width>0.
+for instance that the screen is not inverted and therefore cell_width>0.
 */
 class ScreenStateStore {
     constructor(topleft_cell_position, log2_cell_width){
