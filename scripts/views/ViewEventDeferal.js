@@ -8,23 +8,23 @@ with information about the object and drawing.
 This is done so that functions in `*View` namespaces can defer side effects 
 to callbacks provided by higher levels of object composition outside the `*View` class.
 */
-function ViewEventDeferal(drawing, model, dom) {
-    return {
+const ViewEventDeferal = 
+    () => (drawing, app, dom) => 
+        ({
 
-        callback: onevent => event => { 
-            onevent(event, drawing, model, dom);
-        },
+            callback: onevent => event => { 
+                onevent(event, drawing, app, dom);
+            },
 
-        callbackPrevent: onevent => event => { 
-            event.preventDefault(); 
-            onevent(event, drawing, model, dom);
-        },
+            callbackPrevent: onevent => event => { 
+                event.preventDefault(); 
+                onevent(event, drawing, app, dom);
+            },
 
-        callbackPreventStop: onevent => event => { 
-            event.preventDefault(); 
-            event.stopPropagation();
-            onevent(event, drawing, model, dom);
-        },
+            callbackPreventStop: onevent => event => { 
+                event.preventDefault(); 
+                event.stopPropagation();
+                onevent(event, drawing, app, dom);
+            },
 
-    }
-}
+        });
