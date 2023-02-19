@@ -317,7 +317,7 @@ function AppUpdater(
             }
         },
 
-        arrowdown: function(event, drawing, arrow, app_io, dom_io){
+        arrowdown: (arrow) => (event, drawing, app_io, dom_io) => {
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow), app_io);
@@ -325,7 +325,7 @@ function AppUpdater(
             }
         },
 
-        arrowenter: function(event, drawing, arrow, app_io, dom_io){
+        arrowenter: (arrow) => (event, drawing, app_io, dom_io) => {
             /*
             Do not consider arrows unless they are found in the current diagram.
             Some arrows may not occur in the diagram if they were updated by an earlier event.
@@ -346,7 +346,7 @@ function AppUpdater(
             }
         },
 
-        arrowleave: function(event, drawing, arrow, app_io, dom_io){
+        arrowleave: (arrow) => (event, drawing, app_io, dom_io) => {
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.arrowleave([glm.vec2(event.clientX, event.clientY)], app_io);
@@ -354,7 +354,7 @@ function AppUpdater(
             }
         },
 
-        midpointdown: function(event, drawing, arrow, app_io, dom_io){
+        midpointdown: (arrow) => (event, drawing, app_io, dom_io) => {
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 const screen_position = glm.vec2(event.clientX, event.clientY);
@@ -366,7 +366,7 @@ function AppUpdater(
             }
         },
 
-        objectdown: function(event, drawing, object_, app_io, dom_io){
+        objectdown: (object_) =>(event, drawing, app_io, dom_io) => {
             if (event.buttons == 1 && !object_.is_edited) {
                 event.stopPropagation();
                 const object_id = app_io.diagram.objects.indexOf(object_);
@@ -389,7 +389,7 @@ function AppUpdater(
             }
         },
 
-        objectenter: function(event, drawing, object_, app_io, dom_io){
+        objectenter: (object_) =>(event, drawing, app_io, dom_io) => {
             if (event.buttons == 2 && !object_.is_edited) {
                 event.stopPropagation();
                 const object_id = app_io.diagram.objects.indexOf(object_);

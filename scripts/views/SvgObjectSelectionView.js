@@ -8,7 +8,7 @@ function SvgObjectSelectionView(dependencies, highlight_width) {
     const view_event_deferal         = dependencies.view_event_deferal;
 
     const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, object, onclick) {
+    drawing.draw = function(screen_frame_store, object, onclick) {
         const screen_frame = screen_state_storage.unpack(screen_frame_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
@@ -23,10 +23,9 @@ function SvgObjectSelectionView(dependencies, highlight_width) {
                     screen_mapping.position.apply(object.position)
                 ),
             ]);
-        const deferal = view_event_deferal(drawing, object, dom);
         if (onclick != null) {
-            g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
-            g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
+            g.addEventListener('mousedown',  onclick);
+            g.addEventListener('touchstart', onclick);
         }
         return g;
     }

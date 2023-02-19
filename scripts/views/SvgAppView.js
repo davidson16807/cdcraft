@@ -36,11 +36,11 @@ function SvgAppView(dependencies, onevents) {
                 .setAttribute('cursor', new_app.drag_type.id == 'released'? 'default' : 'move')
         }
 
-        if ((old_app?.undo_history?.length==0) != (new_app.undo_history.length==0)){
+        if ((old_app?.undo_history) != (new_app.undo_history)){
             dom_io.getElementById('undo').disabled = new_app.undo_history.length == 0;
         }
 
-        if ((old_app?.redo_history?.length==0) != (new_app.redo_history.length==0)){
+        if ((old_app?.redo_history) != (new_app.redo_history)){
             dom_io.getElementById('redo').disabled = new_app.redo_history.length == 0;
         }
 
@@ -52,6 +52,7 @@ function SvgAppView(dependencies, onevents) {
 
         const old_diagram = old_app?.diagram;
         const new_diagram = new_app.diagram;
+        const deferal = view_event_deferal(drawing, new_app, dom_io);
 
         if (old_diagram?.screen_frame_store != new_diagram.screen_frame_store) {
             dom_io
@@ -70,8 +71,8 @@ function SvgAppView(dependencies, onevents) {
 
             if (!(new Set(['arrow-label','object-symbol','object-label']).has(trigger))){
                 dom_io.getElementById('multientity-toolbar')
-                    .replaceWith(html_multientity_toolbar_view.draw(dom_io, new_app, 
-                        (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
+                    .replaceWith(html_multientity_toolbar_view.draw(new_app, 
+                        deferal.callback(onevents.buttonclick),
                     ));
             }
         }
@@ -81,9 +82,9 @@ function SvgAppView(dependencies, onevents) {
 
             if (trigger != 'arrow-label'){
                 dom_io.getElementById('arrow-toolbar')
-                    .replaceWith(html_arrow_toolbar_view.draw(dom_io, new_app, 
-                        (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
-                        (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
+                    .replaceWith(html_arrow_toolbar_view.draw(new_app, 
+                        deferal.callback(onevents.textinput),
+                        deferal.callback(onevents.buttonclick),
                     ));
                 dom_io.getElementById('arrow-label')?.focus();
             }
@@ -95,7 +96,6 @@ function SvgAppView(dependencies, onevents) {
                 .replaceChildren(...arrow_selections_list
                     .map(arrow => 
                         svg_arrow_selection_view.draw(
-                            dom_io,
                             new_diagram.screen_frame_store, 
                             arrow,
                             new_diagram.arrows)));
@@ -103,11 +103,10 @@ function SvgAppView(dependencies, onevents) {
                 .replaceChildren(...arrow_selections_list
                     .map(arrow => 
                         svg_arrow_selection_view.draw(
-                            dom_io,
                             new_diagram.screen_frame_store, 
                             arrow,
                             new_diagram.arrows,
-                            (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, new_app, dom_io))));
+                            deferal.callbackPrevent(onevents.selection_click))));
         }
 
         if (old_diagram?.objects != new_diagram.objects ||
@@ -116,9 +115,9 @@ function SvgAppView(dependencies, onevents) {
 
             if (!(new Set(['object-symbol','object-label']).has(trigger))){
                 dom_io.getElementById('object-toolbar')
-                    .replaceWith(html_object_toolbar_view.draw(dom_io, new_app, 
-                        (event, object_drawing, app, dom2) => onevents.textinput(event, drawing, new_app, dom_io),
-                        (event, object_drawing, app, dom2) => onevents.buttonclick(event, drawing, new_app, dom_io),
+                    .replaceWith(html_object_toolbar_view.draw(new_app, 
+                        deferal.callback(onevents.textinput),
+                        deferal.callback(onevents.buttonclick),
                     ));
                 dom_io.getElementById('object-label')?.focus();
             }
@@ -133,17 +132,15 @@ function SvgAppView(dependencies, onevents) {
                 .replaceChildren(...object_selections
                     .map(object => 
                         svg_object_selection_view.draw(
-                            dom_io,
                             new_diagram.screen_frame_store, 
                             object)));
             dom_io.getElementById('object-selection-hitboxes')
                 .replaceChildren(...object_selections
                     .map(object => 
                         svg_object_selection_view.draw(
-                            dom_io,
                             new_diagram.screen_frame_store, 
                             object,
-                            (event, arrow_drawing, object, dom2) => onevents.selection_click(event, drawing, new_app, dom_io))));
+                            deferal.callbackPrevent(onevents.selection_click))));
         }
 
         if (old_diagram?.objects != new_diagram.objects || 
@@ -159,12 +156,11 @@ function SvgAppView(dependencies, onevents) {
                 .replaceChildren(...[...new_diagram.objects, ...inferred_objects]
                     .map(object => 
                         svg_object_view.draw(
-                            dom_io,
                             new_diagram.screen_frame_store, 
                             object, 
                             new_app.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
-                            (event, arrow_drawing, object, dom2) => onevents.objectdown(event, drawing, object, new_app, dom_io),
-                            (event, arrow_drawing, object, dom2) => onevents.objectenter(event, drawing, object, new_app, dom_io))));
+                            deferal.callbackPrevent(onevents.objectdown(object)),
+                            deferal.callbackPrevent(onevents.objectenter(object)))));
         }
 
         if (old_diagram?.arrows != new_diagram.arrows || 
@@ -173,25 +169,23 @@ function SvgAppView(dependencies, onevents) {
                 .replaceChildren(...new_diagram.arrows
                     .map(arrow => 
                         svg_arrow_view.draw(
-                            dom_io,
                             new_diagram.screen_frame_store, 
                             arrow, 
                             new_diagram.arrows,
                             new_app.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
-                            (event, arrow_drawing, arrow, dom2) => onevents.arrowdown(event, drawing, arrow, new_app, dom_io),
-                            (event, arrow_drawing, arrow, dom2) => onevents.arrowenter(event, drawing, arrow, new_app, dom_io),
-                            (event, arrow_drawing, arrow, dom2) => onevents.arrowleave(event, drawing, arrow, new_app, dom_io),
+                            deferal.callbackPrevent(onevents.arrowdown(arrow)),
+                            deferal.callbackPrevent(onevents.arrowenter(arrow)),
+                            deferal.callbackPrevent(onevents.arrowleave(arrow)),
                         )));
             dom_io.getElementById('arrow-midpoint-hitboxes')
                 .replaceChildren(...new_diagram.arrows
                     .map(arrow => 
                         svg_arrow_midpoint_view.draw(
-                            dom_io,
                             new_diagram.screen_frame_store, 
                             arrow,
                             new_diagram.arrows,
                             new_app.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
-                            (event, arrow_drawing, arrow, dom2) => onevents.midpointdown(event, drawing, arrow, new_app, dom_io),
+                            deferal.callbackPrevent(onevents.midpointdown(arrow)),
                         )));
         }
 

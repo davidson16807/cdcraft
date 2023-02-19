@@ -17,7 +17,6 @@ function SvgArrowView(dependencies, settings) {
     const html                   = dependencies.html;
     const svg                    = dependencies.svg;
     const svg_arrow_attributes   = dependencies.svg_arrow_attributes;
-    const view_event_deferal     = dependencies.view_event_deferal;
 
     const source_trim_length = settings.source_trim_length;
     const target_trim_length = settings.target_trim_length;
@@ -72,7 +71,7 @@ function SvgArrowView(dependencies, settings) {
     ];
 
     const drawing = {};
-    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_class, onclick, onenter, onleave) {
+    drawing.draw = function(screen_state_store, arrow, arrows, drag_class, onclick, onenter, onleave) {
         const screen_state = screen_state_storage.unpack(screen_state_store);
         const point_arc = stored_arcs_and_point_arcs_curried(arrows).stored_arc_to_point_arc(arrow.arc);
         const sampler_arc = point_arcs_and_sampler_arcs.point_arc_to_sampler_arc(point_arc);
@@ -147,17 +146,16 @@ function SvgArrowView(dependencies, settings) {
                                       label_height/2.0)),
                     glm.vec2(1, 1)),
             ]);
-        const deferal = view_event_deferal(drawing, arrow, dom);
         if (onclick != null) {
-            g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
-            g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
+            g.addEventListener('mousedown',  onclick);
+            g.addEventListener('touchstart', onclick);
         }
         if (onenter != null) {
-            g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
-            g.addEventListener('mouseenter', deferal.callbackPrevent(onenter));
+            g.addEventListener('mousedown', onenter);
+            g.addEventListener('mouseenter', onenter);
         }
         if (onleave != null) {
-            g.addEventListener('mouseleave', deferal.callbackPrevent(onleave));
+            g.addEventListener('mouseleave', onleave);
         }
         return g;
     }

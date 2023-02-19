@@ -4,10 +4,9 @@
 function HtmlObjectToolbarView(dependencies) {
 
     const html                       = dependencies.html;
-    const view_event_deferal         = dependencies.view_event_deferal;
 
     const drawing = {};
-    drawing.draw = function(dom, app, ontextinput, onbuttonclick) {
+    drawing.draw = function(app, ontextinput, onbuttonclick) {
         let panels = [];
         const diagram = app.diagram;
 
@@ -20,7 +19,6 @@ function HtmlObjectToolbarView(dependencies) {
             const object = (
                 diagram.objects[diagram.object_selections[0]] || 
                 diagram.inferred_object_selections[0]);
-            const deferal = view_event_deferal(drawing, object, dom);
 
             const offset = object.label_offset_id || glm.ivec2();
             panels =[
@@ -34,7 +32,7 @@ function HtmlObjectToolbarView(dependencies) {
                                     type:    'text',
                                     class:   'form-control',
                                     value:   object.symbol || '\\[\\bullet\\]',
-                                    oninput: deferal.callback(ontextinput),
+                                    oninput: ontextinput,
                                 }),
                             ]),
                         html.div({class:'horizontal-axis-group group-split'}, 
@@ -45,7 +43,7 @@ function HtmlObjectToolbarView(dependencies) {
                                     class:   'form-control',
                                     value:   object.label || '',
                                     placeholder: '\\[description\\]',
-                                    oninput: deferal.callback(ontextinput),
+                                    oninput: ontextinput,
                                 }),
                             ])
                     ]),

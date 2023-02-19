@@ -15,13 +15,12 @@ function SvgObjectView(dependencies, highlight_width) {
     const html                       = dependencies.html;
     const svg_object_attributes      = dependencies.svg_object_attributes;
     const screen_state_storage       = dependencies.screen_state_storage;
-    const view_event_deferal         = dependencies.view_event_deferal;
     const render                     = dependencies.render;
 
     const text_center = glm.vec2(-8, -20);
 
     const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, object, drag_class, onclick, onenter) {
+    drawing.draw = function(screen_frame_store, object, drag_class, onclick, onenter) {
         const screen_frame = screen_state_storage.unpack(screen_frame_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
@@ -59,14 +58,13 @@ function SvgObjectView(dependencies, highlight_width) {
                         svg_object_attributes.label_offset_id_to_offset(label_offset_id)),
                     glm.vec2(1, 1)),
             ]);
-        const deferal = view_event_deferal(drawing, object, dom);
         if (onclick != null) {
-            outer_g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
-            outer_g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
+            outer_g.addEventListener('mousedown',  onclick);
+            outer_g.addEventListener('touchstart', onclick);
         }
         if (onenter != null) {
-            outer_g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
-            outer_g.addEventListener('mouseover', deferal.callbackPrevent(onenter));
+            outer_g.addEventListener('mousedown', onenter);
+            outer_g.addEventListener('mouseover', onenter);
         }
         return outer_g;
     }

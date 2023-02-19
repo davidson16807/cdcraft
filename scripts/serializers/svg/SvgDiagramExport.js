@@ -33,7 +33,6 @@ function SvgDiagramExport(dependencies) {
                                 [...diagram.objects, ...inferred_objects]
                                     .map(object => 
                                         svg_object_view.draw(
-                                            dom_io,
                                             diagram.screen_frame_store, 
                                             object, 
                                             'highlight-never', 
@@ -43,7 +42,6 @@ function SvgDiagramExport(dependencies) {
                                 diagram.arrows
                                     .map(arrow => 
                                         svg_arrow_view.draw(
-                                            dom_io,
                                             diagram.screen_frame_store, 
                                             arrow, 
                                             diagram.arrows,
