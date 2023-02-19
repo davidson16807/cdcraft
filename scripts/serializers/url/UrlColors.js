@@ -12,6 +12,6 @@ const UrlColors = (color_code_ids) => {
     return {
         export: (color) => color_id[color] ?? (color == null? null : color.replace('#','')),
         import: (value) => color_code[value] ?? (value == null? null : '#'+value),
-        updates: {},
+        updates: (version, string) => string,
     };
 };

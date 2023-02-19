@@ -6,19 +6,24 @@ that describe maps between `ScreenStateStore`s and their representation in a url
 See README.md for more information.
 */
 
-const UrlScreenState = (url_arrays, url_numbers, url_vectors) => ({
+const UrlScreenState = (dependencies) => {
+    const url_floats = dependencies.url_floats_curried;
+    const url_arrays = dependencies.url_arrays;
+    const url_vec2s = dependencies.url_vec2s_curried;
+    return ({
 
-    export: (state) => 
-        url_arrays.export([
-            url_vectors.export(state.topleft_cell_position), 
-            url_numbers.export(state.log2_cell_width|0)
-        ]),
+        export: (state) => 
+            url_arrays.export([
+                url_vec2s(0,0.1).export(state.topleft_cell_position), 
+                url_floats(0,0.1).export(state.log2_cell_width|0)
+            ]),
 
-    import: (string) => 
-        (array => new ScreenStateStore(
-            url_vectors.import(array[0]), 
-            url_numbers.import(array[1]),
-        ))(url_arrays.import(string)),
+        import: (string) => 
+            (array => new ScreenStateStore(
+                url_vec2s(0,0.1).import(array[0]), 
+                url_floats(0,0.1).import(array[1]),
+            ))(url_arrays.import(string)),
 
-    updates: {},
-});
+        updates: (version, string) => string,
+    });
+}

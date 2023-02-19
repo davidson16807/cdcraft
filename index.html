@@ -77,12 +77,12 @@
     <script src="./scripts/resources/DiagramArrowResource.js"></script>
     <script src="./scripts/resources/ResourceOperations.js"></script>
     <script src="./scripts/resources/PositionMapOperations.js"></script>
-    <script src="./scripts/serializers/url/UrlNumbers.js"></script>
+    <script src="./scripts/serializers/url/UrlNumbersCurried.js"></script>
+    <script src="./scripts/serializers/url/UrlVectorsCurried.js"></script>
+    <script src="./scripts/serializers/url/UrlUintArraysCurried.js"></script>
     <script src="./scripts/serializers/url/UrlStrings.js"></script>
     <script src="./scripts/serializers/url/UrlArrays.js"></script>
     <script src="./scripts/serializers/url/UrlColors.js"></script>
-    <script src="./scripts/serializers/url/UrlVectors.js"></script>
-    <script src="./scripts/serializers/url/UrlUintArraysCurried.js"></script>
     <script src="./scripts/serializers/url/UrlObjects.js"></script>
     <script src="./scripts/serializers/url/UrlArrows.js"></script>
     <script src="./scripts/serializers/url/UrlScreenState.js"></script>
@@ -394,44 +394,32 @@ const app_history_traversal =
 const array_resource = ArrayResource();
 
 // url serializers
-const url_ints = UrlNumbers(parseInt, 10);
-const url_ivec2s = UrlVectors(glm.ivec2, url_ints, UrlArrays('_'));
-const url_vec2s = UrlVectors(glm.vec2, url_ints, UrlArrays('_'));
-const url_arrays = UrlArrays(',', ':');
-const url_strings = UrlStrings('*');
-const url_uint_arrays_curried = UrlUintArraysCurried(UrlNumbers(parseInt, 10));
-const url_colors = UrlColors([
-    ['contrast', 0],
-    ['red', 1],
-    ['green', 2],
-    ['yellow', 3],
-    ['blue', 4],
-]);
+
+const url_floats_curried = UrlNumbersCurried(parseFloat, 10);
+const url_ints_curried =   UrlNumbersCurried(parseInt, 10);
+const url_dependencies = {
+    url_uint_arrays_curried: UrlUintArraysCurried(UrlNumbersCurried(parseInt, 36)(0,1)),
+    url_vec2s_curried:       UrlVectorsCurried(glm.vec2, url_floats_curried, UrlArrays('_')),
+    url_ivec2s_curried:      UrlVectorsCurried(glm.ivec2, url_ints_curried, UrlArrays('_')),
+    url_floats_curried:      url_floats_curried,
+    url_ints_curried:        url_ints_curried,
+    url_arrays:  UrlArrays(',', ':'),
+    url_strings: UrlStrings('*'),
+    url_colors:  UrlColors([
+        ['contrast', 0],
+        ['red', 1],
+        ['green', 2],
+        ['yellow', 3],
+        ['blue', 4],
+    ]),
+};
 const url_diagrams = UrlDiagrams(
     UrlArrays('&='),
     UrlArrays(';'),
-    UrlArrows(
-        url_arrays,
-        url_ints,
-        url_strings,
-        url_uint_arrays_curried, 
-        url_ivec2s,
-        url_vec2s,
-        url_colors,
-    ), 
-    UrlObjects(
-        url_arrays,
-        url_strings,
-        url_ivec2s,
-        url_vec2s,
-        url_colors,
-    ),
-    UrlScreenState(
-        url_arrays,
-        url_ints,
-        url_vec2s
-    ),
-    new ScreenStateStore(glm.vec2(), Math.log2(150)),
+    UrlArrows(url_dependencies), 
+    UrlObjects(url_dependencies),
+    UrlScreenState(url_dependencies),
+    new ScreenStateStore(glm.vec2(), 8),
     0
 );
 

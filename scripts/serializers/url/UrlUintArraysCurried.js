@@ -16,5 +16,5 @@ const UrlUintArraysCurried =
                 import: (string) => 
                     (acc => [...Array(uint_count).keys()].map(i => (acc>>(i*bit_count))%(1<<bit_count))) 
                         (url_numbers.import(string)),
-                updates: {},
+                updates: (version, string) => string,
             });

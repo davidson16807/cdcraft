@@ -16,5 +16,5 @@ const UrlStrings = (base64_prefix) => ({
             text == null? null
         :   !text.startsWith(base64_prefix)? text 
         :   atob(text.replace(base64_prefix, '')),
-    updates: {},
+    updates: (version, string) => string,
 });

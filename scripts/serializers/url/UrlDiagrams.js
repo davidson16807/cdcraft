@@ -13,11 +13,11 @@ const UrlDiagrams = (
         url_objects, 
         url_screen_state,
         default_screen_frame_store,
-        version) => {
+        export_version) => {
     return {
         export: (diagram) => 
             '?'+url_outer_arrays.export([
-                version,
+                export_version,
                 url_screen_state.export(diagram.screen_frame_store),
                 url_inner_arrays.export(diagram.arrows.map(arrow => url_arrows.export(arrow))),
                 url_inner_arrays.export(diagram.objects.map(object => url_objects.export(object))),
@@ -31,8 +31,8 @@ const UrlDiagrams = (
                     array <= 1? 
                         default_screen_frame_store : 
                         url_screen_state.import(array[1]),
-                )
-            )(url_outer_arrays.import(string.replace('?',''))),
-        updates: {},
+                ))
+            (url_outer_arrays.import(string.replace('?',''))),
+        updates: (import_version, string) => string,
     };
 }
