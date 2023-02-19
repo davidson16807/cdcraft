@@ -16,6 +16,8 @@ function AppUpdater(
     const screen_state_storage      = dependencies.screen_state_storage;
     const drag_ops                  = dependencies.drag_state_ops;
     const history                   = dependencies.app_history_traversal;
+    const url_diagrams              = dependencies.url_diagrams;
+    const svg_diagram_export        = dependencies.svg_diagram_export;
     const diagram_object_resources  = dependencies.diagram_object_resources;
     const diagram_arrow_resources   = dependencies.diagram_arrow_resources;
 
@@ -147,6 +149,29 @@ function AppUpdater(
     */
     const generic_actions = {
 
+        save_url: (app_io, event) => {
+            const url = location.href.split('?')[0] + url_diagrams.export(app_io.diagram);
+            window.navigator.clipboard.writeText(url);
+            window.history.pushState({}, 'cdcraft', url);
+            app_io.save_state = 'url';
+        },
+
+        save_svg: (app_io, event) => {
+            const svg = svg_diagram_export.export(app_io.diagram).outerHTML.toString();
+            const header = `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">`
+            window.navigator.clipboard.writeText(header + svg);
+            app_io.save_state = 'svg';
+        },
+
+        save: (app_io, event) => {
+            // disable default ctrl+s
+            event.preventDefault();
+            const url = location.href.split('?')[0] + url_diagrams.export(app_io.diagram);
+            window.navigator.clipboard.writeText(url);
+            window.history.pushState({}, 'cdcraft', url);
+            app_io.save_state = 'url';
+        },
+
         undo: (app_io, event) => {
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             history.undo(app_io);
@@ -211,6 +236,7 @@ function AppUpdater(
     }
 
     const key_bindings = {
+        'ctrl+s': 'save',
         'ctrl+z': 'undo',
         'ctrl+y': 'redo',
         'ctrl+shift+z': 'redo',

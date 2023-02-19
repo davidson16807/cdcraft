@@ -113,11 +113,33 @@
 
     <div class="short-axis-group group-joined">
 
+        <button id="save-url" type="button" class="btn btn-dark">
+            <div>URL</div>
+            <img id="save-url-image" src="icons/link.svg"/>
+            <img id="saved-url-image" src="icons/clipboard-check.svg"/>
+            <div id="save-url-hotkey" class="instructions">ctrl+S</div>
+        </button>
+
+        <button id="save-svg" type="button" class="btn btn-dark">
+            <div>SVG</div>
+            <img id="save-svg-image" src="icons/code-angles.svg"/>
+            <img id="saved-svg-image" src="icons/clipboard-check.svg"/>
+        </button>
+
+<!-- 
+        <button id="copy" type="button" class="btn btn-dark">
+            <div>LaTeX</div>
+            <img id="save-latex-image" src="icons/code-braces.svg"/>
+            <img id="saved-latex-image" src="icons/clipboard-check.svg"/>
+            <div class="instructions">ctrl+S</div>
+        </button>
+
         <button id="copy" type="button" class="btn btn-dark">
             <div>Copy</div>
             <img src="icons/copy.svg"/>
             <div class="instructions">ctrl+C</div>
         </button>
+ -->
 
         <button id="undo" type="button" class="btn btn-dark" disabled>
             <div>Undo</div>
@@ -369,8 +391,17 @@ const app_history_traversal =
 
 const array_resource = ArrayResource();
 
-// url serializers
+// svg serializers
+const svg_diagram_export = SvgDiagramExport({
+    screen_state_storage      : screen_state_storage,
+    arrow_positions_resource  : arrow_positions_resource, 
+    object_position_resource  : object_position_resource,
+    resource_operations       : resource_operations,
+    svg_arrow_view            : svg_arrow_view,
+    svg_object_view           : svg_object_view,
+});
 
+// url serializers
 const url_floats_curried = UrlNumbersCurried(parseFloat, 10);
 const url_ints_curried =   UrlNumbersCurried(parseInt, 10);
 const url_dependencies = {
@@ -405,6 +436,8 @@ const app_updater =
         selection_drags           : selection_drags,
         arrow_drags               : arrow_drags,
         view_drags                : view_drags,
+        url_diagrams              : url_diagrams,
+        svg_diagram_export        : svg_diagram_export,
         screen_state_storage      : screen_state_storage,
         diagram_object_resources  : DiagramObjectResource(array_resource),
         diagram_arrow_resources   : DiagramArrowResource(array_resource),

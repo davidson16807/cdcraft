@@ -19,6 +19,7 @@ function AppHistoryTraversal(diagram_metrics, max_history_size) {
                     }
                 }
                 app_io.diagram = diagram;
+                app_io.save_state = 'unsaved';
             }
         },
 
@@ -30,6 +31,7 @@ function AppHistoryTraversal(diagram_metrics, max_history_size) {
                 is_done = is_soft || diagram_metrics.is_model_different(diagram, app_io.diagram);
                 app_io.redo_history.push(app_io.diagram);
                 app_io.diagram = diagram;
+                app_io.save_state = 'unsaved';
             }
         },
 
@@ -41,6 +43,7 @@ function AppHistoryTraversal(diagram_metrics, max_history_size) {
                 is_done = is_soft || diagram_metrics.is_model_different(diagram, app_io.diagram);
                 app_io.undo_history.push(app_io.diagram);
                 app_io.diagram = diagram;
+                app_io.save_state = 'unsaved';
             }
         },
 

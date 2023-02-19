@@ -36,6 +36,15 @@ function SvgAppView(dependencies, onevents) {
                 .setAttribute('cursor', new_app.drag_type.id == 'released'? 'default' : 'move')
         }
 
+        if ((old_app?.save_state) != (new_app.save_state)){
+            dom_io.getElementById('save-svg-image').hidden = (new_app.save_state == 'svg');
+            dom_io.getElementById('saved-svg-image').hidden = (new_app.save_state != 'svg');
+            dom_io.getElementById('save-url-image').hidden = (new_app.save_state == 'url');
+            dom_io.getElementById('saved-url-image').hidden = (new_app.save_state != 'url');
+            // dom_io.getElementById('save-latex-image').hidden = (new_app.save_state == 'latex');
+            // dom_io.getElementById('saved-latex-image').hidden = (new_app.save_state != 'latex');
+        }
+
         if ((old_app?.undo_history) != (new_app.undo_history)){
             dom_io.getElementById('undo').disabled = new_app.undo_history.length == 0;
         }
@@ -196,6 +205,8 @@ function SvgAppView(dependencies, onevents) {
         // keyboard events
         dom_io.addEventListener('keydown', deferal.callback(onevents.keydown));
         // button events
+        dom_io.getElementById('save-url')    .addEventListener('click',  deferal.callback(onevents.buttonclick));
+        dom_io.getElementById('save-svg')    .addEventListener('click',  deferal.callback(onevents.buttonclick));
         dom_io.getElementById('undo')        .addEventListener('click',  deferal.callback(onevents.buttonclick));
         dom_io.getElementById('redo')        .addEventListener('click',  deferal.callback(onevents.buttonclick));
         dom_io.getElementById('toggle-grid') .addEventListener('click',  deferal.callback(onevents.buttonclick));

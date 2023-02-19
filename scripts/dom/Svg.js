@@ -8,6 +8,7 @@ Function names always match names of their corresponding SVG elements.
 Functions construct their SVG element given only attributes and children as parameters, 
 with optional parameters to allow passing vectored input using glm.vec2().
 */
+
 function Svg(){
 
     function node(tag, attributes, children){
@@ -25,7 +26,6 @@ function Svg(){
         }
         return result;
     };
-
 
     const namespace = {
 

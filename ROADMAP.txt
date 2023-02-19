@@ -7,8 +7,6 @@ user interface
 
 HIGH PRIORITY:
 latex export/import 
-url export/import
-svg export
 
 MEDIUM PRIORITY:
 fix bug where explicit objects persist after deletion

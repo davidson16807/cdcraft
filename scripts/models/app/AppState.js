@@ -11,6 +11,7 @@ class AppState {
         this.drag_state = drag_state;
         this.undo_history = undo_history || [];
         this.redo_history = redo_history || [];
+        this.save_state = 'unsaved';
     }
 
     with(attributes) {
