@@ -21,7 +21,7 @@ function SvgObjectView(dependencies, highlight_width) {
     const text_center = glm.vec2(-8, -20);
 
     const drawing = {};
-    drawing.draw = function(dom, screen_frame_store, object, drag_type, onclick, onenter) {
+    drawing.draw = function(dom, screen_frame_store, object, drag_class, onclick, onenter) {
         const screen_frame = screen_state_storage.unpack(screen_frame_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
@@ -36,7 +36,7 @@ function SvgObjectView(dependencies, highlight_width) {
         const color_class = object_color.startsWith('#')? '':'object-'+object_color;
         const inner_g = svg.g(
             {
-                class: drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
+                class: drag_class,
             },
             [
                 svg.circle(

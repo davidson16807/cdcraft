@@ -72,7 +72,7 @@ function SvgArrowView(dependencies, settings) {
     ];
 
     const drawing = {};
-    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter, onleave) {
+    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_class, onclick, onenter, onleave) {
         const screen_state = screen_state_storage.unpack(screen_state_store);
         const point_arc = stored_arcs_and_point_arcs_curried(arrows).stored_arc_to_point_arc(arrow.arc);
         const sampler_arc = point_arcs_and_sampler_arcs.point_arc_to_sampler_arc(point_arc);
@@ -88,7 +88,6 @@ function SvgArrowView(dependencies, settings) {
             glm.length(arc_midpoint_offset_from_origin) > 1? 
             glm.normalize(arc_midpoint_offset_from_origin) : glm.vec2(0,1);
         const color_class = arrow.color.startsWith('#')? '':'arrow-'+arrow.color;
-        const drag_class = drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never';
         const div = html.div({class:`arrow-label`},[], arrow.label);
         render(div, {throwOnError: false});
         /*

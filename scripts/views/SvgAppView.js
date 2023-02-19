@@ -27,18 +27,20 @@ function SvgAppView(dependencies, onevents) {
     const drawing = {};
 
     function _redraw(old_app, new_app, dom_io, trigger) {
+        typecheck(old_app, 'AppState+1');
+        typecheck(new_app, 'AppState');
 
-        if (old_app == null || old_app.drag_type != new_app.drag_type){
+        if (old_app?.drag_type != new_app.drag_type){
             dom_io
                 .getElementById('graphics')
                 .setAttribute('cursor', new_app.drag_type.id == 'released'? 'default' : 'move')
         }
 
-        if (old_app == null || old_app.undo_history != new_app.undo_history){
+        if ((old_app?.undo_history?.length==0) != (new_app.undo_history.length==0)){
             dom_io.getElementById('undo').disabled = new_app.undo_history.length == 0;
         }
 
-        if (old_app == null || old_app.redo_history != new_app.redo_history){
+        if ((old_app?.redo_history?.length==0) != (new_app.redo_history.length==0)){
             dom_io.getElementById('redo').disabled = new_app.redo_history.length == 0;
         }
 
@@ -48,21 +50,23 @@ function SvgAppView(dependencies, onevents) {
             dom_io.getElementById('toggle-grid').classList.add('active');
         }
 
-        if (old_app == null || old_app.screen_frame_store != new_app.screen_frame_store) {
+        const old_diagram = old_app?.diagram;
+        const new_diagram = new_app.diagram;
+
+        if (old_diagram?.screen_frame_store != new_diagram.screen_frame_store) {
             dom_io
                 .getElementById('transformation')
-                .setAttribute('transformation', frame_transform(new_app.diagram.screen_frame_store));
+                .setAttribute('transformation', frame_transform(new_diagram.screen_frame_store));
             dom_io
                 .getElementById('cell-borders')
-                .replaceWith(svg_grid_view.draw(new_app.diagram.screen_frame_store, new_app.is_grid_hidden));
+                .replaceWith(svg_grid_view.draw(new_diagram.screen_frame_store, new_app.is_grid_hidden));
         }
 
-        if (old_app == null || 
-            old_app.diagram.arrows != new_app.diagram.arrows ||
-            old_app.diagram.arrow_selections != new_app.diagram.arrow_selections ||
-            old_app.diagram.objects != new_app.diagram.objects ||
-            old_app.diagram.object_selections != new_app.diagram.object_selections || 
-            old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
+        if (old_diagram?.arrows != new_diagram.arrows ||
+            old_diagram?.arrow_selections != new_diagram.arrow_selections ||
+            old_diagram?.objects != new_diagram.objects ||
+            old_diagram?.object_selections != new_diagram.object_selections || 
+            old_diagram?.inferred_object_selections != new_diagram.inferred_object_selections) {
 
             if (!(new Set(['arrow-label','object-symbol','object-label']).has(trigger))){
                 dom_io.getElementById('multientity-toolbar')
@@ -72,9 +76,8 @@ function SvgAppView(dependencies, onevents) {
             }
         }
 
-        if (old_app == null || 
-            old_app.diagram.arrows != new_app.diagram.arrows ||
-            old_app.diagram.arrow_selections != new_app.diagram.arrow_selections) {
+        if (old_diagram?.arrows != new_diagram.arrows ||
+            old_diagram?.arrow_selections != new_diagram.arrow_selections) {
 
             if (trigger != 'arrow-label'){
                 dom_io.getElementById('arrow-toolbar')
@@ -85,32 +88,31 @@ function SvgAppView(dependencies, onevents) {
                 dom_io.getElementById('arrow-label')?.focus();
             }
 
-            const arrow_selections_list = new_app.diagram.arrow_selections
-                .map(id => new_app.diagram.arrows[id])
+            const arrow_selections_list = new_diagram.arrow_selections
+                .map(id => new_diagram.arrows[id])
                 .filter(arrow => arrow != null);
             dom_io.getElementById('arrow-selections')
                 .replaceChildren(...arrow_selections_list
                     .map(arrow => 
                         svg_arrow_selection_view.draw(
                             dom_io,
-                            new_app.diagram.screen_frame_store, 
+                            new_diagram.screen_frame_store, 
                             arrow,
-                            new_app.diagram.arrows)));
+                            new_diagram.arrows)));
             dom_io.getElementById('arrow-selection-hitboxes')
                 .replaceChildren(...arrow_selections_list
                     .map(arrow => 
                         svg_arrow_selection_view.draw(
                             dom_io,
-                            new_app.diagram.screen_frame_store, 
+                            new_diagram.screen_frame_store, 
                             arrow,
-                            new_app.diagram.arrows,
+                            new_diagram.arrows,
                             (event, arrow_drawing, arrow, dom2) => onevents.selection_click(event, drawing, new_app, dom_io))));
         }
 
-        if (old_app == null || 
-            old_app.diagram.objects != new_app.diagram.objects ||
-            old_app.diagram.object_selections != new_app.diagram.object_selections || 
-            old_app.diagram.inferred_object_selections != new_app.diagram.inferred_object_selections) {
+        if (old_diagram?.objects != new_diagram.objects ||
+            old_diagram?.object_selections != new_diagram.object_selections || 
+            old_diagram?.inferred_object_selections != new_diagram.inferred_object_selections) {
 
             if (!(new Set(['object-symbol','object-label']).has(trigger))){
                 dom_io.getElementById('object-toolbar')
@@ -122,9 +124,9 @@ function SvgAppView(dependencies, onevents) {
             }
 
             const object_selections = [
-                ...new_app.diagram.inferred_object_selections,
-                ...new_app.diagram.object_selections
-                    .map(id => new_app.diagram.objects[id])
+                ...new_diagram.inferred_object_selections,
+                ...new_diagram.object_selections
+                    .map(id => new_diagram.objects[id])
                     .filter(object => object != null),
             ];
             dom_io.getElementById('object-selections')
@@ -132,65 +134,63 @@ function SvgAppView(dependencies, onevents) {
                     .map(object => 
                         svg_object_selection_view.draw(
                             dom_io,
-                            new_app.diagram.screen_frame_store, 
+                            new_diagram.screen_frame_store, 
                             object)));
             dom_io.getElementById('object-selection-hitboxes')
                 .replaceChildren(...object_selections
                     .map(object => 
                         svg_object_selection_view.draw(
                             dom_io,
-                            new_app.diagram.screen_frame_store, 
+                            new_diagram.screen_frame_store, 
                             object,
                             (event, arrow_drawing, object, dom2) => onevents.selection_click(event, drawing, new_app, dom_io))));
         }
 
-        if (old_app == null || 
-            old_app.diagram.objects != new_app.diagram.objects || 
-            old_app.drag_type != new_app.drag_type) {
+        if (old_diagram?.objects != new_diagram.objects || 
+            old_app?.drag_type != new_app.drag_type) {
             const inferred_objects = 
                 object_position_resource.post([],
                     resource_operations.delete(
-                        arrow_positions_resource.get(new_app.diagram.arrows),
-                        object_position_resource.get(new_app.diagram.objects)
+                        arrow_positions_resource.get(new_diagram.arrows),
+                        object_position_resource.get(new_diagram.objects)
                     )
                 );
             dom_io.getElementById('objects')
-                .replaceChildren(...[...new_app.diagram.objects, ...inferred_objects]
+                .replaceChildren(...[...new_diagram.objects, ...inferred_objects]
                     .map(object => 
                         svg_object_view.draw(
                             dom_io,
-                            new_app.diagram.screen_frame_store, 
+                            new_diagram.screen_frame_store, 
                             object, 
-                            new_app.drag_type, 
+                            new_app.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
                             (event, arrow_drawing, object, dom2) => onevents.objectdown(event, drawing, object, new_app, dom_io),
                             (event, arrow_drawing, object, dom2) => onevents.objectenter(event, drawing, object, new_app, dom_io))));
         }
 
-        if (old_app == null || 
-            old_app.diagram.arrows != new_app.diagram.arrows || 
-            old_app.drag_type != new_app.drag_type) {
+        if (old_diagram?.arrows != new_diagram.arrows || 
+            old_app?.drag_type != new_app.drag_type) {
             dom_io.getElementById('arrows')
-                .replaceChildren(...new_app.diagram.arrows
+                .replaceChildren(...new_diagram.arrows
                     .map(arrow => 
                         svg_arrow_view.draw(
                             dom_io,
-                            new_app.diagram.screen_frame_store, 
+                            new_diagram.screen_frame_store, 
                             arrow, 
-                            new_app.diagram.arrows,
-                            new_app.drag_type, 
+                            new_diagram.arrows,
+                            new_app.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
                             (event, arrow_drawing, arrow, dom2) => onevents.arrowdown(event, drawing, arrow, new_app, dom_io),
                             (event, arrow_drawing, arrow, dom2) => onevents.arrowenter(event, drawing, arrow, new_app, dom_io),
                             (event, arrow_drawing, arrow, dom2) => onevents.arrowleave(event, drawing, arrow, new_app, dom_io),
                         )));
             dom_io.getElementById('arrow-midpoint-hitboxes')
-                .replaceChildren(...new_app.diagram.arrows
+                .replaceChildren(...new_diagram.arrows
                     .map(arrow => 
                         svg_arrow_midpoint_view.draw(
                             dom_io,
-                            new_app.diagram.screen_frame_store, 
+                            new_diagram.screen_frame_store, 
                             arrow,
-                            new_app.diagram.arrows,
-                            new_app.drag_type, 
+                            new_diagram.arrows,
+                            new_app.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
                             (event, arrow_drawing, arrow, dom2) => onevents.midpointdown(event, drawing, arrow, new_app, dom_io),
                         )));
         }

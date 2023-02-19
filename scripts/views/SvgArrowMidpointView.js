@@ -17,7 +17,7 @@ function SvgArrowMidpointView(dependencies, settings) {
     const midpoint_width     = settings.midpoint_width;
 
     const drawing = {};
-    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter, onleave) {
+    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_class, onclick, onenter, onleave) {
         const screen_frame = screen_state_storage.unpack(screen_state_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_midpoint_width = screen_mapping.distance.apply(midpoint_width);
@@ -29,7 +29,7 @@ function SvgArrowMidpointView(dependencies, settings) {
 
         const g = svg.g(
             {
-                class: (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
+                class: drag_class,
             },
             [
                 svg.circle(
