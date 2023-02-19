@@ -49,7 +49,7 @@
     <script src="./scripts/models/app/AppState.js"></script>
     <script src="./scripts/models/app/AppHistoryTraversal.js"></script>
     <script src="./scripts/models/app/AppDragOperations.js"></script>
-    <script src="./scripts/views/ViewEventDeferal.js"></script>
+    <script src="./scripts/views/ViewEventDeferralCurried.js"></script>
     <script src="./scripts/views/SvgObjectView.js"></script>
     <script src="./scripts/views/SvgObjectSelectionView.js"></script>
     <script src="./scripts/views/SvgArrowAttributes.js"></script>
@@ -113,19 +113,11 @@
 
     <div class="short-axis-group group-joined">
 
-    <!-- 
-        <button id="save" type="button" class="btn btn-dark">
-            <div>Save</div>
-            <img src="icons/save.svg"/>
-            <div class="instructions">ctrl+S</div>
+        <button id="copy" type="button" class="btn btn-dark">
+            <div>Copy</div>
+            <img src="icons/copy.svg"/>
+            <div class="instructions">ctrl+C</div>
         </button>
-
-        <button id="load" type="button" class="btn btn-dark">
-            <div>Load</div>
-            <img src="icons/load.svg"/>
-            <div class="instructions">ctrl+O</div>
-        </button>
-     -->
 
         <button id="undo" type="button" class="btn btn-dark" disabled>
             <div>Undo</div>
@@ -140,18 +132,6 @@
         </button>
 
     <!-- 
-        <button id="copy" type="button" class="btn btn-dark">
-            <div>Copy</div>
-            <img src="icons/copy.svg"/>
-            <div class="instructions">ctrl+C</div>
-        </button>
-
-        <button id="cut" type="button" class="btn btn-dark">
-            <div>Cut</div>
-            <img src="icons/cut.svg"/>
-            <div class="instructions">ctrl+C</div>
-        </button>
-
         <button id="paste" type="button" class="btn btn-dark">
             <div>Paste</div>
             <img src="icons/paste.svg"/>
@@ -444,7 +424,7 @@ const app_view =
         svg_object_selection_view : svg_object_selection_view,
         svg_arrow_selection_view  : svg_arrow_selection_view,
         svg_arrow_midpoint_view   : svg_arrow_midpoint_view,
-        view_event_deferal        : ViewEventDeferal(),
+        view_event_deferal        : ViewEventDeferralCurried(),
         html_object_toolbar_view      : HtmlObjectToolbarView({html:html}),
         html_arrow_toolbar_view       : HtmlArrowToolbarView({html:html}),
         html_multientity_toolbar_view : HtmlMultientityToolbarView({html:html}),
