@@ -1,14 +1,14 @@
 'use strict';
 
 /*
-`UrlUintArrays` results in a namespace of pure functions 
+`UrlUintArraysCurried` results in a namespace of pure functions 
 that describe maps between arrays of `uint`s and their representation in a url querystring.
 The querystring is a number whose binary representation is structured
 such that uints at the end of the array correspond to bits of higher value.
 See README.md for more information.
 */
 
-const UrlUintArrays = 
+const UrlUintArraysCurried = 
     (url_numbers) => 
         (bit_count, uint_count) => ({
                 export: (array) => 

@@ -82,7 +82,7 @@
     <script src="./scripts/serializers/url/UrlArrays.js"></script>
     <script src="./scripts/serializers/url/UrlColors.js"></script>
     <script src="./scripts/serializers/url/UrlVectors.js"></script>
-    <script src="./scripts/serializers/url/UrlUintArrays.js"></script>
+    <script src="./scripts/serializers/url/UrlUintArraysCurried.js"></script>
     <script src="./scripts/serializers/url/UrlObjects.js"></script>
     <script src="./scripts/serializers/url/UrlArrows.js"></script>
     <script src="./scripts/serializers/url/UrlScreenState.js"></script>
@@ -393,6 +393,48 @@ const app_history_traversal =
 
 const array_resource = ArrayResource();
 
+// url serializers
+const url_ints = UrlNumbers(parseInt, 10);
+const url_ivec2s = UrlVectors(glm.ivec2, url_ints, UrlArrays('_'));
+const url_vec2s = UrlVectors(glm.vec2, url_ints, UrlArrays('_'));
+const url_arrays = UrlArrays(',', ':');
+const url_strings = UrlStrings('*');
+const url_uint_arrays_curried = UrlUintArraysCurried(UrlNumbers(parseInt, 10));
+const url_colors = UrlColors([
+    ['contrast', 0],
+    ['red', 1],
+    ['green', 2],
+    ['yellow', 3],
+    ['blue', 4],
+]);
+const url_diagrams = UrlDiagrams(
+    UrlArrays('&='),
+    UrlArrays(';'),
+    UrlArrows(
+        url_arrays,
+        url_ints,
+        url_strings,
+        url_uint_arrays_curried, 
+        url_ivec2s,
+        url_vec2s,
+        url_colors,
+    ), 
+    UrlObjects(
+        url_arrays,
+        url_strings,
+        url_ivec2s,
+        url_vec2s,
+        url_colors,
+    ),
+    UrlScreenState(
+        url_arrays,
+        url_ints,
+        url_vec2s
+    ),
+    new ScreenStateStore(glm.vec2(), Math.log2(150)),
+    0
+);
+
 const app_updater = 
     AppUpdater({
         PanZoomMapping            : PanZoomMapping,
@@ -436,14 +478,11 @@ const app_view =
             }),
     }, app_updater);
 
-const initial_screen_frame_store = new ScreenStateStore(glm.vec2(), Math.log2(150));
-const disengaged_drag = view_drags.release(initial_screen_frame_store)
+const initial_diagram = url_diagrams.import(window.location.search);
+const disengaged_drag = view_drags.release(initial_diagram.screen_frame_store);
 const app_state = 
     new AppState(
-        new Diagram(
-            [], [], 
-            [], [], [], 
-            initial_screen_frame_store), 
+        initial_diagram,
         disengaged_drag,
         disengaged_drag.initialize(),
     );
