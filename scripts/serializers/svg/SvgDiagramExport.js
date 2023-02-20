@@ -8,6 +8,7 @@ svg{
  /* set "overflow: hidden" to hide the scrollbar ; */
  overflow : hidden;
  font-family: sans-serif;
+ font-size: 1rem;
  background-color: white;
  color: black;
 }
@@ -80,10 +81,25 @@ svg{
 .katex-display {
  margin: 0;
 }
-/*hidden class used by katex internals*/
+/*hidden class used by katex internals
 .mord{
  display:none;
  visibility:hidden;
+}
+.katex annotation{
+ visibility:hidden;
+}*/
+.katex {
+    font-weight: normal;
+    font-size: 1.21em;
+    font-family: KaTeX_Main, Times New Roman, serif;
+    line-height: 1.2;
+    text-indent: 0;
+    text-rendering: auto;
+}
+.katex-mathml {
+    visibility:hidden;
+    display:none;
 }
 `;
     const screen_state_storage       = dependencies.screen_state_storage;
@@ -113,7 +129,8 @@ svg{
                 {
                     id:            'graphics',
                     viewBox:       [0, 0, 
-                        document.documentElement.clientWidth,
+                        // TODO: try to plumb this in as input rather than use the `document` global
+                        document.documentElement.clientWidth, 
                         document.documentElement.clientHeight].join(' '),
                     xmlns:         "http://www.w3.org/2000/svg",
                     'xmlns:xhtml': "http://www.w3.org/1999/xhtml",
@@ -125,7 +142,7 @@ svg{
                             svg.g({},
                                 [...diagram.objects, ...inferred_objects]
                                     .map(object => 
-                                        svg_object_view.draw(
+                                        svg_object_view(glm.vec2(-12.5, -47)).draw( //glm.vec2(-21,-125) 
                                             diagram.screen_frame_store, 
                                             object, 
                                         ))),

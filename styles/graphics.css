@@ -135,7 +135,8 @@ svg{
 }
 
 .object-label{
-    width: fit-content; /*needed for js to find width using offsetWidth*/
+/*    transform: translate(-12, -33);*/
+/*    width: fit-content; /*needed for js to find width using offsetWidth*/*/
 }
 
 .object-green{
