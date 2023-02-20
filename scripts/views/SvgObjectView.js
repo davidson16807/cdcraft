@@ -26,10 +26,15 @@ function SvgObjectView(dependencies, highlight_width) {
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
         const object_screen_position = screen_mapping.position.apply(object.position);
         const label_offset_id = object.label_offset_id || glm.ivec2(1,-1);
-        const symbol = html.div({},[], object.symbol || '\\[\\bullet\\]');
+        const symbol = html.div({
+            class:`object-label`,
+            xmlns:"http://www.w3.org/1999/xhtml"
+        },[], object.symbol || '\\[\\bullet\\]');
         render(symbol, {throwOnError: false});
         const label = html.div({
-            style:svg_object_attributes.label_offset_id_to_style(label_offset_id),
+            class:`object-label`,
+            style: svg_object_attributes.label_offset_id_to_style(label_offset_id),
+            xmlns: "http://www.w3.org/1999/xhtml",
         }, [], object.label || '');
         const object_color = object.color??'contrast';
         const color_class = object_color.startsWith('#')? '':'object-'+object_color;

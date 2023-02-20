@@ -134,6 +134,10 @@ svg{
     pointer-events: all;
 }
 
+.object-label{
+    width: fit-content; /*needed for js to find width using offsetWidth*/
+}
+
 .object-green{
     color: #28a745;
 }

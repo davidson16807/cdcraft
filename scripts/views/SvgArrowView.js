@@ -87,7 +87,10 @@ function SvgArrowView(dependencies, settings) {
             glm.length(arc_midpoint_offset_from_origin) > 1? 
             glm.normalize(arc_midpoint_offset_from_origin) : glm.vec2(0,1);
         const color_class = arrow.color.startsWith('#')? '':'arrow-'+arrow.color;
-        const div = html.div({class:`arrow-label`},[], arrow.label);
+        const div = html.div({
+            class:`arrow-label ${color_class}`,
+            xmlns:"http://www.w3.org/1999/xhtml",
+        },[], arrow.label);
         render(div, {throwOnError: false});
         /*
         Append the label, measure its dimensions, then remove.
@@ -101,16 +104,10 @@ function SvgArrowView(dependencies, settings) {
         const label_offset_id = arrow.label_offset_id || glm.ivec2(0,1);
         const g = svg.g(
             {
-                class: `arrow-group ${color_class}`,
+                class: `arrow ${color_class}`,
                 // color: arrow.color.startsWith('#')? arrow.color:'',
             },
             [
-                // svg.path({
-                //     'stroke-width': screen_highlight_width, 
-                //     'stroke-linecap':'round', 
-                //     class:"arrow-highlight", 
-                //     d: svg_arrow_attributes.path(screen_arc), 
-                // }),
                 svg.path({
                     'stroke-width': arrow_line_width,
                     class:"arrow", 
