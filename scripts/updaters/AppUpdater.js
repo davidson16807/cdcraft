@@ -150,6 +150,8 @@ function AppUpdater(
     const generic_actions = {
 
         save_url: (app_io, event) => {
+            // disable default ctrl+s
+            event.preventDefault();
             const url = location.href.split('?')[0] + url_diagrams.export(app_io.diagram);
             window.navigator.clipboard.writeText(url);
             window.history.pushState({}, 'cdcraft', url);
@@ -161,15 +163,6 @@ function AppUpdater(
             const header = `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">`
             window.navigator.clipboard.writeText(header + svg);
             app_io.save_state = 'svg';
-        },
-
-        save: (app_io, event) => {
-            // disable default ctrl+s
-            event.preventDefault();
-            const url = location.href.split('?')[0] + url_diagrams.export(app_io.diagram);
-            window.navigator.clipboard.writeText(url);
-            window.history.pushState({}, 'cdcraft', url);
-            app_io.save_state = 'url';
         },
 
         undo: (app_io, event) => {
@@ -236,7 +229,7 @@ function AppUpdater(
     }
 
     const key_bindings = {
-        'ctrl+s': 'save',
+        'ctrl+s': 'save_url',
         'ctrl+z': 'undo',
         'ctrl+y': 'redo',
         'ctrl+shift+z': 'redo',
@@ -360,6 +353,7 @@ function AppUpdater(
             const arrow_id = app_io.diagram.arrows.indexOf(arrow);
             if (arrow_id >= 0) {
                 if (event.buttons == 2 && !arrow.is_edited) {
+                    console.log('here')
                     event.stopPropagation();
                     history.do(app_io, app_io.diagram.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]}), true);
                     drawing.redraw(undefined, app_io, dom_io);

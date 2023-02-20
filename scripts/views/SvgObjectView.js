@@ -3,7 +3,7 @@
 function SvgObjectAttributes(math) {
     const sign = math.sign;
     return {
-        label_offset_id_to_offset: (offset) => glm.vec2(12*offset.x, -20-40*offset.y),
+        label_offset_id_to_offset: (offset) => glm.vec2(12.5*offset.x, -33.3-40*offset.y),
         label_offset_id_to_style:  (offset) => 'float:'+(offset.x>=0? 'left':'right'),
     };
 }
@@ -17,10 +17,10 @@ function SvgObjectView(dependencies, highlight_width) {
     const screen_state_storage       = dependencies.screen_state_storage;
     const render                     = dependencies.render;
 
-    const text_center = glm.vec2(-8, -20);
+    const text_center = glm.vec2(-12.5, -33.3);
 
     const drawing = {};
-    drawing.draw = function(screen_frame_store, object, drag_class, onclick, onenter) {
+    drawing.draw = function(screen_frame_store, object) {
         const screen_frame = screen_state_storage.unpack(screen_frame_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_highlight_width = screen_mapping.distance.apply(highlight_width);
@@ -33,40 +33,22 @@ function SvgObjectView(dependencies, highlight_width) {
         }, [], object.label || '');
         const object_color = object.color??'contrast';
         const color_class = object_color.startsWith('#')? '':'object-'+object_color;
-        const inner_g = svg.g(
-            {
-                class: drag_class,
-            },
-            [
-                svg.circle(
-                    {class:"object-highlight", r:screen_highlight_width/2.0}, 
-                    object_screen_position),
+        const g = svg.g({class: 'object'}, [
                 svg.foreignObject(
                     {
-                        class: `object ${color_class}`
+                        class: `object ${color_class}` // TODO: do we need to duplicate the object class here?
                     }, [symbol], 
                     object_screen_position.add(text_center),
                     glm.vec2(1, 1)),
-            ]);
-        const outer_g = svg.g({}, [
-                inner_g, 
                 svg.foreignObject(
                     {
-                        class: `object ${color_class}`
+                        class: `object ${color_class}` // TODO: do we need to duplicate the object class here?
                     }, [label], 
                     object_screen_position.add(
                         svg_object_attributes.label_offset_id_to_offset(label_offset_id)),
                     glm.vec2(1, 1)),
             ]);
-        if (onclick != null) {
-            outer_g.addEventListener('mousedown',  onclick);
-            outer_g.addEventListener('touchstart', onclick);
-        }
-        if (onenter != null) {
-            outer_g.addEventListener('mousedown', onenter);
-            outer_g.addEventListener('mouseover', onenter);
-        }
-        return outer_g;
+        return g;
     }
     return drawing;
 }

@@ -36,8 +36,7 @@ function SvgDiagramExport(dependencies) {
                                             diagram.screen_frame_store, 
                                             object, 
                                             'highlight-never', 
-                                        ))
-                            ),
+                                        ))),
                             svg.g({}, 
                                 diagram.arrows
                                     .map(arrow => 

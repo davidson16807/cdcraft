@@ -101,20 +101,14 @@ function SvgAppView(dependencies, onevents) {
             const arrow_selections_list = new_diagram.arrow_selections
                 .map(id => new_diagram.arrows[id])
                 .filter(arrow => arrow != null);
-            dom_io.getElementById('arrow-selections')
-                .replaceChildren(...arrow_selections_list
-                    .map(arrow => 
-                        svg_arrow_selection_view.draw(
-                            new_diagram.screen_frame_store, 
-                            arrow,
-                            new_diagram.arrows)));
             dom_io.getElementById('arrow-selection-hitboxes')
                 .replaceChildren(...arrow_selections_list
                     .map(arrow => 
                         svg_arrow_selection_view.draw(
                             new_diagram.screen_frame_store, 
-                            arrow,
-                            new_diagram.arrows,
+                            arrow, 
+                            new_diagram.arrows, 
+                            'highlight-always',
                             deferal.callbackPrevent(onevents.selection_click))));
         }
 
@@ -137,18 +131,13 @@ function SvgAppView(dependencies, onevents) {
                     .map(id => new_diagram.objects[id])
                     .filter(object => object != null),
             ];
-            dom_io.getElementById('object-selections')
-                .replaceChildren(...object_selections
-                    .map(object => 
-                        svg_object_selection_view.draw(
-                            new_diagram.screen_frame_store, 
-                            object)));
             dom_io.getElementById('object-selection-hitboxes')
                 .replaceChildren(...object_selections
                     .map(object => 
                         svg_object_selection_view.draw(
                             new_diagram.screen_frame_store, 
-                            object,
+                            object, 
+                            'highlight-always',
                             deferal.callbackPrevent(onevents.selection_click))));
         }
 
@@ -167,9 +156,17 @@ function SvgAppView(dependencies, onevents) {
                         svg_object_view.draw(
                             new_diagram.screen_frame_store, 
                             object, 
-                            new_app.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
+                        )));
+            dom_io.getElementById('object-selections')
+                .replaceChildren(...[...new_diagram.objects, ...inferred_objects]
+                    .map(object => 
+                        svg_object_selection_view.draw(
+                            new_diagram.screen_frame_store, 
+                            object,
+                            new_app.drag_type.id == 'released'? 'highlight-on-hover' : 'highlight-never',
                             deferal.callbackPrevent(onevents.objectdown(object)),
-                            deferal.callbackPrevent(onevents.objectenter(object)))));
+                            deferal.callbackPrevent(onevents.objectenter(object))
+                        )));
         }
 
         if (old_diagram?.arrows != new_diagram.arrows || 
@@ -178,6 +175,14 @@ function SvgAppView(dependencies, onevents) {
                 .replaceChildren(...new_diagram.arrows
                     .map(arrow => 
                         svg_arrow_view.draw(
+                            new_diagram.screen_frame_store, 
+                            arrow, 
+                            new_diagram.arrows,
+                        )));
+            dom_io.getElementById('arrow-selections')
+                .replaceChildren(...new_diagram.arrows
+                    .map(arrow => 
+                        svg_arrow_selection_view.draw(
                             new_diagram.screen_frame_store, 
                             arrow, 
                             new_diagram.arrows,

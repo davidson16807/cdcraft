@@ -1,5 +1,5 @@
 
-body{
+svg{
     /* set "overflow: hidden" to hide the scrollbar ; */
     overflow : hidden;
 
@@ -9,14 +9,9 @@ body{
 }
 
 @media (prefers-color-scheme: dark){
-    body {
+    svg {
         background-color: black;
         color: white;
-    }
-}
-
-@media (prefers-color-scheme: dark){
-    svg {
         fill: white !important;
     }
 }
@@ -45,7 +40,7 @@ body{
 
 .arrow {
     fill: none;
-    pointer-events: all;
+    pointer-events: none;
 }
 
 .arrow-highlight {
@@ -126,16 +121,17 @@ body{
 }
 
 
-.object-highlight {
-    fill: darkgrey;
-    stroke: none;
-    pointer-events: all;
-}
-
 .object {
     font-size: 161%;
     overflow: visible;
     visibility: visible;
+    pointer-events: none;
+}
+
+.object-highlight {
+    fill: darkgrey;
+    stroke: none;
+    pointer-events: all;
 }
 
 .object-green{
@@ -170,6 +166,8 @@ body{
 
 }
 
+
+
 .highlight-on-hover {
     visibility: hidden;
 }
@@ -193,20 +191,12 @@ body{
     visibility: visible;
 }
 
-.hitbox{
-    opacity: 0;
+.highlight-always {
+    visibility: visible;
 }
 
 
 
-/*
-"#hidden-downloader" is an element that is required by the browser 
- in order to download files, yet is not otherwise needed by the user interface
-It  has no styling and is never meant to be seen.
-*/
-#hidden-downloader{
-    display: none;
-}
 
 /*
 "#drop-dialog" is a visual cue that indicates to the user

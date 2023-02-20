@@ -17,9 +17,9 @@ function AppHistoryTraversal(diagram_metrics, max_history_size) {
                         */
                         app_io.redo_history = [];
                     }
+                    app_io.save_state = 'unsaved';
                 }
                 app_io.diagram = diagram;
-                app_io.save_state = 'unsaved';
             }
         },
 

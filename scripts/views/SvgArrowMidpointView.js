@@ -33,7 +33,7 @@ function SvgArrowMidpointView(dependencies, settings) {
             [
                 svg.circle(
                     {
-                        class: "object-highlight", 
+                        class: ['object-highlight', drag_class].join(' '), 
                         r: screen_midpoint_width/2.0
                     }, 
                     sampler_arc_properties.position(screen_arc, 0.5)
