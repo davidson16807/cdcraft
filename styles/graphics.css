@@ -68,14 +68,12 @@ svg{
 }
 
 .arrow-label-wrapper {
-    color: black;
     overflow: visible;
     visibility: visible;
 }
 
 .arrow-label{
     font-size: 161%;
-    width: fit-content; /*needed for js to find width using offsetWidth*/
 }
 
 .arrow-green{
@@ -122,9 +120,7 @@ svg{
 
 
 .object {
-    font-size: 161%;
-    overflow: visible;
-    visibility: visible;
+    fill: none;
     pointer-events: none;
 }
 
@@ -134,9 +130,13 @@ svg{
     pointer-events: all;
 }
 
+.object-label-wrapper {
+    overflow: visible;
+    visibility: visible;
+}
+
 .object-label{
-/*    transform: translate(-12, -33);*/
-/*    width: fit-content; /*needed for js to find width using offsetWidth*/*/
+    font-size: 161%;
 }
 
 .object-green{

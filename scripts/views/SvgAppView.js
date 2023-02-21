@@ -153,7 +153,7 @@ function SvgAppView(dependencies, onevents) {
             dom_io.getElementById('objects')
                 .replaceChildren(...[...new_diagram.objects, ...inferred_objects]
                     .map(object => 
-                        svg_object_view(glm.vec2(-12.5, -33.3)).draw(
+                        svg_object_view.draw(
                             new_diagram.screen_frame_store, 
                             object, 
                         )));

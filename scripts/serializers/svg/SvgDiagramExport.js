@@ -26,65 +26,94 @@ svg{
   fill: white !important;
  }
 }
-.arrow-label{
- font-size: 161%;
- width: fit-content; /*needed for js to find width using offsetWidth*/
+
+.arrow {
+    fill: none;
+    pointer-events: none;
 }
+
+.arrow-label-wrapper {
+    overflow: visible;
+    visibility: visible;
+}
+
+.arrow-label{
+    font-size: 161%;
+}
+
 .arrow-green{
- stroke: #28a745;
- color: #28a745;
+    stroke: #28a745;
+    color: #28a745;
 }
 .arrow-blue{
- stroke: #007bff;
- color: #007bff;
+    stroke: #007bff;
+    color: #007bff;
 }
 .arrow-red{
- stroke: #dc3545;
- color: #dc3545;
+    stroke: #dc3545;
+    color: #dc3545;
 }
 .arrow-yellow{
- stroke: #ffc107;
- color: #ffc107;
+    stroke: #ffc107;
+    color: #ffc107;
 }
 .arrow-contrast{
- stroke: black;
- color: black;
+    stroke: black;
+    color: black;
 }
+
 @media (prefers-color-scheme: dark){
- .arrow-contrast {
-  stroke: white;
-  color: white;
- }
+
+    .arrow-contrast {
+        stroke: white;
+        color: white;
+    }
+
 }
+
+
 .object {
- font-size: 161%;
- overflow: visible;
- visibility: visible;
+    fill: none;
+    pointer-events: none;
 }
+
+.object-label-wrapper {
+    overflow: visible;
+    visibility: visible;
+}
+
 .object-label{
- font-size: 161%;
- width: fit-content; /*needed for js to find width using offsetWidth*/
+    font-size: 161%;
 }
+
 .object-green{
- color: #28a745;
+    color: #28a745;
 }
 .object-blue{
- color: #007bff;
+    color: #007bff;
 }
 .object-red{
- color: #dc3545;
+    color: #dc3545;
 }
 .object-yellow{
- color: #ffc107;
+    color: #ffc107;
 }
 .object-contrast{
- color: black;
+    color: black;
 }
+
+.katex-display {
+    margin: 0;
+}
+
 @media (prefers-color-scheme: dark){
- .object-contrast {
-  color: white;
- }
+
+    .object-contrast {
+        color: white;
+    }
+
 }
+
 .katex-display {
  margin: 0;
 }
@@ -149,7 +178,7 @@ svg{
                             svg.g({},
                                 [...diagram.objects, ...inferred_objects]
                                     .map(object => 
-                                        svg_object_view(glm.vec2(-20.8, -53.7)).draw( //glm.vec2(-21,-125) 
+                                        svg_object_view.draw( //glm.vec2(-21,-125) 
                                             diagram.screen_frame_store, 
                                             object, 
                                         ))),

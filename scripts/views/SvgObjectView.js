@@ -17,7 +17,8 @@ function SvgObjectView(dependencies, highlight_width) {
     const screen_state_storage       = dependencies.screen_state_storage;
     const render                     = dependencies.render;
 
-    return text_center => ({
+    const text_center = glm.vec2(-8.1, -21.5);
+    return ({
         draw: function(screen_frame_store, object) {
             const screen_frame = screen_state_storage.unpack(screen_frame_store);
             const screen_mapping = PanZoomMapping(screen_frame);
@@ -36,16 +37,16 @@ function SvgObjectView(dependencies, highlight_width) {
             }, [], object.label || '');
             const object_color = object.color??'contrast';
             const color_class = object_color.startsWith('#')? '':'object-'+object_color;
-            const g = svg.g({class: 'object object-label'}, [
+            const g = svg.g({class: `object ${color_class}`}, [
                     svg.foreignObject(
                         {
-                            class: `object ${color_class}` // TODO: do we need to duplicate the object class here?
+                            class: `object-label-wrapper ${color_class}`
                         }, [symbol], 
                         object_screen_position.add(text_center),
                         glm.vec2(1, 1)),
                     svg.foreignObject(
                         {
-                            class: `object ${color_class}` // TODO: do we need to duplicate the object class here?
+                            class: `object-label-wrapper ${color_class}`
                         }, [label], 
                         object_screen_position.add(glm.vec2(0,-33.3))
                             .add(svg_object_attributes.label_offset_id_to_offset(label_offset_id)),

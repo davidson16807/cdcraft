@@ -88,7 +88,7 @@ function SvgArrowView(dependencies, settings) {
             glm.normalize(arc_midpoint_offset_from_origin) : glm.vec2(0,1);
         const color_class = arrow.color.startsWith('#')? '':'arrow-'+arrow.color;
         const div = html.div({
-            class:`arrow-label ${color_class}`,
+            class:`arrow-label`,
             xmlns:"http://www.w3.org/1999/xhtml",
         },[], arrow.label);
         render(div, {throwOnError: false});
@@ -97,10 +97,10 @@ function SvgArrowView(dependencies, settings) {
         This is not very performant, however measurement 
         can only be done when an element is added to the document.
         */
-        document.body.appendChild(div);
-        const label_height = div.offsetHeight;
-        const label_width = div.offsetWidth;
-        document.body.removeChild(div);
+        // document.body.appendChild(div);
+        // const label_height = div.offsetHeight;
+        // const label_width = div.offsetWidth;
+        // document.body.removeChild(div);
         const label_offset_id = arrow.label_offset_id || glm.ivec2(0,1);
         const g = svg.g(
             {
@@ -138,9 +138,7 @@ function SvgArrowView(dependencies, settings) {
                         class:`arrow-label-wrapper ${color_class}`
                     }, [div], 
                     arc_midpoint
-                        .add(arc_midpoint_direction_from_origin.mul(15*label_offset_id.y))
-                        .sub(glm.vec2(label_width * linearstep(-1, 1, -sign(arrow.arc.min_length_clockwise)*arc_direction.y), 
-                                      label_height/2.0)),
+                        .add(arc_midpoint_direction_from_origin.mul(40*label_offset_id.y)),
                     glm.vec2(1, 1)),
             ]);
         return g;
