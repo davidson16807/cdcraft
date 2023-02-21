@@ -3,7 +3,7 @@
 function SvgObjectAttributes(math) {
     const sign = math.sign;
     return {
-        label_offset_id_to_offset: (offset) => glm.vec2(offset.x, -40*offset.y),
+        label_offset_id_to_offset: (offset) => glm.vec2(40*offset.x, -50*offset.y),
         label_offset_id_to_style:  (offset) => 'float:'+(offset.x>=0? 'left':'right'),
     };
 }
@@ -47,7 +47,7 @@ function SvgObjectView(dependencies, highlight_width) {
                         {
                             class: `object ${color_class}` // TODO: do we need to duplicate the object class here?
                         }, [label], 
-                        object_screen_position.add(text_center)
+                        object_screen_position.add(glm.vec2(0,-33.3))
                             .add(svg_object_attributes.label_offset_id_to_offset(label_offset_id)),
                         glm.vec2(1, 1)),
                 ]);

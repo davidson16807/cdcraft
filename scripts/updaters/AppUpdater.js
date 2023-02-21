@@ -352,7 +352,6 @@ function AppUpdater(
             const arrow_id = app_io.diagram.arrows.indexOf(arrow);
             if (arrow_id >= 0) {
                 if (event.buttons == 2 && !arrow.is_edited) {
-                    console.log('here')
                     event.stopPropagation();
                     history.do(app_io, app_io.diagram.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]}), true);
                     drawing.redraw(undefined, app_io, dom_io);
