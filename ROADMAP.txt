@@ -9,8 +9,8 @@ HIGH PRIORITY:
 latex export/import 
 
 MEDIUM PRIORITY:
-fix bug where arrow labels are hidden from svg exports
 fix bug where explicit objects persist after deletion
+fix bug where selection deletion removes incorrect objects/arrows
 circle cursor on rmb
 add zoom support to touchpad
 add selection support to touchpad
