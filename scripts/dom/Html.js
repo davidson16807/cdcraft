@@ -6,9 +6,8 @@
 function Html(){
 
     function node(tag, attributes, children, textContent){
-        attributes = attributes || {};
-        children = children || [];
-        textContent = textContent || '';
+        attributes = attributes ?? {};
+        children = children ?? [];
         const result = document.createElement(tag);
         for (let name in attributes){
             if (name.startsWith('on')) {
@@ -17,7 +16,9 @@ function Html(){
                 result.setAttribute(name, attributes[name])
             }
         }
-        result.textContent = textContent;
+        if (textContent != null) {
+            result.textContent = textContent;
+        }
         for (let child of children){
             result.appendChild(child);
         }

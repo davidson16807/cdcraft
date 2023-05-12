@@ -22,10 +22,9 @@
 function HtmlMultientityToolbarView(dependencies) {
 
     const html                       = dependencies.html;
-    const view_event_deferal         = dependencies.view_event_deferal;
 
     const drawing = {};
-    drawing.draw = function(dom, app, onbuttonclick) {
+    drawing.draw = function(app, onbuttonclick) {
         const panels = [];
         const diagram = app.diagram;
 
@@ -35,7 +34,6 @@ function HtmlMultientityToolbarView(dependencies) {
             app.diagram.arrow_selections.length > 0);
 
         if (is_any_entity_selected) {
-            const deferal = view_event_deferal(drawing, diagram, dom);
 
             panels.push(
                 html.div({class:'group-round',}, 

@@ -8,9 +8,10 @@ Function names always match names of their corresponding SVG elements.
 Functions construct their SVG element given only attributes and children as parameters, 
 with optional parameters to allow passing vectored input using glm.vec2().
 */
+
 function Svg(){
 
-    function node(tag, attributes, children){
+    function node(tag, attributes, children, textContent){
         children = children || [];
         const result = document.createElementNS('http://www.w3.org/2000/svg', tag);
         for (let name in attributes){
@@ -20,12 +21,14 @@ function Svg(){
                 result.setAttribute(name, attributes[name])
             }
         }
+        if (textContent != null) {
+            result.textContent = textContent;
+        }
         for (let child of children){
             result.appendChild(child);
         }
         return result;
     };
-
 
     const namespace = {
 
@@ -59,9 +62,9 @@ function Svg(){
 
     };
 
-    const tags = ['svg', 'g', 'path'];
+    const tags = ['svg', 'style', 'g', 'path'];
     for(let tag of tags){
-        namespace[tag] = (attributes, children) => node(tag, attributes, children)
+        namespace[tag] = (attributes, children, textContent) => node(tag, attributes, children, textContent)
     }
 
     return namespace;

@@ -1,9 +1,11 @@
 'use strict';
 
 /*
-`Diagram` is a data structure that represents all state in the application that can be tracked within an undo/redo history.
-This includes all model and view state but excludes control state such as the state of mouse drags or the undo/redo history itself. 
-The composition of a Diagram with its control state is known as the `App`.
+`Diagram` is a data structure that represents all state in the application that the user may care to preserve.
+This represents all state that can be saved and loaded, 
+and is equivalent to all state that can be tracked within an undo/redo history.
+It includes all model and view state but excludes control state such as the state of mouse drags or the undo/redo history itself. 
+The composition of a Diagram with its control state is known as the `AppState`.
 */
 class Diagram {
     constructor(

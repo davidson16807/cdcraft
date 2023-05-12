@@ -17,7 +17,6 @@ function SvgArrowView(dependencies, settings) {
     const html                   = dependencies.html;
     const svg                    = dependencies.svg;
     const svg_arrow_attributes   = dependencies.svg_arrow_attributes;
-    const view_event_deferal     = dependencies.view_event_deferal;
 
     const source_trim_length = settings.source_trim_length;
     const target_trim_length = settings.target_trim_length;
@@ -72,7 +71,7 @@ function SvgArrowView(dependencies, settings) {
     ];
 
     const drawing = {};
-    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter, onleave) {
+    drawing.draw = function(screen_state_store, arrow, arrows) {
         const screen_state = screen_state_storage.unpack(screen_state_store);
         const point_arc = stored_arcs_and_point_arcs_curried(arrows).stored_arc_to_point_arc(arrow.arc);
         const sampler_arc = point_arcs_and_sampler_arcs.point_arc_to_sampler_arc(point_arc);
@@ -88,31 +87,27 @@ function SvgArrowView(dependencies, settings) {
             glm.length(arc_midpoint_offset_from_origin) > 1? 
             glm.normalize(arc_midpoint_offset_from_origin) : glm.vec2(0,1);
         const color_class = arrow.color.startsWith('#')? '':'arrow-'+arrow.color;
-        const drag_class = drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never';
-        const div = html.div({class:`arrow-label`},[], arrow.label);
+        const div = html.div({
+            class:`arrow-label`,
+            xmlns:"http://www.w3.org/1999/xhtml",
+        },[], arrow.label);
         render(div, {throwOnError: false});
         /*
         Append the label, measure its dimensions, then remove.
         This is not very performant, however measurement 
         can only be done when an element is added to the document.
         */
-        document.body.appendChild(div);
-        const label_height = div.offsetHeight;
-        const label_width = div.offsetWidth;
-        document.body.removeChild(div);
+        // document.body.appendChild(div);
+        // const label_height = div.offsetHeight;
+        // const label_width = div.offsetWidth;
+        // document.body.removeChild(div);
         const label_offset_id = arrow.label_offset_id || glm.ivec2(0,1);
         const g = svg.g(
             {
-                class: `arrow-group ${color_class} ${drag_class}`,
+                class: `arrow ${color_class}`,
                 // color: arrow.color.startsWith('#')? arrow.color:'',
             },
             [
-                svg.path({
-                    'stroke-width': screen_highlight_width, 
-                    'stroke-linecap':'round', 
-                    class:"arrow-highlight", 
-                    d: svg_arrow_attributes.path(screen_arc), 
-                }),
                 svg.path({
                     'stroke-width': arrow_line_width,
                     class:"arrow", 
@@ -143,23 +138,9 @@ function SvgArrowView(dependencies, settings) {
                         class:`arrow-label-wrapper ${color_class}`
                     }, [div], 
                     arc_midpoint
-                        .add(arc_midpoint_direction_from_origin.mul(15*label_offset_id.y))
-                        .sub(glm.vec2(label_width * linearstep(-1, 1, -sign(arrow.arc.min_length_clockwise)*arc_direction.y), 
-                                      label_height/2.0)),
+                        .add(arc_midpoint_direction_from_origin.mul(40*label_offset_id.y)),
                     glm.vec2(1, 1)),
             ]);
-        const deferal = view_event_deferal(drawing, arrow, dom);
-        if (onclick != null) {
-            g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
-            g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
-        }
-        if (onenter != null) {
-            g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
-            g.addEventListener('mouseenter', deferal.callbackPrevent(onenter));
-        }
-        if (onleave != null) {
-            g.addEventListener('mouseleave', deferal.callbackPrevent(onleave));
-        }
         return g;
     }
     return drawing;

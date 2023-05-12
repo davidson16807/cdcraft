@@ -9,7 +9,6 @@ function SvgArrowMidpointView(dependencies, settings) {
     const sampler_arc_properties = dependencies.sampler_arc_properties;
     const sampler_arc_resizing = dependencies.sampler_arc_resizing;
     const sampler_arc_transforms = dependencies.sampler_arc_transforms;
-    const view_event_deferal = dependencies.view_event_deferal;
     const screen_state_storage = dependencies.screen_state_storage;
 
     const source_trim_length = settings.source_trim_length;
@@ -17,7 +16,7 @@ function SvgArrowMidpointView(dependencies, settings) {
     const midpoint_width     = settings.midpoint_width;
 
     const drawing = {};
-    drawing.draw = function(dom, screen_state_store, arrow, arrows, drag_type, onclick, onenter, onleave) {
+    drawing.draw = function(screen_state_store, arrow, arrows, drag_class, onclick, onenter, onleave) {
         const screen_frame = screen_state_storage.unpack(screen_state_store);
         const screen_mapping = PanZoomMapping(screen_frame);
         const screen_midpoint_width = screen_mapping.distance.apply(midpoint_width);
@@ -29,28 +28,27 @@ function SvgArrowMidpointView(dependencies, settings) {
 
         const g = svg.g(
             {
-                class: (drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never'),
+                class: drag_class,
             },
             [
                 svg.circle(
                     {
-                        class: "object-highlight", 
+                        class: ['object-highlight', drag_class].join(' '), 
                         r: screen_midpoint_width/2.0
                     }, 
                     sampler_arc_properties.position(screen_arc, 0.5)
                 ),
             ]);
-        const deferal = view_event_deferal(drawing, arrow, dom);
         if (onclick != null) {
-            g.addEventListener('mousedown',  deferal.callbackPrevent(onclick));
-            g.addEventListener('touchstart', deferal.callbackPrevent(onclick));
+            g.addEventListener('mousedown',  onclick);
+            g.addEventListener('touchstart', onclick);
         }
         if (onenter != null) {
-            g.addEventListener('mousedown', deferal.callbackPrevent(onenter));
-            g.addEventListener('mouseover', deferal.callbackPrevent(onenter));
+            g.addEventListener('mousedown', onenter);
+            g.addEventListener('mouseover', onenter);
         }
         if (onleave != null) {
-            g.addEventListener('mouseout', deferal.callbackPrevent(onleave));
+            g.addEventListener('mouseout', onleave);
         }
         return g;
     }

@@ -27,10 +27,9 @@
 function HtmlArrowToolbarView(dependencies) {
 
     const html                       = dependencies.html;
-    const view_event_deferal         = dependencies.view_event_deferal;
 
     const drawing = {};
-    drawing.draw = function(dom, app, ontextinput, onbuttonclick) {
+    drawing.draw = function(app, ontextinput, onbuttonclick) {
         const panels = [];
         const diagram = app.diagram;
 
@@ -42,7 +41,6 @@ function HtmlArrowToolbarView(dependencies) {
         if (is_single_arrow_selected) {
             
             const arrow = diagram.arrows[diagram.arrow_selections[0]];
-            const deferal = view_event_deferal(drawing, arrow, dom);
 
             const offset = arrow.label_offset_id || glm.ivec2(0,1);
             panels.push(
@@ -55,7 +53,7 @@ function HtmlArrowToolbarView(dependencies) {
                             class:   'form-control',
                             value:   arrow.label || '',
                             placeholder: '\\[description\\]',
-                            oninput: deferal.callback(ontextinput),
+                            oninput: ontextinput,
                         }),
                         html.div({class:'horizontal-axis-group group-joined'}, 
                             [
