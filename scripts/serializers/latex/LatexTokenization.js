@@ -74,20 +74,6 @@ class ParseTag {
 }
 
 /*
-`ParseTagOps` provides useful operations that can be performed on a `ParseTag`
-*/
-const ParseTagOps = (maybes) => ({
-    consume:  i => (array) => new ParseTag(undefined, array.slice(0,i)),
-    fluff:             tag => new ParseTag(),
-    type:    (name) => tag => new ParseTag(undefined, [tag.with({type: name})]),
-    join: next => current => 
-                next == null || current == null? null
-                :   next.with({
-                        tags: [...current.tags, ...next.tags], 
-                    }),
-});
-
-/*
 `ParseState` represents the state of a parsing or formatting operation.
 It stores two `ParseTag`s, one with flat list of children, the other nested.
 During parsing, the flat list is transferred to the nested tree, and during formatting, the opposite occurs.
@@ -108,13 +94,17 @@ class ParseState {
 /*
 `ParseStateOps` provides useful operations that can be performed on a `ParseState`
 */
-const ParseStateOps = (maybes, tags)=>({
-    consume: i => (array) => new ParseState(tags.consume(i)(array), array.slice(i)),
-    fluff:                    maybes.bind(state=>state.with({tree: tags.fluff (state.tree)})),
-    type:          (name) => maybes.bind(state=>state.with({tree: tags.type  (name)(state.tree)})),
+const ParseStateOps = (maybes)=>({
+    consume: i => (array) => new ParseState(new ParseTag(null, array.slice(0,i)), array.slice(i)),
+    fluff:                   maybes.bind(state=>state.with({tree: new ParseTag(null, [])})),
+    type:          (name) => maybes.bind(state=>state.with({tree: new ParseTag(null, [state.tree.with({type: name})])})),
     join: next => current => 
                 next == null || current == null? null
-                :   next.with({ tree: tags.join(next.tree)(current.tree) }),
+                :   next.with({ 
+                        tree: next.tree.with({ 
+                            tags: [...current.tree.tags, ...next.tree.tags] 
+                        }) 
+                    }),
 });
 
 const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps, states) => ({
@@ -184,7 +174,7 @@ let lists = ListOps();
 let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
             ExtendedParsingExpressionGrammarPrimitives(lists,
                 BasicParsingExpressionGrammarPrimitives(maybes, maps, lists, 
-                    MaybeMapOps(), ParseStateOps(maybes, ParseTagOps(maybes)))));
+                    MaybeMapOps(), ParseStateOps(maybes))));
 
 const {rule, type, fluff, not, option, choice, repeat} = peg;
 
@@ -254,7 +244,7 @@ const diagram = [
 rule([not(']'), 'foo'])(lexer.tokenize('foo]'))
 
 let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, 
-    ListOps(), MaybeMapOps(), ParseStateOps(maybes, ParseTagOps(maybes)));
+    ListOps(), MaybeMapOps(), ParseStateOps(maybes));
 console.log(bpeg.exact('x')(['x']));
 console.log(bpeg.exact('x')([]));
 console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))(['a','b']));
