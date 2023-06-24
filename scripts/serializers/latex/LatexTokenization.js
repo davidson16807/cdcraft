@@ -61,7 +61,7 @@ const Lexer = (string_regexen) =>
 analogous to an xml tag. It includes only a data type and a list of ParseTags as children.
 */
 const Tag = (tags, type) => ({
-            tags : tags,
+            tags : tags ?? [],
             type : type,
             with : (attributes) => 
                 Tag(
@@ -76,8 +76,8 @@ It stores two `Tag`s, one with flat list of children, the other nested.
 During parsing, the flat list is transferred to the nested tree, and during formatting, the opposite occurs.
 */
 const State = (tree, list) => ({
-            tree : tree,
-            list : list,
+            tree : tree ?? Tag(),
+            list : list ?? Tag(),
             with : (attributes) => 
                 State(
                     attributes.tree ?? tree,
@@ -90,7 +90,7 @@ const State = (tree, list) => ({
 */
 const StateOps = (maybes)=>({
     consume: i => (array) => State(Tag(array.slice(0,i)), array.slice(i)),
-    fluff:                   maybes.bind(state=>state.with({tree: Tag([])})),
+    fluff:                   maybes.bind(state=>state.with({tree: Tag()})),
     type:          (name) => maybes.bind(state=>state.with({tree: Tag([state.tree.with({type: name})])})),
     join: next => current => 
                 next == null || current == null? null
