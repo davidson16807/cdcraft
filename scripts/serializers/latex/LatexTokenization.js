@@ -39,10 +39,10 @@ where `1` is any function that returns a nullish value,
 and `x` is any function that returns a nonnullish value.
 */
 const MaybeMapOps = () => ({
-    fill   : (...fs) => x => fs.reduceRight((gx,f) => gx ?? f(x), fs.slice(-1)[0](x)),
-    bind   : (f, g)  => x => (gx => gx == null? null:f(x)) (g(x)),
-    swap   : (f, g)  => x => (gx => gx != null? null:f(x)) (g(x)),
-    make   : (f, g)  => x => f(x)? g(x) : null,
+    fill   : (...fs) => x => fs.reduce((gx,f) => gx ?? f(x), fs[0](x)),
+    bind   : (g, f)  => x => (gx => gx == null? null:f(x)) (g(x)),
+    swap   : (g, f)  => x => (gx => gx != null? null:f(x)) (g(x)),
+    make   : (g, f)  => x => f(x)? g(x) : null,
     exists :  f      => x => f(x) != null,
 });
 
@@ -122,13 +122,13 @@ const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps
     fluff: (rule)       => maps.chain(rule, states.fluff),
     type:  (name, rule) => maps.chain(rule, states.type(name)),
 
-    and:   (rule)  => maybe_maps.bind (states.consume(0), rule),
-    not:   (rule)  => maybe_maps.swap (states.consume(0), rule),
-    option:(rule)  => maybe_maps.fill (states.consume(0), rule),
-    any:              maybe_maps.bind (states.consume(1), lists.index(0)),
-    exact: (value) => maybe_maps.bind (states.consume(1), maps.chain(lists.index(0), token => token!=value? null:token)),
-    regex: (regex) => maybe_maps.bind (states.consume(1), maps.chain(lists.index(0), maybes.bind(token=>token.match(regex)))),
-    choice:           maps.right(maybe_maps.fill),
+    and:   (rule)  => maps.right(maybe_maps.bind) (states.consume(0), rule),
+    not:   (rule)  => maps.right(maybe_maps.swap) (states.consume(0), rule),
+    option:(rule)  => maps.right(maybe_maps.fill) (states.consume(0), rule),
+    any:              maps.right(maybe_maps.bind) (states.consume(1), lists.index(0)),
+    exact: (value) => maps.right(maybe_maps.bind) (states.consume(1), maps.chain(lists.index(0), token => token!=value? null:token)),
+    regex: (regex) => maps.right(maybe_maps.bind) (states.consume(1), maps.chain(lists.index(0), maybes.bind(token=>token.match(regex)))),
+    choice:           maybe_maps.fill,
 
     join: (...rules) => 
         maps.chain(states.consume(0), 
