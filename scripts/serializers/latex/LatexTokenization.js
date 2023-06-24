@@ -70,26 +70,26 @@ const Tag = (tags, type) => ({
 It stores two `Tag`s, one with flat list of children, the other nested.
 During parsing, the flat list is transferred to the nested tree, and during formatting, the opposite occurs.
 */
-const State = (tree, list) => ({
-        tree : tree ?? Tag(),
+const State = (list, tree) => ({
         list : list ?? Tag(),
+        tree : tree ?? Tag(),
     });
 
 /*
 `StateOps` provides useful operations that can be performed on a `State`
 */
 const StateOps = (maybes)=>({
-    consume: i => (array) => State(Tag(array.slice(0,i)), array.slice(i)),
-    // consume: i => ({tree,list}) => 
+    consume: i => (array) => State(array.slice(i), Tag(array.slice(0,i))),
+    // consume: i => ({list,tree}) => 
     //     State(
-    //         Tag(list.tags.slice(0,i), tree.type)
-    //         Tag(list.tags.slice(i), list.type)
+    //         Tag(list.tags.slice(i), list.type),
+    //         Tag(list.tags.slice(0,i), tree.type),
     //     ),
-    fluff:                   maybes.bind(({tree,list})=>State(Tag(), list)),
-    type:          (name) => maybes.bind(({tree,list})=>State(Tag([Tag(tree.tags, name)]), list)),
+    fluff:                   maybes.bind(({list,tree})=>State(list)),
+    type:          (name) => maybes.bind(({list,tree})=>State(list, Tag([Tag(tree.tags, name)]))),
     join: next => current => 
             next == null || current == null? null
-            : State(Tag([...current.tree.tags, ...next.tree.tags], next.tree.type ), next.list),
+            : State(next.list, Tag([...current.tree.tags, ...next.tree.tags], next.tree.type )),
 });
 
 const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps, states) => ({
