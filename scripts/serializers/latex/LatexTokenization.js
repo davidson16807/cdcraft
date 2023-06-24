@@ -1,7 +1,7 @@
 'use strict';
 
 /*
-`ParseTagOps` provides useful operations that can be performed on a list
+`ListOps` provides useful operations that can be performed on a list
 */
 const ListOps = () => ({
     index: i => array => i>=0? array[i] : array[array.length-1],
@@ -10,7 +10,7 @@ const ListOps = () => ({
 });
 
 /*
-`ParseTagOps` provides useful operations that can be performed on functions
+`MapOps` provides useful operations that can be performed on functions
 */
 const MapOps = () => ({
     id : x => x,
@@ -61,9 +61,9 @@ const Lexer = (string_regexen) =>
 analogous to an xml tag. It includes only a data type and a list of ParseTags as children.
 */
 class ParseTag {
-    constructor(type, tags){
-        this.type = type;
+    constructor(tags, type){
         this.tags = tags ?? [];
+        this.type = type;
     }
     with(attributes){
         return new ParseTag(
@@ -95,9 +95,9 @@ class ParseState {
 `ParseStateOps` provides useful operations that can be performed on a `ParseState`
 */
 const ParseStateOps = (maybes)=>({
-    consume: i => (array) => new ParseState(new ParseTag(null, array.slice(0,i)), array.slice(i)),
-    fluff:                   maybes.bind(state=>state.with({tree: new ParseTag(null, [])})),
-    type:          (name) => maybes.bind(state=>state.with({tree: new ParseTag(null, [state.tree.with({type: name})])})),
+    consume: i => (array) => new ParseState(new ParseTag(array.slice(0,i)), array.slice(i)),
+    fluff:                   maybes.bind(state=>state.with({tree: new ParseTag([])})),
+    type:          (name) => maybes.bind(state=>state.with({tree: new ParseTag([state.tree.with({type: name})])})),
     join: next => current => 
                 next == null || current == null? null
                 :   next.with({ 
