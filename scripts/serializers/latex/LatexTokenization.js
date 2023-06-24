@@ -61,14 +61,14 @@ const Lexer = (string_regexen) =>
 analogous to an xml tag. It includes only a data type and a list of ParseTags as children.
 */
 const Tag = (tags, type) => ({
-            tags : tags ?? [],
-            type : type,
-            with : (attributes) => 
-                Tag(
-                    attributes.tags ?? tags,
-                    attributes.type ?? type,
-                ),
-        });
+        tags : tags ?? [],
+        type : type,
+        with : (attributes) => 
+            Tag(
+                attributes.tags ?? tags,
+                attributes.type ?? type,
+            ),
+    });
 
 /*
 `State` represents the state of a parsing or formatting operation.
@@ -76,14 +76,14 @@ It stores two `Tag`s, one with flat list of children, the other nested.
 During parsing, the flat list is transferred to the nested tree, and during formatting, the opposite occurs.
 */
 const State = (tree, list) => ({
-            tree : tree ?? Tag(),
-            list : list ?? Tag(),
-            with : (attributes) => 
-                State(
-                    attributes.tree ?? tree,
-                    attributes.list ?? list,
-                ),
-        });
+        tree : tree ?? Tag(),
+        list : list ?? Tag(),
+        with : (attributes) => 
+            State(
+                attributes.tree ?? tree,
+                attributes.list ?? list,
+            ),
+    });
 
 /*
 `StateOps` provides useful operations that can be performed on a `State`
@@ -239,54 +239,54 @@ rule([not(']'), 'foo'])(lexer.tokenize('foo]'))
 
 let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, 
     ListOps(), MaybeMapOps(), StateOps(maybes));
-console.log(bpeg.exact('x')(['x']));
-console.log(bpeg.exact('x')([]));
-console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))(['a','b']));
-console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))(['a']));
-console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))([]));
-console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))(['a','c']));
-console.log(bpeg.repeat()(bpeg.exact('a'))(['a','a']));
-console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))(['b']));
-console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))(['c']));
-console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))([]));
+console.log(bpeg.exact('x')( maps.id( ['x' ] )));
+console.log(bpeg.exact('x')( maps.id( [ ] )));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['a','b' ] )));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['a' ] )));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( maps.id( [ ] )));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['a','c' ] )));
+console.log(bpeg.repeat()(bpeg.exact('a'))( maps.id( ['a','a' ] )));
+console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['b' ] )));
+console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['c' ] )));
+console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))( maps.id( [ ] )));
 
-console.log(rule('x')(['x']));
-console.log(rule('x')([]));
-console.log(rule(['a', 'b'])(['a','b']));
-console.log(rule(['a', 'b'])(['a']));
-console.log(rule(['a', 'b'])([]));
-console.log(rule(['a', 'b'])(['a','c']));
-console.log(repeat()('a')(['a','a']));
-console.log(repeat()('a')(['a']));
-console.log(repeat()('a')([]));
-console.log(choice('a', 'b')(['a']));
-console.log(choice('a', 'b')(['b']));
-console.log(choice('a', 'b')(['c']));
-console.log(choice('a', 'b')([]));
-console.log(rule([not(')'), 'a'])(['a']));
-console.log(rule([not(')'), 'a'])([')']));
-console.log(rule([not(')'), 'a'])([])); 
+console.log(rule('x')( maps.id( ['x' ] )));
+console.log(rule('x')( maps.id( [ ] )));
+console.log(rule(['a', 'b'])( maps.id( ['a','b' ] )));
+console.log(rule(['a', 'b'])( maps.id( ['a' ] )));
+console.log(rule(['a', 'b'])( maps.id( [ ] )));
+console.log(rule(['a', 'b'])( maps.id( ['a','c' ] )));
+console.log(repeat()('a')( maps.id( ['a','a' ] )));
+console.log(repeat()('a')( maps.id( ['a' ] )));
+console.log(repeat()('a')( maps.id( [ ] )));
+console.log(choice('a', 'b')( maps.id( ['a' ] )));
+console.log(choice('a', 'b')( maps.id( ['b' ] )));
+console.log(choice('a', 'b')( maps.id( ['c' ] )));
+console.log(choice('a', 'b')( maps.id( [ ] )));
+console.log(rule([not(')'), 'a'])( maps.id( ['a' ] )));
+console.log(rule([not(')'), 'a'])( maps.id( [')' ] )));
+console.log(rule([not(')'), 'a'])( maps.id( [ ] ))); 
 
-console.log(repeat()([not(')'), 'a'])(['a','a',')']));
-console.log(repeat()([not(')'), 'a'])([')']));
-console.log(repeat()([not(')'), 'a'])([]));
+console.log(repeat()([not(')'), 'a'])( maps.id( ['a','a',')' ] )));
+console.log(repeat()([not(')'), 'a'])( maps.id( [')' ] )));
+console.log(repeat()([not(')'), 'a'])( maps.id( [ ] )));
 
-console.log(repeat(2)([not(')'), 'a'])(['a','a','a',')']));
-console.log(repeat(2)([not(')'), 'a'])(['a','a',')']));
-console.log(repeat(2)([not(')'), 'a'])(['a',')']));
-console.log(repeat(2)([not(')'), 'a'])([]));
+console.log(repeat(2)([not(')'), 'a'])( maps.id( ['a','a','a',')' ] )));
+console.log(repeat(2)([not(')'), 'a'])( maps.id( ['a','a',')' ] )));
+console.log(repeat(2)([not(')'), 'a'])( maps.id( ['a',')' ] )));
+console.log(repeat(2)([not(')'), 'a'])( maps.id( [ ] )));
 
-console.log(rule([not(')'), 'a'])(['a',')']));
-console.log(rule([not(')'), 'a'])(['a',')']));
-console.log(rule(['a'])(['a',')']));
-console.log(rule([choice(word, directive)])(['a',')']));
-console.log(rule([choice(directive)])(['a',')']));
-console.log(rule([choice(parens, brackets, braces, directive, choice(word))])(['a',')']));
-console.log(rule(type('variable',word))(['a',')']));
-console.log(rule([type('variable',word)])(['a',')']));
-console.log(rule([choice(parens, brackets, braces, directive, choice(type('variable',word)))])(['a',')']));
-console.log(rule([choice(parens, brackets, braces, directive, value)])(['a',')']));
-console.log(rule([token])(['a',')']));
+console.log(rule([not(')'), 'a'])( maps.id( ['a',')' ] )));
+console.log(rule([not(')'), 'a'])( maps.id( ['a',')' ] )));
+console.log(rule(['a'])( maps.id( ['a',')' ] )));
+console.log(rule([choice(word, directive)])( maps.id( ['a',')' ] )));
+console.log(rule([choice(directive)])( maps.id( ['a',')' ] )));
+console.log(rule([choice(parens, brackets, braces, directive, choice(word))])( maps.id( ['a',')' ] )));
+console.log(rule(type('variable',word))( maps.id( ['a',')' ] )));
+console.log(rule([type('variable',word)])( maps.id( ['a',')' ] )));
+console.log(rule([choice(parens, brackets, braces, directive, choice(type('variable',word)))])( maps.id( ['a',')' ] )));
+console.log(rule([choice(parens, brackets, braces, directive, value)])( maps.id( ['a',')' ] )));
+console.log(rule([token])( maps.id( ['a',')' ] )));
 console.log(rule([token])(lexer.tokenize('a)')));
 
 console.log(rule(brackets)(lexer.tokenize('[foo]')));
