@@ -57,16 +57,16 @@ const Lexer = (string_regexen) =>
     })) (new RegExp('('+string_regexen.join('|')+')', 'g'));
 
 /*
-`ParseTag` is a sparse but complete representation of an object that has been parsed, 
+`Tag` is a sparse but complete representation of an object that has been parsed, 
 analogous to an xml tag. It includes only a data type and a list of ParseTags as children.
 */
-class ParseTag {
+class Tag {
     constructor(tags, type){
         this.tags = tags ?? [];
         this.type = type;
     }
     with(attributes){
-        return new ParseTag(
+        return new Tag(
             attributes.type     ?? this.type,
             attributes.tags ?? this.tags,
         );
@@ -74,17 +74,17 @@ class ParseTag {
 }
 
 /*
-`ParseState` represents the state of a parsing or formatting operation.
-It stores two `ParseTag`s, one with flat list of children, the other nested.
+`State` represents the state of a parsing or formatting operation.
+It stores two `Tag`s, one with flat list of children, the other nested.
 During parsing, the flat list is transferred to the nested tree, and during formatting, the opposite occurs.
 */
-class ParseState {
+class State {
     constructor(tree, list){
         this.tree = tree;
         this.list = list;
     }
     with(attributes){
-        return new ParseState(
+        return new State(
             attributes.tree ?? this.tree,
             attributes.list ?? this.list,
         );
@@ -92,12 +92,12 @@ class ParseState {
 }
 
 /*
-`ParseStateOps` provides useful operations that can be performed on a `ParseState`
+`StateOps` provides useful operations that can be performed on a `State`
 */
-const ParseStateOps = (maybes)=>({
-    consume: i => (array) => new ParseState(new ParseTag(array.slice(0,i)), array.slice(i)),
-    fluff:                   maybes.bind(state=>state.with({tree: new ParseTag([])})),
-    type:          (name) => maybes.bind(state=>state.with({tree: new ParseTag([state.tree.with({type: name})])})),
+const StateOps = (maybes)=>({
+    consume: i => (array) => new State(new Tag(array.slice(0,i)), array.slice(i)),
+    fluff:                   maybes.bind(state=>state.with({tree: new Tag([])})),
+    type:          (name) => maybes.bind(state=>state.with({tree: new Tag([state.tree.with({type: name})])})),
     join: next => current => 
                 next == null || current == null? null
                 :   next.with({ 
@@ -174,7 +174,7 @@ let lists = ListOps();
 let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
             ExtendedParsingExpressionGrammarPrimitives(lists,
                 BasicParsingExpressionGrammarPrimitives(maybes, maps, lists, 
-                    MaybeMapOps(), ParseStateOps(maybes))));
+                    MaybeMapOps(), StateOps(maybes))));
 
 const {rule, type, fluff, not, option, choice, repeat} = peg;
 
@@ -244,7 +244,7 @@ const diagram = [
 rule([not(']'), 'foo'])(lexer.tokenize('foo]'))
 
 let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, 
-    ListOps(), MaybeMapOps(), ParseStateOps(maybes));
+    ListOps(), MaybeMapOps(), StateOps(maybes));
 console.log(bpeg.exact('x')(['x']));
 console.log(bpeg.exact('x')([]));
 console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))(['a','b']));
