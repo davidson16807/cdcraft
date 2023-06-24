@@ -1,17 +1,20 @@
 'use strict';
 
+/*
+`ParseTagOps` provides useful operations that can be performed on a list
+*/
 const ListOps = () => ({
     index: i => array => i>=0? array[i] : array[array.length-1],
     slice: (i,j) => array => array.slice(i,j),
     range: n => [...Array(n).keys()],
 });
 
+/*
+`ParseTagOps` provides useful operations that can be performed on functions
+*/
 const MapOps = () => ({
     id : x => x,
     right  : f => (...xs) => f(...xs.reverse()),
-    encurry: f => a => b => f(a,b),
-    decurry: f => (a,b)  => f(a)(b),
-    splat  : f => xs => f(...xs),
     chain  : (...fs) => x => fs.reduce((fx, g) => g(fx), x),
     while  : predicate => f => x => { let last; while( predicate(x=f(last=x))){} return last; },
 });
@@ -44,19 +47,6 @@ const MaybeMapOps = () => ({
 });
 
 /*
-`MaybeMapOps` is analogous to MaybeOps, but operates on the datatype: 2=1+x, 
-where `1` is any bimap that returns a nullish value, 
-and `x` is any bimap that returns a nonnullish value.
-*/
-const MaybeBiMapOps = () => ({
-    fill   : (...fs) => x => fs.reduceRight((gx,f) => gx ?? f(x), fs.slice(-1)[0](x)),
-    bind   : (f, g)  => x => (gx => gx == null? null:f(x)) (g(x)),
-    swap   : (f, g)  => x => (gx => gx != null? null:f(x)) (g(x)),
-    make   : (f, g)  => x => f(x)? g(x) : null,
-    exists :  f      => x => f(x) != null,
-});
-
-/*
 `Lexer` results in a namespace of pure functions 
 that describe maps between strings and arrays of tokens.
 */
@@ -66,6 +56,10 @@ const Lexer = (string_regexen) =>
         detokenize: (tokens) => tokens.join(' '),
     })) (new RegExp('('+string_regexen.join('|')+')', 'g'));
 
+/*
+`ParseTag` is a sparse but complete representation of an object that has been parsed, 
+analogous to an xml tag. It includes only a data type and a list of ParseTags as children.
+*/
 class ParseTag {
     constructor(type, children){
         this.type = type;
@@ -79,42 +73,53 @@ class ParseTag {
     }
 }
 
+/*
+`ParseTagOps` provides useful operations that can be performed on a `ParseTag`
+*/
 const ParseTagOps = (maybes) => ({
     consume:  i => (array) => new ParseTag(undefined, array.slice(0,i)),
-    junk:             tag => new ParseTag(),
+    fluff:             tag => new ParseTag(),
     type:    (name) => tag => new ParseTag(undefined, [tag.with({type: name})]),
-    advance: next => current => 
+    join: next => current => 
                 next == null || current == null? null
                 :   next.with({
                         children: [...current.children, ...next.children], 
                     }),
 });
 
+/*
+`ParseState` represents the state of a parsing or formatting operation.
+It stores a `ParseTag` and a list of string tokens (`tokens`).
+During parsing, tokens are converted to tags, and during formatting, tags are converted to tokens.
+*/
 class ParseState {
-    constructor(captured, unmatched){
-        this.captured = captured;
-        this.unmatched = unmatched;
+    constructor(tag, tokens){
+        this.tag = tag;
+        this.tokens = tokens;
     }
     with(attributes){
         return new ParseState(
-            attributes.captured  ?? this.captured,
-            attributes.unmatched ?? this.unmatched,
+            attributes.tag    ?? this.tag,
+            attributes.tokens ?? this.tokens,
         );
     }
 }
 
+/*
+`ParseStateOps` provides useful operations that can be performed on a `ParseState`
+*/
 const ParseStateOps = (maybes, tags)=>({
     consume: i => (array) => new ParseState(tags.consume(i)(array), array.slice(i)),
-    junk:                    maybes.bind(state=>state.with({captured: tags.junk (state.captured)})),
-    type:          (name) => maybes.bind(state=>state.with({captured: tags.type  (name)(state.captured)})),
-    advance: next => current => 
+    fluff:                    maybes.bind(state=>state.with({tag: tags.fluff (state.tag)})),
+    type:          (name) => maybes.bind(state=>state.with({tag: tags.type  (name)(state.tag)})),
+    join: next => current => 
                 next == null || current == null? null
-                :   next.with({ captured: tags.advance(next.captured)(current.captured) }),
+                :   next.with({ tag: tags.join(next.tag)(current.tag) }),
 });
 
 const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps, states) => ({
 
-    junk: (rule)       => maps.chain(rule, states.junk),
+    fluff: (rule)       => maps.chain(rule, states.fluff),
     type:  (name, rule) => maps.chain(rule, states.type(name)),
 
     and:   (rule)  => maybe_maps.bind (states.consume(0), rule),
@@ -128,11 +133,11 @@ const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps
     join: (...rules) => 
         maps.chain(states.consume(0), 
             ...rules.map(rule => 
-                maybes.bind(state => states.advance(rule(state.unmatched))(state)))),
+                maybes.bind(state => states.join(rule(state.tokens))(state)))),
 
     repeat: () => (rule) => 
         maps.chain(states.consume(0), 
-            maps.while(maybes.exists)(state => states.advance(rule(state.unmatched))(state))),
+            maps.while(maybes.exists)(state => states.join(rule(state.tokens))(state))),
 
 });
 
@@ -164,7 +169,7 @@ const ShorthandParsingExpressionGrammarPrimitives = (maps, peg) => {
         rule: longhand,
         any:  peg.any,
         type:  (name,rule) => peg.type (name,longhand(rule)),
-        junk:        rule => peg.junk(longhand(rule)),
+        fluff:        rule => peg.fluff(longhand(rule)),
         and:          rule => peg.and(longhand(rule)),
         not:          rule => peg.not(longhand(rule)),
         option:       rule => peg.option(longhand(rule)),
@@ -172,23 +177,6 @@ const ShorthandParsingExpressionGrammarPrimitives = (maps, peg) => {
         repeat: (min=0, max=Infinity) => (rule) =>  peg.repeat(min,max) (longhand(rule)),
     });
 }
-
-// let maps = MapOps();
-// let maybes = MaybeOps();
-// let tags = ParseTagOps(maybes);
-// let states = ParseStateOps(maybes, tags);
-// let peg = BasicParsingExpressionGrammarPrimitives(maybes, maps, 
-//     ListOps(), MaybeMapOps(), ParseStateOps(maybes, tags));
-// console.log(peg.exact('x')(['x']));
-// console.log(peg.exact('x')([]));
-// console.log(peg.join(peg.exact('a'), peg.exact('b'))(['a','b']));
-// console.log(peg.join(peg.exact('a'), peg.exact('b'))(['a']));
-// console.log(peg.join(peg.exact('a'), peg.exact('b'))([]));
-// console.log(peg.join(peg.exact('a'), peg.exact('b'))(['a','c']));
-// console.log(peg.repeat()(peg.exact('a'))(['a','a']));
-// console.log(peg.choice(peg.exact('a'), peg.exact('b'))(['b']));
-// console.log(peg.choice(peg.exact('a'), peg.exact('b'))(['c']));
-// console.log(peg.choice(peg.exact('a'), peg.exact('b'))([]));
 
 let maps = MapOps();
 let maybes = MaybeOps();
@@ -198,7 +186,85 @@ let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
                 BasicParsingExpressionGrammarPrimitives(maybes, maps, lists, 
                     MaybeMapOps(), ParseStateOps(maybes, ParseTagOps(maybes)))));
 
-const {rule, type, junk, and, not, option, choice, repeat, any} = peg;
+const {rule, type, fluff, not, option, choice, repeat} = peg;
+
+const backslash = '\\\\';
+
+const lexer = Lexer([
+    //`'(?:[^']|${backslash}')*?'`,
+    `"(?:[^"]|${backslash}")*?"`,
+    `${backslash}?[a-zA-Z0-9_]+`,
+    `${backslash}\\n`,
+    `[^a-zA-Z0-9_]`,
+    `\\s*`,
+]);
+
+const token     = [];
+const parens    = [fluff('('), repeat()([not(')'), token]), fluff(')')];
+const brackets  = [fluff('['), repeat()([not(']'), token]), fluff(']')];
+const braces    = [fluff('{'), repeat()([not('}'), token]), fluff('}')];
+const word      = /[a-zA-Z_][a-zA-Z0-9_]*/;
+const directive = type('directive',/\\[a-zA-Z0-9_]*/);
+const integer   = type('integer',  /-?[0-9]+/);
+const float     = type('float',    /-?[0-9]+\.[0-9]*([Ee]-?[0-9]*)?/);
+const string    = type('string',   /"(?:[^"]|\\")*?"/);
+const offset    = type('offset',   /[udlr]+/);
+const variable  = type('variable', word);
+const phrase    = type('phrase',   repeat(1)(word));
+const label     = type('label',    [type('text',string), type('modifiers', option("'"), repeat(1)(word))]);
+const text      = type('text',     repeat()(token));
+const value     = choice(offset, variable, string, integer, float);
+const assignment= type('assignment',     [type('key', variable), fluff('='), type('value', value)]);
+token.push(choice(parens, brackets, braces, directive, value));
+
+const arrow = type('arrow', [
+    type('tag',/\\[udlr]*ar(row)?/),
+    fluff('['), 
+    repeat()(type('entry', [choice(assignment, label, phrase, value), fluff(',')])),
+    option(type('entry', choice(assignment, label, phrase, value))),
+    fluff(']'),
+    option(
+        fluff('{'), 
+        type('offset', offset),
+        fluff('}'),
+    ),
+    type('label',
+        repeat()(
+            type('label-position', brackets),
+            type('label-test', braces),
+        ),
+    ),
+]);
+const beginning = lexer.tokenize('\\begin{tikzcd}')
+const ending = lexer.tokenize('\\end{tikzcd}')
+const object = [not(choice('&', '\\', ending)), token];
+const cell = type('cell', repeat()(choice(arrow, object)));
+const row  = type('row', [
+    repeat()([not(choice('\\', ending)), cell, fluff('&')]),
+    option(cell),
+]);
+const diagram = [
+    fluff(beginning),
+    repeat()([row, fluff('\\')]),
+    option(row),
+    fluff(ending),
+];
+
+
+rule([not(']'), 'foo'])(lexer.tokenize('foo]'))
+
+let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, 
+    ListOps(), MaybeMapOps(), ParseStateOps(maybes, ParseTagOps(maybes)));
+console.log(bpeg.exact('x')(['x']));
+console.log(bpeg.exact('x')([]));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))(['a','b']));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))(['a']));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))([]));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))(['a','c']));
+console.log(bpeg.repeat()(bpeg.exact('a'))(['a','a']));
+console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))(['b']));
+console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))(['c']));
+console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))([]));
 
 console.log(rule('x')(['x']));
 console.log(rule('x')([]));
@@ -226,74 +292,6 @@ console.log(repeat(2)([not(')'), 'a'])(['a','a',')']));
 console.log(repeat(2)([not(')'), 'a'])(['a',')']));
 console.log(repeat(2)([not(')'), 'a'])([]));
 
-const backslash = '\\\\';
-
-const lexer = Lexer([
-    //`'(?:[^']|${backslash}')*?'`,
-    `"(?:[^"]|${backslash}")*?"`,
-    `${backslash}?[a-zA-Z0-9_]+`,
-    `${backslash}\\n`,
-    `[^a-zA-Z0-9_]`,
-    `\\s*`,
-]);
-
-
-rule([not(']'), 'foo'])(lexer.tokenize('foo]')) 
-
-
-
-const token     = [];
-const parens    = [junk('('), repeat(0)([not(')'), token]), junk(')')];
-const brackets   = [junk('['), repeat(0)([not(']'), token]), junk(']')];
-const braces   = [junk('{'), repeat(0)([not('}'), token]), junk('}')];
-const word      = /[a-zA-Z_][a-zA-Z0-9_]*/;
-const directive = type('directive',/\\[a-zA-Z0-9_]*/);
-const integer   = type('integer',  /-?[0-9]+/);
-const float     = type('float',    /-?[0-9]+\.[0-9]*([Ee]-?[0-9]*)?/);
-const string    = type('string',   /"(?:[^"]|\\")*?"/);
-const offset    = type('offset',   /[udlr]+/);
-const variable  = type('variable', word);
-const phrase    = type('phrase',   repeat(1)(word));
-const label     = type('label',    [type('text',string), type('modifiers', option("'"), repeat(1)(word))]);
-const text      = type('text',     repeat()(token));
-const value     = choice(offset, variable, string, integer, float);
-const pair      = type('pair',     [type('key', variable), junk('='), type('value', value)]);
-token.push(choice(parens, brackets, braces, directive, value, any));
-
-const arrow = type('arrow', [
-    type('tag',/\\[udlr]*ar(row)?/),
-    junk('['), 
-    repeat()(type('entry', [choice(pair, label, phrase, value), junk(',')])),
-    option(type('entry', choice(pair, label, phrase, value))),
-    junk(']'),
-    option(
-        junk('{'), 
-        type('offset', offset),
-        junk('}'),
-    ),
-    type('label',
-        repeat()(
-            type('label-position', brackets),
-            type('label-test', braces),
-        ),
-    ),
-]);
-const beginning = lexer.tokenize('\\begin{tikzcd}')
-const ending = lexer.tokenize('\\end{tikzcd}')
-const object = [not(choice('&', '\\', ending)), token];
-const cell = type('cell', repeat()(choice(arrow, object)));
-const row  = type('row', [
-    repeat()([not(choice('\\', ending)), cell, junk('&')]),
-    option(cell),
-]);
-const diagram = [
-    junk(beginning),
-    repeat()([row, junk('\\')]),
-    option(row),
-    junk(ending),
-];
-
-
 console.log(rule([not(')'), 'a'])(['a',')']));
 console.log(rule([not(')'), 'a'])(['a',')']));
 console.log(rule(['a'])(['a',')']));
@@ -303,11 +301,9 @@ console.log(rule([choice(parens, brackets, braces, directive, choice(word))])(['
 console.log(rule(type('variable',word))(['a',')']));
 console.log(rule([type('variable',word)])(['a',')']));
 console.log(rule([choice(parens, brackets, braces, directive, choice(type('variable',word)))])(['a',')']));
-console.log(rule([choice(parens, brackets, braces, directive, value, any)])(['a',')']));
+console.log(rule([choice(parens, brackets, braces, directive, value)])(['a',')']));
 console.log(rule([token])(['a',')']));
 console.log(rule([token])(lexer.tokenize('a)')));
-
-
 
 console.log(rule(brackets)(lexer.tokenize('[foo]')));
 console.log(rule(arrow)(lexer.tokenize(`\\arrow[rd]`)));
@@ -315,9 +311,9 @@ console.log(rule(arrow)(lexer.tokenize(`\\arrow[r, "\\phi"]`)));
 console.log(rule(repeat()(arrow))(lexer.tokenize(`\\arrow[rd] \\arrow[r, "\\phi"]`)));
 console.log(rule(cell)(lexer.tokenize(`A \\arrow[rd] \\arrow[r, "\\phi"]`)));
 console.log(rule(row)(lexer.tokenize(`A \\arrow[rd] \\arrow[r, "\\phi"] & B`)));
-console.log(rule([repeat()([row, junk('\\')]), option(row)])(
+console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
     lexer.tokenize(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ C`)));
-console.log(rule([repeat()([row, junk('\\')]), option(row)])(
+console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
     lexer.tokenize(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ & C`)));
 console.log(rule(diagram)(lexer.tokenize(`
     \\begin{tikzcd}
