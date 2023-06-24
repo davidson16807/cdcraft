@@ -61,14 +61,14 @@ const Lexer = (string_regexen) =>
 analogous to an xml tag. It includes only a data type and a list of ParseTags as children.
 */
 class ParseTag {
-    constructor(type, children){
+    constructor(type, tags){
         this.type = type;
-        this.children = children ?? [];
+        this.tags = tags ?? [];
     }
     with(attributes){
         return new ParseTag(
             attributes.type     ?? this.type,
-            attributes.children ?? this.children,
+            attributes.tags ?? this.tags,
         );
     }
 }
@@ -83,24 +83,24 @@ const ParseTagOps = (maybes) => ({
     join: next => current => 
                 next == null || current == null? null
                 :   next.with({
-                        children: [...current.children, ...next.children], 
+                        tags: [...current.tags, ...next.tags], 
                     }),
 });
 
 /*
 `ParseState` represents the state of a parsing or formatting operation.
-It stores a `ParseTag` and a list of string tokens (`tokens`).
-During parsing, tokens are converted to tags, and during formatting, tags are converted to tokens.
+It stores two `ParseTag`s, one with flat list of children, the other nested.
+During parsing, the flat list is transferred to the nested tree, and during formatting, the opposite occurs.
 */
 class ParseState {
-    constructor(tag, tokens){
-        this.tag = tag;
-        this.tokens = tokens;
+    constructor(tree, list){
+        this.tree = tree;
+        this.list = list;
     }
     with(attributes){
         return new ParseState(
-            attributes.tag    ?? this.tag,
-            attributes.tokens ?? this.tokens,
+            attributes.tree ?? this.tree,
+            attributes.list ?? this.list,
         );
     }
 }
@@ -110,11 +110,11 @@ class ParseState {
 */
 const ParseStateOps = (maybes, tags)=>({
     consume: i => (array) => new ParseState(tags.consume(i)(array), array.slice(i)),
-    fluff:                    maybes.bind(state=>state.with({tag: tags.fluff (state.tag)})),
-    type:          (name) => maybes.bind(state=>state.with({tag: tags.type  (name)(state.tag)})),
+    fluff:                    maybes.bind(state=>state.with({tree: tags.fluff (state.tree)})),
+    type:          (name) => maybes.bind(state=>state.with({tree: tags.type  (name)(state.tree)})),
     join: next => current => 
                 next == null || current == null? null
-                :   next.with({ tag: tags.join(next.tag)(current.tag) }),
+                :   next.with({ tree: tags.join(next.tree)(current.tree) }),
 });
 
 const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps, states) => ({
@@ -133,11 +133,11 @@ const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps
     join: (...rules) => 
         maps.chain(states.consume(0), 
             ...rules.map(rule => 
-                maybes.bind(state => states.join(rule(state.tokens))(state)))),
+                maybes.bind(state => states.join(rule(state.list))(state)))),
 
     repeat: () => (rule) => 
         maps.chain(states.consume(0), 
-            maps.while(maybes.exists)(state => states.join(rule(state.tokens))(state))),
+            maps.while(maybes.exists)(state => states.join(rule(state.list))(state))),
 
 });
 
