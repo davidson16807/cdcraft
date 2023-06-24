@@ -63,11 +63,6 @@ analogous to an xml tag. It includes only a data type and a list of ParseTags as
 const Tag = (tags, type) => ({
         tags : tags ?? [],
         type : type,
-        with : (attributes) => 
-            Tag(
-                attributes.tags ?? tags,
-                attributes.type ?? type,
-            ),
     });
 
 /*
@@ -78,11 +73,6 @@ During parsing, the flat list is transferred to the nested tree, and during form
 const State = (tree, list) => ({
         tree : tree ?? Tag(),
         list : list ?? Tag(),
-        with : (attributes) => 
-            State(
-                attributes.tree ?? tree,
-                attributes.list ?? list,
-            ),
     });
 
 /*
@@ -90,15 +80,16 @@ const State = (tree, list) => ({
 */
 const StateOps = (maybes)=>({
     consume: i => (array) => State(Tag(array.slice(0,i)), array.slice(i)),
-    fluff:                   maybes.bind(state=>state.with({tree: Tag()})),
-    type:          (name) => maybes.bind(state=>state.with({tree: Tag([state.tree.with({type: name})])})),
+    // consume: i => ({tree,list}) => 
+    //     State(
+    //         Tag(list.tags.slice(0,i), tree.type)
+    //         Tag(list.tags.slice(i), list.type)
+    //     ),
+    fluff:                   maybes.bind(({tree,list})=>State(Tag(), list)),
+    type:          (name) => maybes.bind(({tree,list})=>State(Tag([Tag(tree.tags, name)]), list)),
     join: next => current => 
-                next == null || current == null? null
-                :   next.with({ 
-                        tree: next.tree.with({ 
-                            tags: [...current.tree.tags, ...next.tree.tags] 
-                        }) 
-                    }),
+            next == null || current == null? null
+            : State(Tag([...current.tree.tags, ...next.tree.tags], next.tree.type ), next.list),
 });
 
 const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps, states) => ({
