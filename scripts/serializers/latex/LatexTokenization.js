@@ -60,44 +60,38 @@ const Lexer = (string_regexen) =>
 `Tag` is a sparse but complete representation of an object that has been parsed, 
 analogous to an xml tag. It includes only a data type and a list of ParseTags as children.
 */
-class Tag {
-    constructor(tags, type){
-        this.tags = tags ?? [];
-        this.type = type;
-    }
-    with(attributes){
-        return new Tag(
-            attributes.type     ?? this.type,
-            attributes.tags ?? this.tags,
-        );
-    }
-}
+const Tag = (tags, type) => ({
+            tags : tags,
+            type : type,
+            with : (attributes) => 
+                Tag(
+                    attributes.tags ?? tags,
+                    attributes.type ?? type,
+                ),
+        });
 
 /*
 `State` represents the state of a parsing or formatting operation.
 It stores two `Tag`s, one with flat list of children, the other nested.
 During parsing, the flat list is transferred to the nested tree, and during formatting, the opposite occurs.
 */
-class State {
-    constructor(tree, list){
-        this.tree = tree;
-        this.list = list;
-    }
-    with(attributes){
-        return new State(
-            attributes.tree ?? this.tree,
-            attributes.list ?? this.list,
-        );
-    }
-}
+const State = (tree, list) => ({
+            tree : tree,
+            list : list,
+            with : (attributes) => 
+                State(
+                    attributes.tree ?? tree,
+                    attributes.list ?? list,
+                ),
+        });
 
 /*
 `StateOps` provides useful operations that can be performed on a `State`
 */
 const StateOps = (maybes)=>({
-    consume: i => (array) => new State(new Tag(array.slice(0,i)), array.slice(i)),
-    fluff:                   maybes.bind(state=>state.with({tree: new Tag([])})),
-    type:          (name) => maybes.bind(state=>state.with({tree: new Tag([state.tree.with({type: name})])})),
+    consume: i => (array) => State(Tag(array.slice(0,i)), array.slice(i)),
+    fluff:                   maybes.bind(state=>state.with({tree: Tag([])})),
+    type:          (name) => maybes.bind(state=>state.with({tree: Tag([state.tree.with({type: name})])})),
     join: next => current => 
                 next == null || current == null? null
                 :   next.with({ 
