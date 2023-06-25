@@ -47,16 +47,6 @@ const MaybeMapOps = () => ({
 });
 
 /*
-`Lexer` results in a namespace of pure functions 
-that describe maps between strings and arrays of tokens.
-*/
-const Lexer = (string_regexen) => 
-    (token_regex => ({
-        tokenize:   (text)   => text.split(token_regex).filter(token => token.trim(/\s*/).length > 0),
-        detokenize: (tokens) => tokens.join(' '),
-    })) (new RegExp('('+string_regexen.join('|')+')', 'g'));
-
-/*
 `Tag` is a sparse but complete representation of an object that has been parsed, 
 analogous to an xml tag. It includes only a data type and a list of ParseTags as children.
 */
@@ -79,12 +69,11 @@ const State = (list, tree) => ({
 `StateOps` provides useful operations that can be performed on a `State`
 */
 const StateOps = (maybes)=>({
-    consume: i => (array) => State(array.slice(i), Tag(array.slice(0,i))),
-    // consume: i => ({list,tree}) => 
-    //     State(
-    //         Tag(list.tags.slice(i), list.type),
-    //         Tag(list.tags.slice(0,i), tree.type),
-    //     ),
+    consume: i => ({list,tree}) => 
+        State(
+            Tag(list.tags.slice(i), list.type),
+            Tag(list.tags.slice(0,i), tree.type),
+        ),
     fluff:                   maybes.bind(({list,tree})=>State(list)),
     type:          (name) => maybes.bind(({list,tree})=>State(list, Tag([Tag(tree.tags, name)]))),
     join: next => current => 
@@ -100,19 +89,19 @@ const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps
     and:   (rule)  => maybe_maps.bind (states.consume(0), rule),
     not:   (rule)  => maybe_maps.swap (states.consume(0), rule),
     option:(rule)  => maybe_maps.fill (states.consume(0), rule),
-    any:              maybe_maps.bind (states.consume(1), lists.index(0)),
-    exact: (value) => maybe_maps.bind (states.consume(1), maps.chain(lists.index(0), token => token!=value? null:token)),
-    regex: (regex) => maybe_maps.bind (states.consume(1), maps.chain(lists.index(0), maybes.bind(token=>token.match(regex)))),
+    any:              maybe_maps.bind (states.consume(1), maps.chain(({list,tree})=>list.tags[0])),
+    exact: (value) => maybe_maps.bind (states.consume(1), maps.chain(({list,tree})=>list.tags[0], token => token!=value? null:token)),
+    regex: (regex) => maybe_maps.bind (states.consume(1), maps.chain(({list,tree})=>list.tags[0], maybes.bind(token=>token.match(regex)))),
     choice:           maps.right(maybe_maps.fill),
 
     join: (...rules) => 
         maps.chain(states.consume(0), 
             ...rules.map(rule => 
-                maybes.bind(state => states.join(rule(state.list))(state)))),
+                maybes.bind(state => states.join(rule(state))(state)))),
 
     repeat: () => (rule) => 
         maps.chain(states.consume(0), 
-            maps.while(maybes.exists)(state => states.join(rule(state.list))(state))),
+            maps.while(maybes.exists)(state => states.join(rule(state))(state))),
 
 });
 
@@ -133,7 +122,7 @@ const ExtendedParsingExpressionGrammarPrimitives = (lists, peg) =>
 
 const ShorthandParsingExpressionGrammarPrimitives = (maps, peg) => {
     const type_lookups = {}
-    const longhand = rule => array => type_lookups[rule.constructor.name](rule)(array);
+    const longhand = rule => state => type_lookups[rule.constructor.name](rule)(state);
     Object.assign(type_lookups, {
         'String':   peg.exact,
         'RegExp':   peg.regex,
@@ -152,6 +141,18 @@ const ShorthandParsingExpressionGrammarPrimitives = (maps, peg) => {
         repeat: (min=0, max=Infinity) => (rule) =>  peg.repeat(min,max) (longhand(rule)),
     });
 }
+
+const Lexer = (string_regexen) => 
+    (token_regex => ({
+        tokenize:   (text)   => text.split(token_regex).filter(token => token.trim(/\s*/).length > 0),
+        detokenize: (tokens) => tokens.join(' '),
+    })) (new RegExp('('+string_regexen.join('|')+')', 'g'));
+
+const Loader = () => ({
+        state: (list)  => State(Tag(list)),
+        list:  (state) => state.list.tags,
+    });
+
 
 let maps = MapOps();
 let maybes = MaybeOps();
@@ -173,6 +174,13 @@ const lexer = Lexer([
     `[^a-zA-Z0-9_]`,
     `\\s*`,
 ]);
+
+const loader = Loader();
+
+const lexloader = ({
+    state: maps.chain(lexer.tokenize, loader.state),
+    text:  maps.chain(loader.list, lexer.detokenize),
+});
 
 const token     = [];
 const parens    = [fluff('('), repeat()([not(')'), token]), fluff(')')];
@@ -226,71 +234,71 @@ const diagram = [
 ];
 
 
-rule([not(']'), 'foo'])(lexer.tokenize('foo]'))
+rule([not(']'), 'foo'])(lexloader.state('foo]'))
 
 let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, 
     ListOps(), MaybeMapOps(), StateOps(maybes));
-console.log(bpeg.exact('x')( maps.id( ['x' ] )));
-console.log(bpeg.exact('x')( maps.id( [ ] )));
-console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['a','b' ] )));
-console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['a' ] )));
-console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( maps.id( [ ] )));
-console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['a','c' ] )));
-console.log(bpeg.repeat()(bpeg.exact('a'))( maps.id( ['a','a' ] )));
-console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['b' ] )));
-console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))( maps.id( ['c' ] )));
-console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))( maps.id( [ ] )));
+console.log(bpeg.exact('x')( loader.state( ['x' ] )));
+console.log(bpeg.exact('x')( loader.state( [ ] )));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( loader.state( ['a','b' ] )));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( loader.state( ['a' ] )));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( loader.state( [ ] )));
+console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( loader.state( ['a','c' ] )));
+console.log(bpeg.repeat()(bpeg.exact('a'))( loader.state( ['a','a' ] )));
+console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))( loader.state( ['b' ] )));
+console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))( loader.state( ['c' ] )));
+console.log(bpeg.choice(bpeg.exact('a'), bpeg.exact('b'))( loader.state( [ ] )));
 
-console.log(rule('x')( maps.id( ['x' ] )));
-console.log(rule('x')( maps.id( [ ] )));
-console.log(rule(['a', 'b'])( maps.id( ['a','b' ] )));
-console.log(rule(['a', 'b'])( maps.id( ['a' ] )));
-console.log(rule(['a', 'b'])( maps.id( [ ] )));
-console.log(rule(['a', 'b'])( maps.id( ['a','c' ] )));
-console.log(repeat()('a')( maps.id( ['a','a' ] )));
-console.log(repeat()('a')( maps.id( ['a' ] )));
-console.log(repeat()('a')( maps.id( [ ] )));
-console.log(choice('a', 'b')( maps.id( ['a' ] )));
-console.log(choice('a', 'b')( maps.id( ['b' ] )));
-console.log(choice('a', 'b')( maps.id( ['c' ] )));
-console.log(choice('a', 'b')( maps.id( [ ] )));
-console.log(rule([not(')'), 'a'])( maps.id( ['a' ] )));
-console.log(rule([not(')'), 'a'])( maps.id( [')' ] )));
-console.log(rule([not(')'), 'a'])( maps.id( [ ] ))); 
+console.log(rule('x')( loader.state( ['x' ] )));
+console.log(rule('x')( loader.state( [ ] )));
+console.log(rule(['a', 'b'])( loader.state( ['a','b' ] )));
+console.log(rule(['a', 'b'])( loader.state( ['a' ] )));
+console.log(rule(['a', 'b'])( loader.state( [ ] )));
+console.log(rule(['a', 'b'])( loader.state( ['a','c' ] )));
+console.log(repeat()('a')( loader.state( ['a','a' ] )));
+console.log(repeat()('a')( loader.state( ['a' ] )));
+console.log(repeat()('a')( loader.state( [ ] )));
+console.log(choice('a', 'b')( loader.state( ['a' ] )));
+console.log(choice('a', 'b')( loader.state( ['b' ] )));
+console.log(choice('a', 'b')( loader.state( ['c' ] )));
+console.log(choice('a', 'b')( loader.state( [ ] )));
+console.log(rule([not(')'), 'a'])( loader.state( ['a' ] )));
+console.log(rule([not(')'), 'a'])( loader.state( [')' ] )));
+console.log(rule([not(')'), 'a'])( loader.state( [ ] ))); 
 
-console.log(repeat()([not(')'), 'a'])( maps.id( ['a','a',')' ] )));
-console.log(repeat()([not(')'), 'a'])( maps.id( [')' ] )));
-console.log(repeat()([not(')'), 'a'])( maps.id( [ ] )));
+console.log(repeat()([not(')'), 'a'])( loader.state( ['a','a',')' ] )));
+console.log(repeat()([not(')'), 'a'])( loader.state( [')' ] )));
+console.log(repeat()([not(')'), 'a'])( loader.state( [ ] )));
 
-console.log(repeat(2)([not(')'), 'a'])( maps.id( ['a','a','a',')' ] )));
-console.log(repeat(2)([not(')'), 'a'])( maps.id( ['a','a',')' ] )));
-console.log(repeat(2)([not(')'), 'a'])( maps.id( ['a',')' ] )));
-console.log(repeat(2)([not(')'), 'a'])( maps.id( [ ] )));
+console.log(repeat(2)([not(')'), 'a'])( loader.state( ['a','a','a',')' ] )));
+console.log(repeat(2)([not(')'), 'a'])( loader.state( ['a','a',')' ] )));
+console.log(repeat(2)([not(')'), 'a'])( loader.state( ['a',')' ] )));
+console.log(repeat(2)([not(')'), 'a'])( loader.state( [ ] )));
 
-console.log(rule([not(')'), 'a'])( maps.id( ['a',')' ] )));
-console.log(rule([not(')'), 'a'])( maps.id( ['a',')' ] )));
-console.log(rule(['a'])( maps.id( ['a',')' ] )));
-console.log(rule([choice(word, directive)])( maps.id( ['a',')' ] )));
-console.log(rule([choice(directive)])( maps.id( ['a',')' ] )));
-console.log(rule([choice(parens, brackets, braces, directive, choice(word))])( maps.id( ['a',')' ] )));
-console.log(rule(type('variable',word))( maps.id( ['a',')' ] )));
-console.log(rule([type('variable',word)])( maps.id( ['a',')' ] )));
-console.log(rule([choice(parens, brackets, braces, directive, choice(type('variable',word)))])( maps.id( ['a',')' ] )));
-console.log(rule([choice(parens, brackets, braces, directive, value)])( maps.id( ['a',')' ] )));
-console.log(rule([token])( maps.id( ['a',')' ] )));
-console.log(rule([token])(lexer.tokenize('a)')));
+console.log(rule([not(')'), 'a'])( loader.state( ['a',')' ] )));
+console.log(rule([not(')'), 'a'])( loader.state( ['a',')' ] )));
+console.log(rule(['a'])( loader.state( ['a',')' ] )));
+console.log(rule([choice(word, directive)])( loader.state( ['a',')' ] )));
+console.log(rule([choice(directive)])( loader.state( ['a',')' ] )));
+console.log(rule([choice(parens, brackets, braces, directive, choice(word))])( loader.state( ['a',')' ] )));
+console.log(rule(type('variable',word))( loader.state( ['a',')' ] )));
+console.log(rule([type('variable',word)])( loader.state( ['a',')' ] )));
+console.log(rule([choice(parens, brackets, braces, directive, choice(type('variable',word)))])( loader.state( ['a',')' ] )));
+console.log(rule([choice(parens, brackets, braces, directive, value)])( loader.state( ['a',')' ] )));
+console.log(rule([token])( loader.state( ['a',')' ] )));
+console.log(rule([token])(lexloader.state('a)')));
 
-console.log(rule(brackets)(lexer.tokenize('[foo]')));
-console.log(rule(arrow)(lexer.tokenize(`\\arrow[rd]`)));
-console.log(rule(arrow)(lexer.tokenize(`\\arrow[r, "\\phi"]`)));
-console.log(rule(repeat()(arrow))(lexer.tokenize(`\\arrow[rd] \\arrow[r, "\\phi"]`)));
-console.log(rule(cell)(lexer.tokenize(`A \\arrow[rd] \\arrow[r, "\\phi"]`)));
-console.log(rule(row)(lexer.tokenize(`A \\arrow[rd] \\arrow[r, "\\phi"] & B`)));
+console.log(rule(brackets)(lexloader.state('[foo]')));
+console.log(rule(arrow)(lexloader.state(`\\arrow[rd]`)));
+console.log(rule(arrow)(lexloader.state(`\\arrow[r, "\\phi"]`)));
+console.log(rule(repeat()(arrow))(lexloader.state(`\\arrow[rd] \\arrow[r, "\\phi"]`)));
+console.log(rule(cell)(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"]`)));
+console.log(rule(row)(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B`)));
 console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
-    lexer.tokenize(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ C`)));
+    lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ C`)));
 console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
-    lexer.tokenize(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ & C`)));
-console.log(rule(diagram)(lexer.tokenize(`
+    lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ & C`)));
+console.log(rule(diagram)(lexloader.state(`
     \\begin{tikzcd}
     A \\arrow[rd] \\arrow[r, "\\phi"] & B \\\\
     & C
