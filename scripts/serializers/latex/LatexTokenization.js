@@ -98,8 +98,7 @@ const BasicParsingExpressionGrammarPrimitives = (maybes, maps, maybe_maps, state
 
     join: (...rules) => 
         maps.chain(states.consume(0), 
-            ...rules.map(rule => 
-                maybes.bind(state => states.join(rule(state))(state)))),
+            ...rules.map(rule => maybes.bind(state => states.join(rule(state))(state)))),
 
     repeat: () => (rule) => 
         maps.chain(states.consume(0), 
@@ -119,22 +118,10 @@ const ExtendedParsingExpressionGrammarPrimitives = (lists, peg) =>
                             lists.range(max-min).map(i=>peg.option(rule))
                         :   [peg.repeat()(rule)]),
                     ),
-            any: value => 
+            pad: rule => 
                     peg.join(
                         peg.option(peg.fluff(peg.regex('\\s+'))), 
-                        peg.any,
-                        peg.option(peg.fluff(peg.regex('\\s+'))),
-                    ),
-            exact: value => 
-                    peg.join(
-                        peg.option(peg.fluff(peg.regex('\\s+'))), 
-                        peg.exact(value),
-                        peg.option(peg.fluff(peg.regex('\\s+'))),
-                    ),
-            regex: regex => 
-                    peg.join(
-                        peg.option(peg.fluff(peg.regex('\\s+'))), 
-                        peg.regex(regex),
+                        rule,
                         peg.option(peg.fluff(peg.regex('\\s+'))),
                     ),
         }
@@ -144,14 +131,14 @@ const ShorthandParsingExpressionGrammarPrimitives = (maps, peg) => {
     const type_lookups = {}
     const longhand = rule => state => type_lookups[rule.constructor.name](rule)(state);
     Object.assign(type_lookups, {
-        'String':   peg.exact,
-        'RegExp':   peg.regex,
+        'String':   maps.chain(peg.exact, peg.pad),
+        'RegExp':   maps.chain(peg.regex, peg.pad),
         'Array':    array => peg.join(...array.map(longhand)),
         'Function': maps.id,
     });
     return ({
-        rule: longhand,
-        any:  peg.any,
+        rule:                 longhand,
+        any:                  peg.pad(peg.any),
         type:  (name,rule) => peg.type (name,longhand(rule)),
         fluff:        rule => peg.fluff(longhand(rule)),
         and:          rule => peg.and(longhand(rule)),
@@ -178,7 +165,7 @@ const Lexer = (string_regexen) =>
     (token_regex => ({
         // tokenize:   (text)   => text.split(token_regex).filter(token => token.trim(/\s*/).length > 0),
         tokenize:   (text)   => text.split(token_regex).filter(token => token.length > 0),
-        detokenize: (tokens) => tokens.join(' '),
+        detokenize: (tokens) => tokens.join(''),
     })) (new RegExp('('+string_regexen.join('|')+')', 'g'));
 
 
