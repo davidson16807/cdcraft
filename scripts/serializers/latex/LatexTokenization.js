@@ -119,6 +119,24 @@ const ExtendedParsingExpressionGrammarPrimitives = (lists, peg) =>
                             lists.range(max-min).map(i=>peg.option(rule))
                         :   [peg.repeat()(rule)]),
                     ),
+            any: value => 
+                    peg.join(
+                        peg.option(peg.fluff(peg.regex('\\s+'))), 
+                        peg.any,
+                        peg.option(peg.fluff(peg.regex('\\s+'))),
+                    ),
+            exact: value => 
+                    peg.join(
+                        peg.option(peg.fluff(peg.regex('\\s+'))), 
+                        peg.exact(value),
+                        peg.option(peg.fluff(peg.regex('\\s+'))),
+                    ),
+            regex: regex => 
+                    peg.join(
+                        peg.option(peg.fluff(peg.regex('\\s+'))), 
+                        peg.regex(regex),
+                        peg.option(peg.fluff(peg.regex('\\s+'))),
+                    ),
         }
     );
 
@@ -146,7 +164,7 @@ const ShorthandParsingExpressionGrammarPrimitives = (maps, peg) => {
 
 const TagFormatting = (maps) => {
     const type_lookups = {};
-    const format = (tag)  => tag.tags.map(subtag=> type_lookups[subtag.constructor.name](subtag)).flat();
+    const format = tag => tag.tags.map(subtag=> type_lookups[subtag.constructor.name](subtag)).flat();
     Object.assign(type_lookups, {
         'String':   maps.id,
         'Object':   format,
@@ -158,7 +176,8 @@ const TagFormatting = (maps) => {
 
 const Lexer = (string_regexen) => 
     (token_regex => ({
-        tokenize:   (text)   => text.split(token_regex).filter(token => token.trim(/\s*/).length > 0),
+        // tokenize:   (text)   => text.split(token_regex).filter(token => token.trim(/\s*/).length > 0),
+        tokenize:   (text)   => text.split(token_regex).filter(token => token.length > 0),
         detokenize: (tokens) => tokens.join(' '),
     })) (new RegExp('('+string_regexen.join('|')+')', 'g'));
 
@@ -182,12 +201,12 @@ const {rule, type, fluff, not, option, choice, repeat} = peg;
 const backslash = '\\\\';
 
 const lexer = Lexer([
-    //`'(?:[^']|${backslash}')*?'`,
+    // `'(?:[^']|${backslash}')*?'`,
     `"(?:[^"]|${backslash}")*?"`,
     `${backslash}?[a-zA-Z0-9_]+`,
-    `${backslash}\\n`,
-    `[^a-zA-Z0-9_]`,
-    `\\s*`,
+    `${backslash}${backslash}`,
+    `[^a-zA-Z0-9_\\s]`,
+    // `\\s+`,
 ]);
 
 const loader = Loader();
@@ -237,15 +256,15 @@ const arrow = type('arrow', [
 ]);
 const beginning = lexer.tokenize('\\begin{tikzcd}')
 const ending = lexer.tokenize('\\end{tikzcd}')
-const object = [not(choice('&', '\\', ending)), token];
+const object = [not(choice('&', backslash, ending)), token];
 const cell = type('cell', repeat()(choice(arrow, object)));
 const row  = type('row', [
-    repeat()([not(choice('\\', ending)), cell, fluff('&')]),
+    repeat()([not(choice(backslash, ending)), cell, fluff('&')]),
     option(cell),
 ]);
 const diagram = [
     fluff(beginning),
-    repeat()([row, fluff('\\')]),
+    repeat()([row, fluff(backslash)]),
     option(row),
     fluff(ending),
 ];
@@ -253,8 +272,7 @@ const diagram = [
 
 rule([not(']'), 'foo'])(lexloader.state('foo]'))
 
-let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, 
-     MaybeMapOps(), StateOps(maybes));
+let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, MaybeMapOps(), StateOps(maybes));
 console.log(bpeg.exact('x')( loader.state( ['x' ] )));
 console.log(bpeg.exact('x')( loader.state( [ ] )));
 console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( loader.state( ['a','b' ] )));
@@ -315,10 +333,17 @@ console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
     lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ C`)));
 console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
     lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ & C`)));
-console.log(rule(diagram)(lexloader.state(`
+const state = lexloader.state(`
     \\begin{tikzcd}
     A \\arrow[rd] \\arrow[r, "\\phi"] & B \\\\
     & C
     \\end{tikzcd}
-`)));
+`);
+const parsed = rule(diagram)(state);
+const formatted = formatter.format(parsed.tree);
+const detokenized = lexer.detokenize(formatted);
+console.log('state:', state);
+console.log('parsed:', parsed);
+console.log('formatted:', formatted);
+console.log('detokenized:', detokenized);
 
