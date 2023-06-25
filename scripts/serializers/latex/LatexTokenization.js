@@ -71,7 +71,6 @@ const State = (list, tree) => ({
 */
 const StateOps = (maybes)=>({
     next:         ({list,tree}) => list.tags[0],
-    mirror:       ({list,tree}) => State(tree,list),
     consume: i => ({list,tree}) => 
         State(
             Tag(list.tags.slice(i), list.type),
@@ -84,7 +83,7 @@ const StateOps = (maybes)=>({
             : State(next.list, Tag([...current.tree.tags, ...next.tree.tags], next.tree.type )),
 });
 
-const BasicParsingExpressionGrammarPrimitives = (maybes, maps, lists, maybe_maps, states) => ({
+const BasicParsingExpressionGrammarPrimitives = (maybes, maps, maybe_maps, states) => ({
 
     fluff: (rule)       => maps.chain(rule, states.fluff),
     type:  (name, rule) => maps.chain(rule, states.type(name)),
@@ -145,11 +144,24 @@ const ShorthandParsingExpressionGrammarPrimitives = (maps, peg) => {
     });
 }
 
+const TagFormatting = (maps) => {
+    const type_lookups = {};
+    const format = (tag)  => tag.tags.map(subtag=> type_lookups[subtag.constructor.name](subtag)).flat();
+    Object.assign(type_lookups, {
+        'String':   maps.id,
+        'Object':   format,
+    });
+    return {
+        format: format
+    }
+};
+
 const Lexer = (string_regexen) => 
     (token_regex => ({
         tokenize:   (text)   => text.split(token_regex).filter(token => token.trim(/\s*/).length > 0),
         detokenize: (tokens) => tokens.join(' '),
     })) (new RegExp('('+string_regexen.join('|')+')', 'g'));
+
 
 const Loader = () => ({
         state: (list)  => State(Tag(list)),
@@ -162,7 +174,7 @@ let maybes = MaybeOps();
 let lists = ListOps();
 let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
             ExtendedParsingExpressionGrammarPrimitives(lists,
-                BasicParsingExpressionGrammarPrimitives(maybes, maps, lists, 
+                BasicParsingExpressionGrammarPrimitives(maybes, maps, 
                     MaybeMapOps(), StateOps(maybes))));
 
 const {rule, type, fluff, not, option, choice, repeat} = peg;
@@ -179,6 +191,8 @@ const lexer = Lexer([
 ]);
 
 const loader = Loader();
+
+const formatter = TagFormatting(maps);
 
 const lexloader = ({
     state: maps.chain(lexer.tokenize, loader.state),
@@ -240,7 +254,7 @@ const diagram = [
 rule([not(']'), 'foo'])(lexloader.state('foo]'))
 
 let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, 
-    ListOps(), MaybeMapOps(), StateOps(maybes));
+     MaybeMapOps(), StateOps(maybes));
 console.log(bpeg.exact('x')( loader.state( ['x' ] )));
 console.log(bpeg.exact('x')( loader.state( [ ] )));
 console.log(bpeg.join(bpeg.exact('a'), bpeg.exact('b'))( loader.state( ['a','b' ] )));
