@@ -194,7 +194,7 @@
 <script type="text/javascript">
 'use strict';
 
-const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing(), Math), Math);
+const diagram_ids = DiagramIds(UnboundedCellHashing(NonNegativeCellHashing(), Math), Math);
 
 const node_metric_bundle = NodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
 
@@ -335,7 +335,7 @@ const svg_object_selection_view =
     }, 0.5);
 
 
-const node_hashing = NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math));
+const node_hashing = NodeHashing(UnboundedCellHashing(NonNegativeCellHashing(), Math));
 
 const arrow_reference_resource = 
     ArrowReferenceResource(user_arcs_curried_and_stored_arcs, node_hashing);

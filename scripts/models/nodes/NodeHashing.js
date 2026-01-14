@@ -1,7 +1,7 @@
 
 /* 
-`NodeHashing` generates a namspace with a single pure function exposed, `hash()`.
-The function maps any `Node` to a unique positive integer.
+`NodeHashing` generates a namespace with a single pure function exposed, `hash()`.
+The function maps any `Node` to a unique non-negative integer.
 It is bijective in principle, however its inverse is not implemented.
 `NodeHashing.hash(new Node(position))` is equivalent to `UnboundedCellHashing.hash(position)` 
 */

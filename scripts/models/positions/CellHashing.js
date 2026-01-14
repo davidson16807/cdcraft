@@ -1,11 +1,11 @@
 'use strict';
 
 /* 
-`PositiveCellHashing` generates a namspace with a single pure function exposed, `hash()`.
+`NonNegativeCellHashing` generates a namspace with a single pure function exposed, `hash()`.
 The function maps any positive whole number 2d coordinates to a unique positive integer.
 It is bijective in principle, however its inverse is not implemented.
 */
-function PositiveCellHashing() {
+function NonNegativeCellHashing() {
     return {
         hash: (x,y) => ((x+y)+1)*((x+y)/2) + y,
     };

@@ -2,7 +2,6 @@
 
 
 function NodeMetricBundle(position_metric_bundle){
-    const vectors = position_metric_bundle;
     return {
         /*
         Returns a nonnegative number indicating the difference between two nodes,
