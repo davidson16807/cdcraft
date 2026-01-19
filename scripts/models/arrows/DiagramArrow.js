@@ -40,8 +40,9 @@ class DiagramArrow {
     }
 
     with(attributes){
+        const is_edited = attributes.is_edited != null? attributes.is_edited : this.is_edited;
         return new DiagramArrow(
-            attributes.arc             != null? attributes.arc             : this.arc,
+            attributes.arc             != null? attributes.arc             : this.arc.with({is_valid:!is_edited}),
             attributes.head_style_id   != null? attributes.head_style_id   : this.head_style_id,
             attributes.line_style_id   != null? attributes.line_style_id   : this.line_style_id,
             attributes.body_style_id   != null? attributes.body_style_id   : this.body_style_id,
@@ -53,7 +54,7 @@ class DiagramArrow {
             attributes.color           != null? attributes.color           : this.color,
             attributes.label           != null? attributes.label           : this.label,
             attributes.label_offset_id != null? attributes.label_offset_id : this.label_offset_id,
-            attributes.is_edited       != null? attributes.is_edited       : this.is_edited,
+            is_edited,
         );
     }
 
