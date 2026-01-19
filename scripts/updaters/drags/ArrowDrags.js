@@ -58,7 +58,7 @@ function ArrowDrags(
 
         edit: function(arrows, replaced_arrow) {
             const arrow_id = arrows.indexOf(replaced_arrow);
-            const arrow_hash = node_hashing.hash(new Node(null, arrow_id));
+            const arrow_hash = node_hashing.reference(arrow_id);
             const arrows_before = arrows.slice(0,arrow_id);
             const arrows_after = arrows.slice(arrow_id+1);
             return Object.assign({}, 

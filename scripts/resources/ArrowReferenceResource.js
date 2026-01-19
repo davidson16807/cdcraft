@@ -55,7 +55,7 @@ function ArrowReferenceResource(
                 const arc = arrow.arc;
                 const source_hash = node_hashing.hash(arc.source);
                 const target_hash = node_hashing.hash(arc.target);
-                const arrow_hash = node_hashing.hash(new Node(null, i));
+                const arrow_hash = node_hashing.reference(i);
                 if (reference_to_reference[source_hash] == null && reference_to_reference[target_hash] == null && reference_to_reference[arrow_hash] == null) {
                     filtered.push(arrow);
                     updated_window[arrow_hash] = filtered.length;
