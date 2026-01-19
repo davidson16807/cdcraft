@@ -49,7 +49,7 @@ function ArrowReferenceResource(
         delete: function(arrows, reference_to_reference) {
             let filtered = [];
             const updated_window = {};
-            const deleted_window = {};
+            const deleted_window = {...reference_to_reference};
             for(let i = 0; i < arrows.length; i++){
                 const arrow = arrows[i];
                 const arc = arrow.arc;
@@ -60,18 +60,18 @@ function ArrowReferenceResource(
                     filtered.push(arrow);
                     updated_window[arrow_hash] = filtered.length;
                 } else {
-                    deleted_window[arrow_hash] = filtered.length;
+                    deleted_window[arrow_hash] = i;
                 }
             }
             /*
             The arrows that were removed may be referenced by other arrows,
-            so recursively call `delete()` for as long as arrows have been removed and there are more arrows available.
+            so recursively call `delete()` for as long as arrows have been removed.
             */
-            filtered = this.put(filtered, updated_window);
-            filtered = 0 < filtered.length && filtered.length < arrows.length? 
-                this.delete(filtered, deleted_window) 
-              : filtered;
-            return filtered;
+            if(Object.keys(deleted_window).length > Object.keys(reference_to_reference).length){
+                return this.delete(arrows, deleted_window);
+            } else {
+                return this.put(filtered, updated_window);
+            }
         },
 
     };
