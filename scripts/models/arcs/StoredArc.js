@@ -14,9 +14,9 @@ class StoredArc {
         typecheck(target, 'Node')
         this.source = Object.freeze(source);
         this.target = Object.freeze(target);
-        this.min_length_clockwise = Object.freeze(min_length_clockwise);
-        this.target_offset_id = Object.freeze(target_offset_id);
-        this.is_valid = Object.freeze(is_valid);
+        this.min_length_clockwise = min_length_clockwise;
+        this.target_offset_id = target_offset_id;
+        this.is_valid = is_valid;
     }
     with(attributes){
         return new StoredArc(
