@@ -20,6 +20,9 @@ function AppUpdater(
     const svg_diagram_export        = dependencies.svg_diagram_export;
     const diagram_object_resources  = dependencies.diagram_object_resources;
     const diagram_arrow_resources   = dependencies.diagram_arrow_resources;
+    const logclick = dependencies.logclick || ((text,app)=>undefined);
+    const logmove  = dependencies.logmove  || ((text,app)=>undefined);
+    const loghover = dependencies.loghover || ((text,app)=>undefined);
 
     /* 
     functions mapping app×event→app 
@@ -255,37 +258,44 @@ function AppUpdater(
     return {
 
         contextmenu: function(event, drawing, app_io, dom_io){
+            logclick('contextmenu', app_io);
         },
 
         wheel: function(event, drawing, app_io, dom_io){
+            logmove('wheel', app_io);
             drag_ops.wheel( glm.vec2(event.clientX, event.clientY), event.deltaY, app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         mousedown: function(event, drawing, app_io, dom_io){
+            logclick('mousedown', app_io);
             const action_id = mousedown_bindings[event.button];
             (mouse_actions[action_id] || generic_actions[action_id])(app_io, event);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         mousemove: function(event, drawing, app_io, dom_io){
+            logmove('mousemove', app_io);
             // mouse motion is a degenerate case of touchscreen motion where the number of touchpoints is one
             drag_ops.move( [glm.vec2(event.clientX, event.clientY)], app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         mouseup: function(event, drawing, app_io, dom_io){
+            logclick('mouseup', app_io);
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         touchstart: function(event, drawing, app_io, dom_io){
+            logclick('touchstart', app_io);
             const action_id = touchstart_bindings[event.touches.length-1];
             (touch_actions[action_id] || generic_actions[action_id])(app_io, event);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         touchmove: function(event, drawing, app_io, dom_io){
+            logmove('touchmove', app_io);
             const positions = [];
             for (var i = 0; i < event.touches.length; i++) {
                 positions.push(glm.vec2(event.touches[i].clientX, event.touches[i].clientY));
@@ -295,16 +305,19 @@ function AppUpdater(
         },
 
         touchend: function(event, drawing, app_io, dom_io){
+            logclick('touchend', app_io);
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         touchcancel: function(event, drawing, app_io, dom_io){
+            logclick('touchcancel', app_io);
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
 
         keydown: function(event, drawing, app_io, dom_io){
+            logclick('keydown', app_io);
             const keycode = `${event.ctrlKey?'ctrl+':''}${event.shiftKey?'shift+':''}${event.key.toLowerCase()}`
             const action_id = key_bindings[keycode];
             if (action_id!=null) {
@@ -317,6 +330,7 @@ function AppUpdater(
         },
 
         buttonclick: function(event, drawing, app_io, dom_io){
+            logclick('buttonclick', app_io);
             const action = generic_actions[event.currentTarget.id.replaceAll('-','_')];
             if (action!=null) {
                 action(app_io, event);
@@ -325,6 +339,7 @@ function AppUpdater(
         },
 
         textinput: function(event, drawing, app_io, dom_io){
+            logclick('textinput', app_io);
             const action_id = text_bindings[event.currentTarget.id];
             if (action_id!=null) {
                 const action = text_actions[action_id];
@@ -336,6 +351,7 @@ function AppUpdater(
         },
 
         arrowdown: (arrow) => (event, drawing, app_io, dom_io) => {
+            logclick('arrowdown', app_io);
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow), app_io);
@@ -344,6 +360,7 @@ function AppUpdater(
         },
 
         arrowenter: (arrow) => (event, drawing, app_io, dom_io) => {
+            loghover('arrowenter', app_io);
             /*
             Do not consider arrows unless they are found in the current diagram.
             Some arrows may not occur in the diagram if they were updated by an earlier event.
@@ -365,6 +382,7 @@ function AppUpdater(
         },
 
         arrowleave: (arrow) => (event, drawing, app_io, dom_io) => {
+            loghover('arrowleave', app_io);
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.arrowleave([glm.vec2(event.clientX, event.clientY)], app_io);
@@ -373,6 +391,7 @@ function AppUpdater(
         },
 
         midpointdown: (arrow) => (event, drawing, app_io, dom_io) => {
+            logclick('midpointdown', app_io);
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 const screen_position = glm.vec2(event.clientX, event.clientY);
@@ -385,6 +404,7 @@ function AppUpdater(
         },
 
         objectdown: (object_) =>(event, drawing, app_io, dom_io) => {
+            logclick('objectdown', app_io);
             if (event.buttons == 1 && !object_.is_edited) {
                 event.stopPropagation();
                 const object_id = app_io.diagram.objects.indexOf(object_);
@@ -408,6 +428,7 @@ function AppUpdater(
         },
 
         objectenter: (object_) =>(event, drawing, app_io, dom_io) => {
+            loghover('objectenter', app_io);
             if (event.buttons == 2 && !object_.is_edited) {
                 event.stopPropagation();
                 const object_id = app_io.diagram.objects.indexOf(object_);
@@ -422,6 +443,7 @@ function AppUpdater(
         },
 
         selection_click: function(event, drawing, app_io, dom_io){
+            logclick('selection_click', app_io);
             if (event.button == 0) {
                 event.stopPropagation();
                 drag_ops.transition( 
