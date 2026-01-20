@@ -255,6 +255,15 @@ function AppUpdater(
         'select'
     ];
 
+    /*
+    Most browsers have issues issues where `mouseout` events do not reliably fire,
+    see https://stackoverflow.com/questions/7448468/why-cant-i-reliably-capture-a-mouseout-event.
+    A common workaround is to track whether the `target` of an event has change during a `mousemove` event.
+    AppUpdater has the ability to abstract over this hack but it does need to store dom/event state for this to work.
+    This unfortunately introduces state in an otherwise stateless elm architecture but we see no other workaround.
+    */
+    let mouseout_hack_target = undefined;
+
     return {
 
         contextmenu: function(event, drawing, app_io, dom_io){
@@ -277,7 +286,13 @@ function AppUpdater(
         mousemove: function(event, drawing, app_io, dom_io){
             logmove('mousemove', app_io);
             // mouse motion is a degenerate case of touchscreen motion where the number of touchpoints is one
-            drag_ops.move( [glm.vec2(event.clientX, event.clientY)], app_io);
+            if (mouseout_hack_target && mouseout_hack_target != event.target) {
+                mouseout_hack_target = undefined;
+                loghover('arrowleave', app_io);
+                drag_ops.arrowleave([glm.vec2(event.clientX, event.clientY)], app_io);
+            } else {
+                drag_ops.move( [glm.vec2(event.clientX, event.clientY)], app_io);
+            }
             drawing.redraw(undefined, app_io, dom_io);
         },
 
@@ -368,6 +383,7 @@ function AppUpdater(
             */
             const arrow_id = app_io.diagram.arrows.indexOf(arrow);
             if (arrow_id >= 0) {
+                mouseout_hack_target = event.target;
                 if (event.buttons == 2 && !arrow.is_edited) {
                     event.stopPropagation();
                     history.do(app_io, app_io.diagram.with({arrow_selections: [...app_io.diagram.arrow_selections, arrow_id]}), true);
@@ -381,14 +397,8 @@ function AppUpdater(
             }
         },
 
-        arrowleave: (arrow) => (event, drawing, app_io, dom_io) => {
-            loghover('arrowleave', app_io);
-            if (event.buttons == 1 && !arrow.is_edited) {
-                event.stopPropagation();
-                drag_ops.arrowleave([glm.vec2(event.clientX, event.clientY)], app_io);
-                drawing.redraw(undefined, app_io, dom_io);
-            }
-        },
+        // currently cannot function in most browsers, see note for `mouseout_hack_target`
+        arrowleave: (arrow) => (event, drawing, app_io, dom_io) => {},
 
         midpointdown: (arrow) => (event, drawing, app_io, dom_io) => {
             logclick('midpointdown', app_io);
