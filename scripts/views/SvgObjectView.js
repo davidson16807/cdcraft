@@ -17,7 +17,7 @@ function SvgObjectView(dependencies, highlight_width) {
     const screen_state_storage       = dependencies.screen_state_storage;
     const render                     = dependencies.render;
 
-    const text_center = glm.vec2(-8.1, -21.5);
+    const text_center = glm.vec2(-50, -13.0);
     return ({
         draw: function(screen_frame_store, object) {
             const screen_frame = screen_state_storage.unpack(screen_frame_store);
@@ -43,7 +43,7 @@ function SvgObjectView(dependencies, highlight_width) {
                             class: `object-label-wrapper ${color_class}`
                         }, [symbol], 
                         object_screen_position.add(text_center),
-                        glm.vec2(1, 1)),
+                        glm.vec2(100, 30)),
                     svg.foreignObject(
                         {
                             class: `object-label-wrapper ${color_class}`
