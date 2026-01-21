@@ -1,4 +1,13 @@
 TODO:
+fix bug where mousemove steals focus from text boxes
+fix undo/redo history when changing text
+latex for descriptions
+apply styles when multiple arrows are selected
+double arrow heads
+smaller bullet text
+centered bullet text
+right align text when on the left of an arrow
+
 
 SUMMARY:
 import/export formats
