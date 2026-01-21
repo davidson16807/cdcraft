@@ -133,10 +133,14 @@ svg{
 .object-label-wrapper {
     overflow: visible;
     visibility: visible;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .object-label{
-    font-size: 161%;
+    font-size: 100%;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .object-green{
