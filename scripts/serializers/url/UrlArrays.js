@@ -7,7 +7,7 @@ that describe maps between arrays of nullable primitives and their representatio
 See README.md for more information.
 */
 
-const UrlArrays = (array_delimiters, tuple_delimiter) => {
+const UrlArrays = (array_delimiter, tuple_delimiter) => {
     return {
 
         export: (array) => {
@@ -16,11 +16,11 @@ const UrlArrays = (array_delimiters, tuple_delimiter) => {
                 .map((element, i) => [element, i])
                 .filter(([element, i]) => element != null)
                 .map(([element, i]) => i > first_null_id && first_null_id > 0? `${i}${tuple_delimiter}${element}` : element)
-                .join(array_delimiters);
+                .join(array_delimiter);
         },
 
         import: (string) => {
-            const split = string == null || string.length<1? [] : string.split(array_delimiters).map(element => element.split(tuple_delimiter, 2));
+            const split = string == null || string.length<1? [] : string.split(array_delimiter).map(element => element.split(tuple_delimiter, 2));
             const array = split.filter(element => element.length == 1).map(element => element[0]);
             split.filter(element => element.length == 2).forEach(element => array[element[0]] = element[1]);
             return array;
