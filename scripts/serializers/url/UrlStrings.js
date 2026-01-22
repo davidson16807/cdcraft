@@ -11,10 +11,12 @@ const UrlStrings = (base64_prefix) => ({
     export: (text) =>
             text == null? null
         :   isNaN(parseInt(text)) && text.match(/^[a-zA-Z0-9+/=.-]$/)? text 
-        :   base64_prefix+btoa(unescape(encodeURIComponent(text))),
+        :   base64_prefix+btoa(((text))),
+        // :   base64_prefix+btoa(unescape(encodeURIComponent(text))),
     import: (text) => 
             text == null? null
         :   !text.startsWith(base64_prefix)? text 
-        :   decodeURIComponent(escape(atob(text.replace(base64_prefix, '')))),
+        :   ((atob(text.replace(base64_prefix, '')))),
+        // :   decodeURIComponent(escape(atob(text.replace(base64_prefix, '')))),
     updates: (version, string) => string,
 });
