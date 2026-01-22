@@ -17,7 +17,6 @@ function SvgObjectView(dependencies, highlight_width) {
     const screen_state_storage       = dependencies.screen_state_storage;
     const render                     = dependencies.render;
 
-    const symbol_width = 100;
 
     return ({
         draw: function(screen_frame_store, object) {
@@ -41,6 +40,7 @@ function SvgObjectView(dependencies, highlight_width) {
             }, [], object.label || '');
             const object_color = object.color??'contrast';
             const color_class = object_color.startsWith('#')? '':'object-'+object_color;
+            const symbol_width = screen_mapping.distance.apply(1);
             const g = svg.g({class: `object ${color_class}`}, [
                     svg.foreignObject(
                         {
