@@ -73,6 +73,8 @@ svg{
 }
 
 .arrow-label{
+    text-align: center;
+    vertical-align: middle;
     white-space: nowrap;
 }
 
