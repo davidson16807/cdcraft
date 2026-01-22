@@ -38,7 +38,7 @@ const UrlArrows = (dependencies) => {
                 url_ints().export(arrow.arc.target.reference),
                 url_colors.export(arrow.color),
                 url_strings.export(arrow.label),
-                url_ivec2s(0,1).export(arrow.arc.label_offset_id),
+                url_ivec2s(0,1).export(arrow.label_offset_id),
             ]),
 
         import: (string) => 
