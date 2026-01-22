@@ -3,7 +3,7 @@
 function SvgObjectAttributes(math) {
     const sign = math.sign;
     return {
-        label_offset_id_to_offset: (offset) => glm.vec2(40*offset.x, -50*offset.y),
+        label_offset_id_to_offset: (offset) => glm.vec2(0.2*offset.x, -0.2*offset.y),
         label_offset_id_to_style:  (offset) => 'float:'+(offset.x>=0? 'left':'right'),
     };
 }
@@ -52,8 +52,11 @@ function SvgObjectView(dependencies, highlight_width) {
                         {
                             class: `object-label-wrapper ${color_class}`
                         }, [label], 
-                        object_screen_position.add(glm.vec2(0, screen_mapping.distance.apply(-0.13)))
-                            .add(svg_object_attributes.label_offset_id_to_offset(label_offset_id)),
+                        object_screen_position.add(
+                            screen_mapping.offset.apply(
+                                glm.vec2(0, -0.13)
+                                    .add(svg_object_attributes.label_offset_id_to_offset(label_offset_id))
+                            )),
                         glm.vec2(1, 1)),
                 ]);
             return g;

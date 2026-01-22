@@ -84,12 +84,14 @@ function SvgArrowView(dependencies, settings) {
         const arc_midpoint = sampler_arc_properties.position(screen_arc, 0.5);
         const arc_midpoint_offset_from_origin = arc_midpoint.sub(screen_arc.origin);
         const arc_midpoint_direction_from_origin = 
-            glm.length(arc_midpoint_offset_from_origin) > 1? 
+            glm.length(arc_midpoint_offset_from_origin) > 0? 
             glm.normalize(arc_midpoint_offset_from_origin) : glm.vec2(0,1);
         const color_class = arrow.color.startsWith('#')? '':'arrow-'+arrow.color;
+        const label_offset_id = arrow.label_offset_id || glm.ivec2(0,1);
         const div = html.div({
             class:`arrow-label`,
-            style:`font-size:${screen_mapping.distance.apply(1)}%;`,
+            style:  `font-size:${screen_mapping.distance.apply(1)}%;`+
+                    'float:'+(arc_midpoint_direction_from_origin.x*label_offset_id.y>=0? 'left':'right'),
             xmlns:"http://www.w3.org/1999/xhtml",
         },[], arrow.label);
         render(div, {throwOnError: false});
@@ -102,7 +104,6 @@ function SvgArrowView(dependencies, settings) {
         // const label_height = div.offsetHeight;
         // const label_width = div.offsetWidth;
         // document.body.removeChild(div);
-        const label_offset_id = arrow.label_offset_id || glm.ivec2(0,1);
         const g = svg.g(
             {
                 class: `arrow ${color_class}`,
@@ -136,10 +137,12 @@ function SvgArrowView(dependencies, settings) {
                 ),
                 svg.foreignObject(
                     {
-                        class:`arrow-label-wrapper ${color_class}`
+                        class:`arrow-label-wrapper ${color_class}`,
                     }, [div], 
                     arc_midpoint
-                        .add(arc_midpoint_direction_from_origin.mul(40*label_offset_id.y)),
+                        .add(arc_midpoint_direction_from_origin.mul(
+                            screen_mapping.distance.apply(0.2*label_offset_id.y)
+                        )),
                     glm.vec2(1, 1)),
             ]);
         return g;
