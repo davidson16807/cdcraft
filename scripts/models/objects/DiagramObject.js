@@ -17,8 +17,8 @@ class DiagramObject {
         this.label = Object.freeze(label);
         this.label_offset_id = Object.freeze(label_offset_id);
         this.color = Object.freeze(color);
-        this.is_edited = Object.freeze(is_edited??false);
-        this.is_valid = Object.freeze(is_valid??true);
+        this.is_edited = is_edited??false;
+        this.is_valid = is_valid??true;
     }
 
     with(attributes){

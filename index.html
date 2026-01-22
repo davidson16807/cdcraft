@@ -194,7 +194,7 @@
 <script type="text/javascript">
 'use strict';
 
-const diagram_ids = DiagramIds(UnboundedCellHashing(PositiveCellHashing(), Math), Math);
+const diagram_ids = DiagramIds(UnboundedCellHashing(NonNegativeCellHashing(), Math), Math);
 
 const node_metric_bundle = NodeMetricBundle(PositionMetricBundle(diagram_ids, glm));
 
@@ -277,8 +277,8 @@ const svg_arrow_view = SvgArrowView({
         stored_arcs_and_point_arcs_curried: stored_arcs_and_point_arcs_curried,
     }, 
     { 
-        source_trim_length: 0.13,
-        target_trim_length: 0.13,
+        source_trim_length: 0.17,
+        target_trim_length: 0.17,
         arrow_line_spacing: 3,
         arrow_head_slope:   1,
         arrow_line_width:   2,
@@ -295,8 +295,8 @@ const svg_arrow_selection_view =
         stored_arcs_and_point_arcs_curried: stored_arcs_and_point_arcs_curried,
     }, 
     { 
-        source_trim_length: 0.13,
-        target_trim_length: 0.13,
+        source_trim_length: 0.17,
+        target_trim_length: 0.17,
         highlight_width:    0.2,
     });
 
@@ -312,8 +312,8 @@ const svg_arrow_midpoint_view =
         stored_arcs_and_point_arcs_curried: stored_arcs_and_point_arcs_curried,
     },
     { 
-        source_trim_length: 0.13,
-        target_trim_length: 0.13,
+        source_trim_length: 0.17,
+        target_trim_length: 0.17,
         midpoint_width:     0.5,
     });
 
@@ -335,7 +335,7 @@ const svg_object_selection_view =
     }, 0.5);
 
 
-const node_hashing = NodeHashing(UnboundedCellHashing(PositiveCellHashing(), Math));
+const node_hashing = NodeHashing(UnboundedCellHashing(NonNegativeCellHashing(), Math));
 
 const arrow_reference_resource = 
     ArrowReferenceResource(user_arcs_curried_and_stored_arcs, node_hashing);
@@ -370,7 +370,7 @@ const arrow_drags =
             user_arcs_curried_and_stored_arcs, 
             stored_arcs_and_point_arcs_curried, 
             Math,
-            0.001 // min_length_clockwise_change_per_scroll
+            0.0005 // min_length_clockwise_change_per_scroll
         ),
         arrow_reference_resource,
         user_arcs_curried_and_stored_arcs,

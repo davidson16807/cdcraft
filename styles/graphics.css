@@ -73,7 +73,7 @@ svg{
 }
 
 .arrow-label{
-    font-size: 161%;
+    white-space: nowrap;
 }
 
 .arrow-green{
@@ -133,14 +133,14 @@ svg{
 .object-label-wrapper {
     overflow: visible;
     visibility: visible;
-    text-align: center;
+    text-align: right;
     vertical-align: middle;
 }
 
 .object-label{
-    font-size: 100%;
-    text-align: center;
+    text-align: right;
     vertical-align: middle;
+    white-space: nowrap;
 }
 
 .object-green{

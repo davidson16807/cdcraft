@@ -13,8 +13,8 @@ class Node {
     constructor(position, reference){
         typecheck(position, 'glm_vec2$class+glm_ivec2$class+1');
         typecheck(reference, 'Number+1');
-        this.position = Object.freeze(position);
-        this.reference = Object.freeze(reference);
+        this.position = Object.freeze(glm.vec2(position));
+        this.reference = reference;
     }
 
     with(attributes){

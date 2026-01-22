@@ -32,7 +32,7 @@ function UserArcsAndStoredArcsCurried(
                 const is_valid = is_snapped && !is_hidden;
 
                 const target_offset_id = 
-                     !is_valid?  glm.vec2()
+                     !is_valid? glm.vec2()
                     : is_loop?   
                         diagram_ids.offset_to_offset_id(
                             stored_arc_properties.target_offset_to_global_mapping(arc, is_loop)
