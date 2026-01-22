@@ -73,6 +73,7 @@ svg{
 }
 
 .arrow-label{
+    white-space: nowrap;
 }
 
 .arrow-green{
@@ -139,6 +140,7 @@ svg{
 .object-label{
     text-align: right;
     vertical-align: middle;
+    white-space: nowrap;
 }
 
 .object-green{
