@@ -89,6 +89,7 @@ function SvgArrowView(dependencies, settings) {
         const color_class = arrow.color.startsWith('#')? '':'arrow-'+arrow.color;
         const div = html.div({
             class:`arrow-label`,
+            style:`font-size:${screen_mapping.distance.apply(1)}%;`,
             xmlns:"http://www.w3.org/1999/xhtml",
         },[], arrow.label);
         render(div, {throwOnError: false});
