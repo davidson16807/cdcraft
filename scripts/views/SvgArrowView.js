@@ -104,6 +104,7 @@ function SvgArrowView(dependencies, settings) {
         // const label_height = div.offsetHeight;
         // const label_width = div.offsetWidth;
         // document.body.removeChild(div);
+        const label_width = 130;
         const g = svg.g(
             {
                 class: `arrow ${color_class}`,
@@ -140,10 +141,11 @@ function SvgArrowView(dependencies, settings) {
                         class:`arrow-label-wrapper ${color_class}`,
                     }, [div], 
                     arc_midpoint
+                        .add(glm.vec2(-label_width/2, -33))
                         .add(arc_midpoint_direction_from_origin.mul(
-                            screen_mapping.distance.apply(0.2*label_offset_id.y)
+                            screen_mapping.distance.apply(0.25*label_offset_id.y)
                         )),
-                    glm.vec2(1, 1)),
+                    glm.vec2(label_width, 1)),
             ]);
         return g;
     }

@@ -1,0 +1,5 @@
+
+test for label positions:
+
+?0&=-27_277,8000&=nvnm,2_2,2_3,10,0_0,7:0,8:*ZG93bndhcmQ=;nvnm,2_2,3_2,10,0_0,7:0,8:*cmlnaHR3YXJk;nvnm,2_2,1_2,10,0_0,7:0,8:*bGVmdHdhcmQ=;nvnm,2_2,2_1,10,0_0,7:0,8:*dXB3YXJk;nvnm,5_2,4_3,10,0_0,7:0,8:*ZG93bnJpZ2h0;nvnm,5_2,6_3,10,0_0,7:0,8:*ZG93biByaWdodA==;nvnm,5_2,6_1,10,0_0,7:0,8:*dXAgcmlnaHQ=;nvnm,5_2,4_1,10,0_0,7:0,8:*dXAgbGVmdA==&=2_2,3:*Y2VudGVy,4:1_1;5_2,3:*Y2VudGVy,4:1_1;3_2,3:*cmlnaHQ=,4:-1_1
+

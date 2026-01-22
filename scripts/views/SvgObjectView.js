@@ -3,7 +3,7 @@
 function SvgObjectAttributes(math) {
     const sign = math.sign;
     return {
-        label_offset_id_to_offset: (offset) => glm.vec2(0.2*offset.x, -0.2*offset.y),
+        label_offset_id_to_offset: (offset) => glm.vec2(0.08*offset.x, -0.1*offset.y),
         label_offset_id_to_style:  (offset) => 'float:'+(offset.x>=0? 'left':'right'),
     };
 }
