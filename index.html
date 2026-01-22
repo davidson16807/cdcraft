@@ -423,7 +423,9 @@ const url_dependencies = {
 const url_diagrams = UrlDiagrams(
     UrlArrays('&='),
     UrlArrays(';'),
-    UrlArrows(url_dependencies), 
+    UrlArrows(url_dependencies, {
+        min_length_clockwise_precision: 0.0005
+    }), 
     UrlObjects(url_dependencies),
     UrlScreenState(url_dependencies),
     new ScreenStateStore(glm.vec2(), 8),
