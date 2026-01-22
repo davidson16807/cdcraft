@@ -40,22 +40,31 @@ function SvgObjectView(dependencies, highlight_width) {
             }, [], object.label || '');
             const object_color = object.color??'contrast';
             const color_class = object_color.startsWith('#')? '':'object-'+object_color;
-            const symbol_width = screen_mapping.distance.apply(1);
+            /*
+            Append the label, measure its dimensions, then remove.
+            This is not very performant, however measurement 
+            can only be done when an element is added to the document.
+            */
+            // document.body.appendChild(symbol);
+            // const symbol_width = Math.max(1, screen_mapping.distance.apply(symbol.offsetWidth/100));
+            // document.body.removeChild(symbol);
+            const symbol_width = screen_mapping.distance.apply(0.25);
+            const symbol_height = screen_mapping.distance.apply(0.27);
             const g = svg.g({class: `object ${color_class}`}, [
                     svg.foreignObject(
                         {
                             class: `object-label-wrapper ${color_class}`
                         }, [symbol], 
-                        object_screen_position.add(glm.vec2(-symbol_width/2, screen_mapping.distance.apply(-0.13))),
-                        glm.vec2(symbol_width, 30)),
+                        object_screen_position.sub(glm.vec2(symbol_width/2, symbol_width/2)),
+                        glm.vec2(symbol_width, symbol_width)),
                     svg.foreignObject(
                         {
                             class: `object-label-wrapper ${color_class}`
                         }, [label], 
-                        object_screen_position.add(
-                            screen_mapping.offset.apply(
-                                glm.vec2(0, -0.13)
-                                    .add(svg_object_attributes.label_offset_id_to_offset(label_offset_id))
+                        object_screen_position
+                            .sub(glm.vec2(0,symbol_height/2))
+                            .add(screen_mapping.offset.apply(
+                                svg_object_attributes.label_offset_id_to_offset(label_offset_id)
                             )),
                         glm.vec2(1, 1)),
                 ]);
