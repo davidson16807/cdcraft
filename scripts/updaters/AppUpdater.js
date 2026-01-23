@@ -30,6 +30,14 @@ function AppUpdater(
         }
     }
 
+    function is_textbox_focused(dom) {
+        return (
+            dom.activeElement == dom.getElementById('object-symbol') ||
+            dom.activeElement == dom.getElementById('object-label') ||
+            dom.activeElement == dom.getElementById('arrow-label')
+        );
+    }
+
     /* 
     functions mapping app×event→app 
     where the event must represent the pressing of a mouse key
@@ -264,7 +272,7 @@ function AppUpdater(
     /*
     Most browsers have issues issues where `mouseout` events do not reliably fire,
     see https://stackoverflow.com/questions/7448468/why-cant-i-reliably-capture-a-mouseout-event.
-    A common workaround is to track whether the `target` of an event has change during a `mousemove` event.
+    A common workaround is to track whether the `target` of an event has changed during a `mousemove` event.
     AppUpdater has the ability to abstract over this hack but it does need to store dom/event state for this to work.
     This unfortunately introduces state in an otherwise stateless elm architecture but we see no other workaround.
     */
@@ -300,7 +308,9 @@ function AppUpdater(
             } else {
                 drag_ops.move( [glm.vec2(event.clientX, event.clientY)], app_io);
             }
-            drawing.redraw(undefined, app_io, dom_io);
+            if (!is_textbox_focused(dom_io)) {
+                drawing.redraw(undefined, app_io, dom_io);
+            }
         },
 
         mouseup: function(event, drawing, app_io, dom_io){
