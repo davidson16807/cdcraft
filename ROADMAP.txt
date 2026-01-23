@@ -1,5 +1,4 @@
 TODO:
-fix undo/redo history when changing text
 latex for descriptions
 allow apply styles for arrow heads/shafts/tails when multiple arrows are selected
 double arrow heads
@@ -24,6 +23,7 @@ ctrl+rmb to remove from selection
 copy/paste
 
 LOW PRIORITY:
+fix undo/redo history annoyance when changing text
 arrow curvature slider
 arrow trim slider
 arrow offset slider

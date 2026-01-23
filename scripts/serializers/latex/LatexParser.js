@@ -1,6 +1,6 @@
 'use strict';
 
-const LatexRules = (peg) => {
+const TikzcdRules = (peg) => {
 
     const backslash = '\\\\';
 
@@ -84,16 +84,9 @@ const LatexRules = (peg) => {
     }
 }
 
-const LatexParser = (maps, lexer, loader, rules) => {
-    return Object.assign(
-        ...Object.entries(rules).map((
-            [key, rule]) => {key: maps.chain(lexer.tokenize, loader.state, rule)})
-    );
-};
+let backslash = '\\\\';
 
-const backslash = '\\\\';
-
-const lexer = Lexer([
+let lexer = Lexer([
     // `'(?:[^']|${backslash}')*?'`,
     `"(?:[^"]|${backslash}")*?"`,
     `${backslash}?[a-zA-Z0-9_]+`,
@@ -102,23 +95,22 @@ const lexer = Lexer([
     // `\\s+`,
 ]);
 
-const LatexSerializer = (Lexer, loader, parser, formatter) => {
-
-}
-
-
 let maps = MapOps();
 let maybes = MaybeOps();
+let loader = Loader();
+
 let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
             ExtendedParsingExpressionGrammarPrimitives(ListOps(),
                 BasicParsingExpressionGrammarPrimitives(maybes, maps, 
                     MaybeMapOps(), StateOps(maybes))));
 
-const loader = Loader();
+let rules = TikzcdRules(peg);
 
-const formatter = TagFormatting(maps);
+let parser = Parser(maps, lexer, loader, rules);
 
-const lexloader = ({
+let formatter = TagFormatting(maps);
+
+let lexloader = ({
     state: maps.chain(lexer.tokenize, loader.state),
     text:  maps.chain(loader.list, lexer.detokenize),
 });
@@ -187,17 +179,21 @@ console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
     lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ C`)));
 console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
     lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ & C`)));
-const state = lexloader.state(`
+let state = lexloader.state(`
     \\begin{tikzcd}
     A \\arrow[rd] \\arrow[r, "\\phi"] & B \\\\
     & C
     \\end{tikzcd}
 `);
-const parsed = rule(diagram)(state);
-const formatted = formatter.format(parsed.tree);
-const detokenized = lexer.detokenize(formatted);
+let parsed = rule(diagram)(state);
+let formatted = formatter.format(parsed.tree);
+let detokenized = lexer.detokenize(formatted);
 console.log('state:', state);
 console.log('parsed:', parsed);
 console.log('formatted:', formatted);
 console.log('detokenized:', detokenized);
+
+
+let parsed = rules.arrow(lexloader.state('\\arrow[rd]'));
+formatter.format(parsed.tree).join(' ');
 
