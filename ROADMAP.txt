@@ -2,12 +2,8 @@ TODO:
 fix bug where mousemove steals focus from text boxes
 fix undo/redo history when changing text
 latex for descriptions
-apply styles when multiple arrows are selected
+allow apply styles for arrow heads/shafts/tails when multiple arrows are selected
 double arrow heads
-smaller bullet text
-centered bullet text
-right align text when on the left of an arrow
-change cursor to circle when user holds rmb
 
 SUMMARY:
 import/export formats
@@ -16,14 +12,18 @@ user interface
 
 HIGH PRIORITY:
 latex export/import 
+fix bug where mousemove steals focus from text boxes
+double arrow heads/tails
 
 MEDIUM PRIORITY:
 fix bug where explicit objects persist after deletion
-fix bug where selection deletion removes incorrect objects/arrows
-circle cursor on rmb
 add zoom support to touchpad
 add selection support to touchpad
 fix bug where panning with touchpad resets the display
+ctrl+A to select all
+shift+rmb to add to selection
+ctrl+rmb to remove from selection
+copy/paste
 
 LOW PRIORITY:
 arrow curvature slider
@@ -32,8 +32,6 @@ arrow offset slider
 arrow flip/reverse operations
 json export
 refresh grids on window resize
-ctrl+A to select all
-copy/paste
 rotate/flip/mirror selections
 automatic object label positioning: 
 	use gradient of summed sdfs of objects/arrows in 1 cell's distance
@@ -45,7 +43,7 @@ arrow pushout/pullback symbol
 tooltips
 internationalization
 about/welcome sidebar
-double arrow heads/tails
+illustrated mouse with commands
 redraw grid on window resize
 set trim of arrow heads and tails to reflect slope of the specified 
 set scroll wheel to zoom in/out during pan drags
@@ -58,6 +56,5 @@ refactor so app operations return new app objects
 refactor so that toolbar buttons work through `data-*` variables
 represent arrow heads and tails using svg paths and transforms
 gather all diagram object arrays into a single class
-remove calculation of offsetWidth/offsetHeight and use css floats in SvgArrowView
 refactor so that arrow drags are degenerate selection drags, 
 	and add head/tail handles to drag arrow source and target
