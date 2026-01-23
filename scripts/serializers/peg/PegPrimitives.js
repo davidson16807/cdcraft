@@ -190,24 +190,22 @@ const Loader = () => ({
         list:  (state) => state.list.tags,
     });
 
-const Parser = (lexer, loader) => rule => code => rule(loader.state(lexer.tokenize(code)));
+const Decoder = (lexer, loader) => rule => code => rule(loader.state(lexer.tokenize(code)));
 
-const Parsers = (parser, rules) => {
-    return Object.assign({},
+const Decoders = (decoder, rules) => 
+    Object.assign(
         ...Object.entries(rules).map((
-            [key, rule]) => {key: parser(rule)})
+            [key, rule]) => [key, decoder(rule)])
     );
-};
 
-let Codec = (Lexer, loader, formatter, delimiter=' ') => rule => ({
+const Codec = (Lexer, loader, formatter, delimiter=' ') => rule => ({
     encode: tree => formatter.format(tree).join(delimiter),
-    decode: code => rule(loader.state(lexer.tokenize(code))),
+    decode: code => rule(loader.state(lexer.tokenize(code)))?.tree,
 })
 
-const Codecs = (codec, rules) => {
-    return Object.assign({},
-        ...Object.entries(rules).map((
-            [key, rule]) => {key: codec(rule)})
+const Codecs = (codec, rules) => 
+    Object.fromEntries(
+        Object.entries(rules).map(
+            ([key, rule]) => [key, codec(rule)])
     );
-};
 

@@ -2,9 +2,10 @@
 
 const TikzcdRules = (peg) => {
 
-    const backslash = '\\\\';
-
     const {rule, type, fluff, not, option, choice, repeat} = peg;
+
+    const backslash = fluff('\\\\');
+    const ampersand = fluff('&');
 
     const token     = [];
     const parens    = [fluff('('), repeat()([not(')'), token]), fluff(')')];
@@ -42,27 +43,26 @@ const TikzcdRules = (peg) => {
             ),
         ),
     ]);
-    const beginning = lexer.tokenize('\\begin{tikzcd}')
-    const ending = lexer.tokenize('\\end{tikzcd}')
-    const object = [not(choice('&', backslash, ending)), token];
+    const beginning = fluff(lexer.tokenize('\\begin{tikzcd}'))
+    const ending = fluff(lexer.tokenize('\\end{tikzcd}'))
+    const object = type('object', [not(choice(ampersand, backslash, ending)), token]);
     const cell = type('cell', repeat()(choice(arrow, object)));
     const row  = type('row', [
-        repeat()([not(choice(backslash, ending)), cell, fluff('&')]),
+        repeat()([not(choice(backslash, ending)), cell, ampersand]),
         option(cell),
     ]);
-    const diagram = [
-        fluff(beginning),
+    const diagram = type('diagram', [
+        beginning,
         repeat()([row, fluff(backslash)]),
         option(row),
-        fluff(ending),
-    ];
+        ending,
+    ]);
 
     return {
         token:     token,
         parens:    parens,
         brackets:  brackets,
         braces:    braces,
-        word:      word,
         directive: directive,
         integer:   integer,
         float:     float,
@@ -81,7 +81,7 @@ const TikzcdRules = (peg) => {
         cell:      cell,
         row:       row,
         diagram:   diagram,
-    }
+    };
 }
 
 let backslash = '\\\\';
@@ -106,8 +106,6 @@ let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
 
 let rules = TikzcdRules(peg);
 
-let parser = Parser(maps, lexer, loader, rules);
-
 let formatter = TagFormatting(maps);
 
 let lexloader = ({
@@ -115,8 +113,18 @@ let lexloader = ({
     text:  maps.chain(loader.list, lexer.detokenize),
 });
 
+let codecs = Codecs(Codec(lexer, loader, formatter, ' '), rules);
 
-rule([not(']'), 'foo'])(lexloader.state('foo]'))
+codecs.arrow.decode('\\arrow[rd]');
+
+codecs.diagram.decode(`
+    \\begin{tikzcd}
+    A \\arrow[rd] \\arrow[r, "\\phi"] & B \\\\
+    & C
+    \\end{tikzcd}
+`);
+
+rule([not(']'), 'foo'])(lexloader.state('foo]'));
 
 let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, MaybeMapOps(), StateOps(maybes));
 console.log(bpeg.exact('x')( loader.state( ['x' ] )));
@@ -173,8 +181,8 @@ console.log(rule(brackets)(lexloader.state('[foo]')));
 console.log(rule(arrow)(lexloader.state(`\\arrow[rd]`)));
 console.log(rule(arrow)(lexloader.state(`\\arrow[r, "\\phi"]`)));
 console.log(rule(repeat()(arrow))(lexloader.state(`\\arrow[rd] \\arrow[r, "\\phi"]`)));
-console.log(rule(cell)(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"]`)));
-console.log(rule(row)(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B`)));
+console.log(rules.cell(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"]`)));
+console.log(rules.row(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B`)));
 console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
     lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ C`)));
 console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
