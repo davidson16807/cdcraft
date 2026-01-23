@@ -280,6 +280,9 @@ function AppUpdater(
             logclick('mousedown', app_io);
             const action_id = mousedown_bindings[event.button];
             (mouse_actions[action_id] || generic_actions[action_id])(app_io, event);
+            if (event.buttons == 2 && app_io.drag_type.id == 'released') {
+                app_io.drag_type.cursor = 'circle';
+            }
             drawing.redraw(undefined, app_io, dom_io);
         },
 
@@ -298,6 +301,9 @@ function AppUpdater(
 
         mouseup: function(event, drawing, app_io, dom_io){
             logclick('mouseup', app_io);
+            if (event.buttons == 2 && app_io.drag_type.id == 'released') {
+                app_io.drag_type.cursor = 'default';
+            }
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
@@ -367,6 +373,9 @@ function AppUpdater(
 
         arrowdown: (arrow) => (event, drawing, app_io, dom_io) => {
             logclick('arrowdown', app_io);
+            if (event.buttons == 2 && app_io.drag_type.id == 'released') {
+                app_io.drag_type.cursor = 'circle';
+            }
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow), app_io);
@@ -402,6 +411,9 @@ function AppUpdater(
 
         midpointdown: (arrow) => (event, drawing, app_io, dom_io) => {
             logclick('midpointdown', app_io);
+            if (event.buttons == 2 && app_io.drag_type.id == 'released') {
+                app_io.drag_type.cursor = 'circle';
+            }
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 const screen_position = glm.vec2(event.clientX, event.clientY);
@@ -415,6 +427,9 @@ function AppUpdater(
 
         objectdown: (object_) =>(event, drawing, app_io, dom_io) => {
             logclick('objectdown', app_io);
+            if (event.buttons == 2 && app_io.drag_type.id == 'released') {
+                app_io.drag_type.cursor = 'circle';
+            }
             if (event.buttons == 1 && !object_.is_edited) {
                 event.stopPropagation();
                 const object_id = app_io.diagram.objects.indexOf(object_);

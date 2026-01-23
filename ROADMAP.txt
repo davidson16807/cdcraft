@@ -7,7 +7,7 @@ double arrow heads
 smaller bullet text
 centered bullet text
 right align text when on the left of an arrow
-
+change cursor to circle when user holds rmb
 
 SUMMARY:
 import/export formats
