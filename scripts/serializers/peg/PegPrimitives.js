@@ -35,8 +35,9 @@ const MapOps = () => ({
 });
 
 /*
-`MaybeOps` attempts a complete description of useful operations that can be performed on the datatype: maybe=1+x≅2,
-where `1` is any nullish value, and `x` is any nonnullish value of arbitrary type.
+`MaybeOps` attempts a complete description of useful operations that can be performed on the datatype maybe=1+x,
+when forgetting all but whether the maybe is null or not.
+Here `1` is any nullish value, and `x` is any nonnullish value of arbitrary type.
 There are 2² possible functions that map 2→2, however we omit one (2→1) since it is trivial.
 We also add two functions (2⇆bool) that cast to and from another representation of 2, using booleans.
 */
@@ -66,10 +67,10 @@ const MaybeMapOps = () => ({
 analogous to an xml tag. It includes only a data type and a list of ParseTags as children.
 */
 const Tag = (tags, type, fluff) => ({
-        tags : tags ?? [],
-        ...(type? {type:type} : {}),
-        ...(fluff? {fluff:true} : {}),
-    });
+    tags : tags ?? [],
+    ...(type? {type:type} : {}),
+    ...(fluff? {fluff:true} : {}),
+});
 
 /*
 `State` represents the state of a parsing or formatting operation.
@@ -77,9 +78,9 @@ It stores two `Tag`s, one with flat list of children, the other nested.
 During parsing, the flat list is transferred to the nested tree, and during formatting, the opposite occurs.
 */
 const State = (list, tree) => ({
-        list : list ?? Tag(),
-        tree : tree ?? Tag(),
-    });
+    list : list ?? Tag(),
+    tree : tree ?? Tag(),
+});
 
 /*
 `StateOps` provides useful operations that can be performed on a `State`
@@ -98,7 +99,7 @@ const StateOps = (maybes)=>({
             : State(next.list, Tag([...current.tree.tags, ...next.tree.tags], next.tree.type )),
 });
 
-const BasicPegPrimitives = (maybes, maps, maybe_maps, states) => ({
+const BasicParsingExpressionGrammarPrimitives = (maybes, maps, maybe_maps, states) => ({
 
     fluff: (rule)       => maps.chain(rule, states.fluff),
     type:  (name, rule) => maps.chain(rule, states.type(name)),
@@ -121,7 +122,7 @@ const BasicPegPrimitives = (maybes, maps, maybe_maps, states) => ({
 
 });
 
-const ExtendedPegPrimitives = (lists, peg) =>
+const ExtendedParsingExpressionGrammarPrimitives = (lists, peg) =>
     Object.assign({}, 
         peg,
         {
@@ -142,7 +143,7 @@ const ExtendedPegPrimitives = (lists, peg) =>
         }
     );
 
-const ShorthandPegPrimitives = (maps, peg) => {
+const ShorthandParsingExpressionGrammarPrimitives = (maps, peg) => {
     const type_lookups = {}
     const longhand = rule => state => type_lookups[rule.constructor.name](rule)(state);
     Object.assign(type_lookups, {
@@ -188,4 +189,25 @@ const Loader = () => ({
         state: (list)  => State(Tag(list)),
         list:  (state) => state.list.tags,
     });
+
+const Parser = (lexer, loader) => rule => code => rule(loader.state(lexer.tokenize(code)));
+
+const Parsers = (parser, rules) => {
+    return Object.assign({},
+        ...Object.entries(rules).map((
+            [key, rule]) => {key: parser(rule)})
+    );
+};
+
+let Codec = (Lexer, loader, formatter, delimiter=' ') => rule => ({
+    encode: tree => formatter.format(tree).join(delimiter),
+    decode: code => rule(loader.state(lexer.tokenize(code))),
+})
+
+const Codecs = (codec, rules) => {
+    return Object.assign({},
+        ...Object.entries(rules).map((
+            [key, rule]) => {key: codec(rule)})
+    );
+};
 

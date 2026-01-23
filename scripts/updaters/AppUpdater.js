@@ -24,6 +24,20 @@ function AppUpdater(
     const logmove  = dependencies.logmove  || ((text,app)=>undefined);
     const loghover = dependencies.loghover || ((text,app)=>undefined);
 
+    function left_click_cursor(app_io, event, cursor){
+        if (event.buttons == 2 && app_io.drag_type.id == 'released') {
+            app_io.drag_type.cursor = cursor;
+        }
+    }
+
+    function is_textbox_focused(dom) {
+        return (
+            dom.activeElement == dom.getElementById('object-symbol') ||
+            dom.activeElement == dom.getElementById('object-label') ||
+            dom.activeElement == dom.getElementById('arrow-label')
+        );
+    }
+
     /* 
     functions mapping app×event→app 
     where the event must represent the pressing of a mouse key
@@ -258,7 +272,7 @@ function AppUpdater(
     /*
     Most browsers have issues issues where `mouseout` events do not reliably fire,
     see https://stackoverflow.com/questions/7448468/why-cant-i-reliably-capture-a-mouseout-event.
-    A common workaround is to track whether the `target` of an event has change during a `mousemove` event.
+    A common workaround is to track whether the `target` of an event has changed during a `mousemove` event.
     AppUpdater has the ability to abstract over this hack but it does need to store dom/event state for this to work.
     This unfortunately introduces state in an otherwise stateless elm architecture but we see no other workaround.
     */
@@ -280,6 +294,7 @@ function AppUpdater(
             logclick('mousedown', app_io);
             const action_id = mousedown_bindings[event.button];
             (mouse_actions[action_id] || generic_actions[action_id])(app_io, event);
+            left_click_cursor(app_io, event, 'circle');
             drawing.redraw(undefined, app_io, dom_io);
         },
 
@@ -293,11 +308,14 @@ function AppUpdater(
             } else {
                 drag_ops.move( [glm.vec2(event.clientX, event.clientY)], app_io);
             }
-            drawing.redraw(undefined, app_io, dom_io);
+            if (!is_textbox_focused(dom_io)) {
+                drawing.redraw(undefined, app_io, dom_io);
+            }
         },
 
         mouseup: function(event, drawing, app_io, dom_io){
             logclick('mouseup', app_io);
+            left_click_cursor(app_io, event, 'default');
             drag_ops.transition( view_drags.release(app_io.diagram.screen_frame_store), app_io);
             drawing.redraw(undefined, app_io, dom_io);
         },
@@ -367,6 +385,7 @@ function AppUpdater(
 
         arrowdown: (arrow) => (event, drawing, app_io, dom_io) => {
             logclick('arrowdown', app_io);
+            left_click_cursor(app_io, event, 'circle');
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 drag_ops.transition( arrow_drags.edit(app_io.diagram.arrows, arrow), app_io);
@@ -402,6 +421,7 @@ function AppUpdater(
 
         midpointdown: (arrow) => (event, drawing, app_io, dom_io) => {
             logclick('midpointdown', app_io);
+            left_click_cursor(app_io, event, 'circle');
             if (event.buttons == 1 && !arrow.is_edited) {
                 event.stopPropagation();
                 const screen_position = glm.vec2(event.clientX, event.clientY);
@@ -415,6 +435,7 @@ function AppUpdater(
 
         objectdown: (object_) =>(event, drawing, app_io, dom_io) => {
             logclick('objectdown', app_io);
+            left_click_cursor(app_io, event, 'circle');
             if (event.buttons == 1 && !object_.is_edited) {
                 event.stopPropagation();
                 const object_id = app_io.diagram.objects.indexOf(object_);

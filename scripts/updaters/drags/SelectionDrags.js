@@ -11,6 +11,7 @@ function SelectionDrags(
         move: function(initial_diagram, original_screen_position) {
             return {
                 id: DragState.object,
+                cursor: 'grab',
                 initialize: () => glm.vec2(0,0),
                 move: (model_offset, screen_positions, cell_to_pixel) => 
                     PanZoomMapping(cell_to_pixel).offset.revert(screen_positions[0].sub(original_screen_position)),

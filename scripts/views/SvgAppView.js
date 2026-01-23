@@ -26,14 +26,19 @@ function SvgAppView(dependencies, onevents) {
 
     const drawing = {};
 
+    const cursors = {
+        circle: `url('icons/circle.svg') 16 16, auto`
+    };
+
     function _redraw(old_app, new_app, dom_io, trigger) {
         typecheck(old_app, 'AppState+1');
         typecheck(new_app, 'AppState');
 
-        if (old_app?.drag_type != new_app.drag_type){
+        if (old_app?.drag_type?.cursor != new_app.drag_type.cursor){
+            const cursor = cursors[new_app.drag_type.cursor] || new_app.drag_type.cursor || 'default';
             dom_io
                 .getElementById('graphics')
-                .setAttribute('cursor', new_app.drag_type.id == 'released'? 'default' : 'move')
+                .style.cursor = cursor
         }
 
         if ((old_app?.save_state) != (new_app.save_state)){
@@ -200,6 +205,8 @@ function SvgAppView(dependencies, onevents) {
                             new_diagram.arrows,
                             new_app.drag_type.id == 'released'?  'highlight-on-hover' : 'highlight-never',
                             deferal.callbackPrevent(onevents.midpointdown(arrow)),
+                            deferal.callbackPrevent(onevents.arrowenter(arrow)),
+                            deferal.callbackPrevent(onevents.arrowleave(arrow)),
                         )));
         }
 

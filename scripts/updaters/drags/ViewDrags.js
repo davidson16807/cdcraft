@@ -31,6 +31,7 @@ function ViewDrags(
 
             return {
                 id: DragState.pan,
+                cursor: 'grab',
                 initialize: () => 
                     original_cell_to_pixel_store.with({}),
                 move: (cell_to_pixel_store, screen_positions, cell_to_pixel) => {
@@ -57,11 +58,12 @@ function ViewDrags(
             };
         },
 
-        release: function(original_cell_to_pixel_store){
+        release: function(original_cell_to_pixel_store, cursor){
             const max = Math.max;
             const min = Math.min;
             return {
                 id: DragState.released,
+                cursor: cursor!=null? cursor : 'default',
                 initialize: () => original_cell_to_pixel_store.with({}),
                 move: (cell_to_pixel_store, screen_positions, screen_state) => cell_to_pixel_store,
                 wheel: function(cell_to_pixel_store, model_focus, scroll_count) {
