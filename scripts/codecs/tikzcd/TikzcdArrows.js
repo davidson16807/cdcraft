@@ -71,18 +71,41 @@ const TizcdArrows = () => {
 
     return {
 
-        decode:(tag) => {
+        decode:(tag, reference_cell) => {
 
             let arrow = DiagramArrow();
             const tags = tag.tags;
-            const directive = tags[0];
-            const directive_offset = directive.replace("arrow", '');
-            const tags = tags.filter(subtag=>subtag=='');
+            const control = tags[0];
+            const control_offset = control.replace("arrow", '');
+            const offsets = tags.filter(subtag=>subtag=='offset');
+            const assignments = tags.filter(subtag=>subtag=='assignment');
+            const labels = tags.filter(subtag=>subtag=='label');
+            const phrases = tags.filter(subtag=>subtag=='phrase');
+
+            // each letter offset increments the target by a cardinal direction
+            control_offset
+            for(let offset of offsets){
+                
+            }
+
+            // based on the manual, directionality specified by assignments overrides all else
+            for(let assignment of assignments){
+
+            }
 
             // note: we only support arrows with single labels
+            for(let phrases of phrases){
+
+            }
+
+            for(let label of labels){
+
+            }
+
 
         }
 
     };
 
 };
+
