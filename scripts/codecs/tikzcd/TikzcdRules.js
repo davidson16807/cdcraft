@@ -11,26 +11,25 @@ const TikzcdRules = (peg) => {
     const parens    = [fluff('('), repeat()([not(')'), token]), fluff(')')];
     const brackets  = [fluff('['), repeat()([not(']'), token]), fluff(']')];
     const braces    = [fluff('{'), repeat()([not('}'), token]), fluff('}')];
-    const word      = /[a-zA-Z_][a-zA-Z0-9_]*/;
-    const directive = type('directive',/\\[a-zA-Z0-9_]*/);
-    const integer   = type('integer',  /-?[0-9]+/);
-    const float     = type('float',    /-?[0-9]+\.[0-9]*([Ee]-?[0-9]*)?/);
-    const string    = type('string',   /"(?:[^"]|\\")*?"/);
-    const offset    = type('offset',   /[udlr]+/);
+    const word      = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+    const directive = type('directive',/^\\[a-zA-Z0-9_]*$/);
+    const integer   = type('integer',  /^-?[0-9]+$/);
+    const float     = type('float',    /^-?[0-9]+\.[0-9]*([Ee]-?[0-9]*)?$/);
+    const string    = type('string',   /^"(?:[^"]|\\")*?"$/);
+    const offset    = type('offset',   /^[udlr]+$/);
     const variable  = type('variable', word);
     const phrase    = type('phrase',   repeat(1)(word));
-    const label     = type('label',    [type('text',string), type('modifiers', repeat(1)(word))]);
+    const label     = type('label',    [type('text',string), type('modifiers', repeat()(word))]);
     const text      = type('text',     repeat()(token));
     const value     = choice(offset, variable, string, integer, float);
     const assignment= type('assignment', [type('key', repeat(1)(word)), fluff('='), type('value', value)]);
     token.push(choice(parens, brackets, braces, directive, value));
 
-    const entry     = type('entry', choice(offset, assignment, label, phrase, value));
     const arrow = type('arrow', [
-        /\\[udlr]*ar(row)?/,
+        /^\\[udlr]*ar(row)?$/,
         fluff('['), 
-        repeat()([choice(offset, assignment, label, phrase, value), fluff(',')]),
-        option(choice(offset, assignment, label, phrase, value)),
+        choice(offset, assignment, label, phrase),
+        repeat()([fluff(','), choice(offset, assignment, label, phrase)]),
         fluff(']'),
         option(
             fluff('{'), 
@@ -85,11 +84,11 @@ const TikzcdRules = (peg) => {
 let backslash = '\\\\';
 
 let lexer = Lexer([
-    // `'(?:[^']|${backslash}')*?'`,
+    `'(?:[^']|${backslash}')*?'`,
     `"(?:[^"]|${backslash}")*?"`,
-    `${backslash}?[a-zA-Z0-9_]+`,
+    `${backslash}?[a-zA-Z_][a-zA-Z0-9_]*`,
     `${backslash}${backslash}`,
-    `[^a-zA-Z0-9_\\s]`,
+    `[^a-zA-Z0-9_ \\t\\n]`,
     // `\\s+`,
 ]);
 
@@ -117,14 +116,14 @@ codecs.diagram.decode(`
     \\end{tikzcd}
 `);
 
-
-/*
-// EVERYTHING BELOW THIS POINT USES AN OLD VERSION OF CODE ABOVE, AND NEEDS TO BE MODERNIZED
-
 let lexloader = ({
     state: maps.chain(lexer.tokenize, loader.state),
     text:  maps.chain(loader.list, lexer.detokenize),
 });
+
+/*
+// EVERYTHING BELOW THIS POINT USES AN OLD VERSION OF CODE ABOVE, AND NEEDS TO BE MODERNIZED
+
 rule([not(']'), 'foo'])(lexloader.state('foo]'));
 
 let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, MaybeMapOps(), StateOps(maybes));

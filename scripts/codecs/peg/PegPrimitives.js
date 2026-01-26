@@ -180,13 +180,12 @@ const TagFormatting = (maps) => {
     }
 };
 
-const Lexer = (string_regexen) => 
-    (token_regex => ({
-        // tokenize:   (text)   => text.split(token_regex).filter(token => token.trim(/\s*/).length > 0),
-        tokenize:   (text)   => text.split(token_regex).filter(token => token.length > 0),
+const Lexer = (splitter_regexen) => 
+    (splitter_regex => ({
+        // tokenize:   (text)   => text.split(splitter_regex).filter(token => token.trim(/\s*/).length > 0),
+        tokenize:   (text)   => text.split(splitter_regex).filter(token => token.trim().length > 0),
         detokenize: (tokens) => tokens.join(''),
-    })) (new RegExp('('+string_regexen.join('|')+')', 'g'));
-
+    })) (new RegExp('('+splitter_regexen.join('|')+')', 'g'));
 
 const Loader = () => ({
         state: (list)  => State(Tag(list)),

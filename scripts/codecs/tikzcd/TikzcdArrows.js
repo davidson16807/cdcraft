@@ -13,6 +13,7 @@ const LatexArrows = () => {
     const offsetters = {
         arrow_arc: (key, mod) => (arrow, value) => arrow.with({ arc: arrow.arc.with(Object.fromEntries([[key, mod(arrow.arc)]])) }),
     }
+
     const setters = {
         arrow_arc: (key, get) => (arrow, value) => arrow.with({ arc: arrow.arc.with(Object.fromEntries([[key,get(value)]])) }),
         arrow:     (key, get) => (arrow, value) => arrow.with( Object.fromEntries([[key,get(value)]]) ),
@@ -70,13 +71,16 @@ const TizcdArrows = () => {
 
     return {
 
-        // encode:(arrow) =>
-
         decode:(tag) => {
+
             let arrow = DiagramArrow();
-            const directive = tag.tags[0];
+            const tags = tag.tags;
+            const directive = tags[0];
             const directive_offset = directive.replace("arrow", '');
-            
+            const tags = tags.filter(subtag=>subtag=='');
+
+            // note: we only support arrows with single labels
+
         }
 
     };
