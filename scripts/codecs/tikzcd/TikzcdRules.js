@@ -15,13 +15,14 @@ const TikzcdRules = (peg) => {
     const directive = type('directive',/^\\[a-zA-Z0-9_]*$/);
     const integer   = type('integer',  /^-?[0-9]+$/);
     const float     = type('float',    /^-?[0-9]+\.[0-9]*([Ee]-?[0-9]*)?$/);
+    const tuple     = type('tuple',    float, repeat(1)(float))
     const string    = type('string',   /^"(?:[^"]|\\")*?"$/);
     const offset    = type('offset',   /^[udlr]+$/);
     const variable  = type('variable', word);
     const phrase    = type('phrase',   repeat(1)(word));
     const label     = type('label',    [type('text',string), type('modifiers', repeat()(word))]);
     const text      = type('text',     repeat()(token));
-    const value     = choice(offset, variable, string, integer, float);
+    const value     = choice(offset, variable, string, integer, tuple, float);
     const assignment= type('assignment', [type('key', repeat(1)(word)), fluff('='), type('value', value)]);
     token.push(choice(parens, brackets, braces, directive, value));
 
