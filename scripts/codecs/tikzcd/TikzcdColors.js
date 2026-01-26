@@ -14,3 +14,4 @@ const LatexColors = (color_code_ids) => {
         import: (value) => color_code[value] ?? (value == null? null : '#'+value),
     };
 };
+

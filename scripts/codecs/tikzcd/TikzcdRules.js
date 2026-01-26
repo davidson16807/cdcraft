@@ -19,32 +19,31 @@ const TikzcdRules = (peg) => {
     const offset    = type('offset',   /[udlr]+/);
     const variable  = type('variable', word);
     const phrase    = type('phrase',   repeat(1)(word));
-    const label     = type('label',    [type('text',string), type('modifiers', option("'"), repeat(1)(word))]);
+    const label     = type('label',    [type('text',string), type('modifiers', repeat(1)(word))]);
     const text      = type('text',     repeat()(token));
     const value     = choice(offset, variable, string, integer, float);
-    const assignment= type('assignment',     [type('key', variable), fluff('='), type('value', value)]);
+    const assignment= type('assignment', [type('key', repeat(1)(word)), fluff('='), type('value', value)]);
     token.push(choice(parens, brackets, braces, directive, value));
 
+    const entry     = type('entry', choice(offset, assignment, label, phrase, value));
     const arrow = type('arrow', [
-        type('tag',/\\[udlr]*ar(row)?/),
+        /\\[udlr]*ar(row)?/,
         fluff('['), 
-        repeat()(type('entry', [choice(assignment, label, phrase, value), fluff(',')])),
-        option(type('entry', choice(assignment, label, phrase, value))),
+        repeat()([choice(offset, assignment, label, phrase, value), fluff(',')]),
+        option(choice(offset, assignment, label, phrase, value)),
         fluff(']'),
         option(
             fluff('{'), 
             type('offset', offset),
             fluff('}'),
         ),
-        type('label',
-            repeat()(
-                type('label-position', brackets),
-                type('label-test', braces),
-            ),
+        repeat()(
+            type('label-position', brackets),
+            type('label-test', braces),
         ),
     ]);
-    const beginning = fluff(lexer.tokenize('\\begin{tikzcd}'))
-    const ending = fluff(lexer.tokenize('\\end{tikzcd}'))
+    const beginning = fluff(lexer.tokenize('\\begin{tikzcd}'));
+    const ending = fluff(lexer.tokenize('\\end{tikzcd}'));
     const object = type('object', [not(choice(ampersand, backslash, ending)), token]);
     const cell = type('cell', repeat()(choice(arrow, object)));
     const row  = type('row', [
@@ -59,7 +58,6 @@ const TikzcdRules = (peg) => {
     ]);
 
     return {
-        token:     token,
         parens:    parens,
         brackets:  brackets,
         braces:    braces,
@@ -108,14 +106,9 @@ let rules = TikzcdRules(peg);
 
 let formatter = TagFormatting(maps);
 
-let lexloader = ({
-    state: maps.chain(lexer.tokenize, loader.state),
-    text:  maps.chain(loader.list, lexer.detokenize),
-});
-
 let codecs = Codecs(Codec(lexer, loader, formatter, ' '), rules);
 
-codecs.arrow.decode('\\arrow[rd]');
+codecs.arrow.decode('\\arrow[rrd, "\\phi"]');
 
 codecs.diagram.decode(`
     \\begin{tikzcd}
@@ -124,6 +117,14 @@ codecs.diagram.decode(`
     \\end{tikzcd}
 `);
 
+
+/*
+// EVERYTHING BELOW THIS POINT USES AN OLD VERSION OF CODE ABOVE, AND NEEDS TO BE MODERNIZED
+
+let lexloader = ({
+    state: maps.chain(lexer.tokenize, loader.state),
+    text:  maps.chain(loader.list, lexer.detokenize),
+});
 rule([not(']'), 'foo'])(lexloader.state('foo]'));
 
 let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, MaybeMapOps(), StateOps(maybes));
@@ -205,3 +206,4 @@ console.log('detokenized:', detokenized);
 let parsed = rules.arrow(lexloader.state('\\arrow[rd]'));
 formatter.format(parsed.tree).join(' ');
 
+*/
