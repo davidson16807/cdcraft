@@ -2,106 +2,98 @@
 
 
 /*
-`LatexArrows` results in a namespace of pure functions 
-that describe maps between `DiagramArrow`s and their representations in LaTeX.
+`TikzcdArrows` results in a namespace of pure functions 
+that describe maps between `DiagramArrow`s and their representations in LaTeX using the Tikzcd plugin.
+
+TODO: 
+    decode color 
+    implement encode()
 */
 
-const LatexArrows = () => {
+const TikzcdArrows = (tikzcd_codec) => {
 
-    const id = x => x;
-
-    const offsetters = {
-        arrow_arc: (key, mod) => (arrow, value) => arrow.with({ arc: arrow.arc.with(Object.fromEntries([[key, mod(arrow.arc)]])) }),
-    }
-
-    const setters = {
-        arrow_arc: (key, get) => (arrow, value) => arrow.with({ arc: arrow.arc.with(Object.fromEntries([[key,get(value)]])) }),
-        arrow:     (key, get) => (arrow, value) => arrow.with( Object.fromEntries([[key,get(value)]]) ),
-    }
-
-    const color_lookup = Object.fromEntries(
-        color_code_ids.map(([code, id]) => [code, setters.arrow('color', 0)])
-    );
-
-    const parameter_lookup = {
-        l:          offsetters.arrow_arc('target', arc=>arc.source.add(glm.vec2(-1, 0))),
-        r:          offsetters.arrow_arc('target', arc=>arc.source.add(glm.vec2( 1, 0))),
-        ld:         offsetters.arrow_arc('target', arc=>arc.source.add(glm.vec2(-1,-1))),
-        rd:         offsetters.arrow_arc('target', arc=>arc.source.add(glm.vec2( 1,-1))),
-        lu:         offsetters.arrow_arc('target', arc=>arc.source.add(glm.vec2(-1, 1))),
-        ru:         offsetters.arrow_arc('target', arc=>arc.source.add(glm.vec2( 1, 1))),
-        to:         setters.arrow_arc('source', value=>latex_vectors.import(value) ),
-        from:       setters.arrow_arc('target', value=>latex_vectors.import(value) ),
-        bend_left:  setters.arrow_arc('min_length_clockwise', value=>-value),
-        bend_right: setters.arrow_arc('min_length_clockwise', value=> value),
-        dashed:     setters.arrow    ('line_style_id', value=>1),
-        dotted:     setters.arrow    ('line_style_id', value=>2),
-    }
-
-    return {
-
-        encode: (arrow) => 
-            ((args, kwargs) => `\\arrow[${kwargs.map(keyvalue=>keyvalue.join('=')).join(', ')} ${args.filter(arg => arg.length>0).join(', ')}]`)
-                ([
-                    ['to',   latex_vectors.export(arrow.arc.source)],
-                    ['from', latex_vectors.export(arrow.arc.target)],
-                ],
-                [
-                    latex_colors.export(arrow.color),
-                ]),
-
-        decode: (tag) => tag.tags
-            .slice(1)
-            .filter(subtag => !subtag.fluff)
-            .map(subtag => )
-        // decode: (string) => 
-        //     ((args, kwargs) => 
-        //         kwargs.reduce((arrow, keyvalue)=>(parameter_lookup[keyvalue[0]] ?? id)(arrow, value), 
-        //             args.reduce((arrow, value)=>(parameter_lookup[value] ?? id)(arrow), 
-        //                 DiagramArrow())))
-        //         (string.split(',')
-        //             .map(section => section.split('=',2))
-        //             .map(keyvalue => keyvalue.length>1? keyvalue : [keyvalue, undefined])),
-
+    const offset_of_letter = {
+        l: glm.vec2(-1, 0),
+        r: glm.vec2( 1, 0),
+        d: glm.vec2( 0,-1),
+        u: glm.vec2( 0, 1),
     };
 
-};
+    const apply_offset = (arc, offset) => 
+        arc.with({
+            target: new Node(arc.target.position.add(offset))
+        });
 
-const TizcdArrows = () => {
+    const action_for_phrase = {
+        'bend left':  arc => arc.with({min_length_clockwise: -1.5}),
+        'bend right': arc => arc.with({min_length_clockwise:  1.5}),
+        'dashed': arc => arc.with({line_style_id: 1}),
+        'dotted': arc => arc.with({line_style_id: 2}),
+    };
 
     return {
 
         decode:(tag, reference_cell) => {
 
-            let arrow = DiagramArrow();
+            let arrow = new DiagramArrow(
+                new StoredArc(new Node(reference_cell), new Node(reference_cell), 1.0, glm.vec2(0,0), true),
+                0, 2, 0, 0, 1, 1, 0, 0
+            );
+
             const tags = tag.tags;
             const control = tags[0];
-            const control_offset = control.replace("arrow", '');
-            const offsets = tags.filter(subtag=>subtag=='offset');
-            const assignments = tags.filter(subtag=>subtag=='assignment');
-            const labels = tags.filter(subtag=>subtag=='label');
-            const phrases = tags.filter(subtag=>subtag=='phrase');
+            const control_offset = control.replace("arrow", '').replace("ar", '').replace('\\','');
+            const offsets = tags.filter(subtag=>subtag.type=='offset');
+            const assignments = tags.filter(subtag=>subtag.type=='assignment');
+            const labels = tags.filter(subtag=>subtag.type=='label');
+            const phrases = tags.filter(subtag=>subtag.type=='phrase');
 
             // each letter offset increments the target by a cardinal direction
-            control_offset
+            for(let letter of control_offset){
+                const offset = offset_of_letter[letter];
+                arrow = arrow.with({ arc: apply_offset(arrow.arc, offset_of_letter[letter]) });
+            }
+
             for(let offset of offsets){
-                
+                const letters = offset.tags[0];
+                for(let letter of letters){
+                    arrow = arrow.with({ arc: apply_offset(arrow.arc, offset_of_letter[letter]) });
+                }
             }
 
-            // based on the manual, directionality specified by assignments overrides all else
             for(let assignment of assignments){
+                // directionality specified by assignments overrides all other direction modifier
+                const key = tikzcd_codec.phrase.encode(assignment.tags[0]);
+                console.log(key);
+                const value = assignment.tags[1];
+                const action = action_for_phrase[key];
+                if(action != null){
+                    arrow = arrow.with({arc: action(arc)});
+                } else if (key == 'to') {
 
+                } else if (key == 'from') {
+
+                }
             }
 
-            // note: we only support arrows with single labels
-            for(let phrases of phrases){
-
+            for(let phrase of phrases){
+                const key = tikzcd_codec.phrase.encode(phrase);
+                console.log(key);
+                const action = action_for_phrase[key];
+                if(action != null){
+                    arrow = arrow.with({arc: action(arrow.arc)});
+                } 
             }
 
             for(let label of labels){
-
+                const text = label.tags.filter(subtag=>subtag.type=='string')[0].tags[0];
+                const phrase = label.tags.filter(subtag=>subtag.type=='phrase')[0];
+                // `phrase` typically expresses label postiion, but it is currently not supported
+                // we only support arrows with single labels, so we override the last label
+                arrow = arrow.with({label: `\\[${text}\\]`});
             }
 
+            return arrow;
 
         }
 

@@ -200,7 +200,7 @@ const Decoders = (decoder, rules) =>
             [key, rule]) => [key, decoder(rule)])
     );
 
-const Codec = (Lexer, loader, formatter, delimiter=' ') => rule => ({
+const Codec = (lexer, loader, formatter, delimiter=' ') => rule => ({
     encode: tree => formatter.format(tree).join(delimiter),
     decode: code => rule(loader.state(lexer.tokenize(code)))?.tree?.tags[0],
 })
