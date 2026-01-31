@@ -308,7 +308,7 @@ function AppUpdater(
             } else {
                 drag_ops.move( [glm.vec2(event.clientX, event.clientY)], app_io);
             }
-            if (!is_textbox_focused(dom_io)) {
+            if (!is_textbox_focused(dom_io) || app_io.drag_type.id != 'released') {
                 drawing.redraw(undefined, app_io, dom_io);
             }
         },
