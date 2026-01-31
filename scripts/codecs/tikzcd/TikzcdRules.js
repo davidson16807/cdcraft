@@ -2,68 +2,77 @@
 
 const TikzcdRules = (peg) => {
 
-    const backslash = '\\\\';
-
     const {rule, type, fluff, not, option, choice, repeat} = peg;
+
+    const backslash = fluff('\\\\');
+    const ampersand = fluff('&');
 
     const token     = [];
     const parens    = [fluff('('), repeat()([not(')'), token]), fluff(')')];
     const brackets  = [fluff('['), repeat()([not(']'), token]), fluff(']')];
     const braces    = [fluff('{'), repeat()([not('}'), token]), fluff('}')];
-    const word      = /[a-zA-Z_][a-zA-Z0-9_]*/;
-    const directive = type('directive',/\\[a-zA-Z0-9_]*/);
-    const integer   = type('integer',  /-?[0-9]+/);
-    const float     = type('float',    /-?[0-9]+\.[0-9]*([Ee]-?[0-9]*)?/);
-    const string    = type('string',   /"(?:[^"]|\\")*?"/);
-    const offset    = type('offset',   /[udlr]+/);
+    const word      = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+    const control = type('control',/^\\[a-zA-Z0-9_]*$/);
+    const integer   = type('integer',  /^-?[0-9]+$/);
+    const float     = type('float',    /^-?[0-9]+\.[0-9]*([Ee]-?[0-9]*)?$/);
+    const tuple     = type('tuple',    float, repeat(1)(float))
+    const string    = type('string',   /^"(?:[^"]|\\")*?"$/);
+    const offset    = type('offset',   /^[udlr]+$/);
     const variable  = type('variable', word);
     const phrase    = type('phrase',   repeat(1)(word));
-    const label     = type('label',    [type('text',string), type('modifiers', option("'"), repeat(1)(word))]);
+    const label     = type('label',    [string, option(phrase)]);
     const text      = type('text',     repeat()(token));
-    const value     = choice(offset, variable, string, integer, float);
-    const assignment= type('assignment',     [type('key', variable), fluff('='), type('value', value)]);
-    token.push(choice(parens, brackets, braces, directive, value));
+    const value     = choice(offset, variable, string, integer, tuple, float);
+    const assignment= type('assignment', [type('key', repeat(1)(word)), fluff('='), type('value', value)]);
+    token.push(choice(parens, brackets, braces, control, value));
 
     const arrow = type('arrow', [
-        type('tag',/\\[udlr]*ar(row)?/),
+        /^\\[udlr]*ar(row)?$/,
         fluff('['), 
-        repeat()(type('entry', [choice(assignment, label, phrase, value), fluff(',')])),
-        option(type('entry', choice(assignment, label, phrase, value))),
+        choice(offset, assignment, label, phrase),
+        repeat()([fluff(','), choice(offset, assignment, label, phrase)]),
         fluff(']'),
         option(
             fluff('{'), 
             type('offset', offset),
             fluff('}'),
         ),
-        type('label',
-            repeat()(
-                type('label-position', brackets),
-                type('label-test', braces),
-            ),
+        repeat()(
+            type('label-position', brackets),
+            type('label-test', braces),
         ),
     ]);
-    const beginning = lexer.tokenize('\\begin{tikzcd}')
-    const ending = lexer.tokenize('\\end{tikzcd}')
-    const object = [not(choice('&', backslash, ending)), token];
+
+    const color_text = type('color_text', [
+        /^\\(text)?color$/, 
+        fluff('{'),
+        type('color',repeat()(token)),
+        fluff('}'),
+        fluff('{'),
+        repeat()(token),
+        fluff('}'),
+    ]);
+
+    const beginning = fluff(lexer.tokenize('\\begin{tikzcd}'));
+    const ending = fluff(lexer.tokenize('\\end{tikzcd}'));
+    const object = type('object', [not(choice(ampersand, backslash, ending)), choice(color_text, (token))]);
     const cell = type('cell', repeat()(choice(arrow, object)));
     const row  = type('row', [
-        repeat()([not(choice(backslash, ending)), cell, fluff('&')]),
+        repeat()([not(choice(backslash, ending)), cell, ampersand]),
         option(cell),
     ]);
-    const diagram = [
-        fluff(beginning),
+    const diagram = type('diagram', [
+        beginning,
         repeat()([row, fluff(backslash)]),
         option(row),
-        fluff(ending),
-    ];
+        ending,
+    ]);
 
     return {
-        token:     token,
         parens:    parens,
         brackets:  brackets,
         braces:    braces,
-        word:      word,
-        directive: directive,
+        control:   control,
         integer:   integer,
         float:     float,
         string:    string,
@@ -81,42 +90,15 @@ const TikzcdRules = (peg) => {
         cell:      cell,
         row:       row,
         diagram:   diagram,
-    }
+    };
+
 }
 
-let backslash = '\\\\';
 
-let lexer = Lexer([
-    // `'(?:[^']|${backslash}')*?'`,
-    `"(?:[^"]|${backslash}")*?"`,
-    `${backslash}?[a-zA-Z0-9_]+`,
-    `${backslash}${backslash}`,
-    `[^a-zA-Z0-9_\\s]`,
-    // `\\s+`,
-]);
+/*
+// EVERYTHING BELOW THIS POINT USES AN OLD VERSION OF CODE ABOVE, AND NEEDS TO BE MODERNIZED
 
-let maps = MapOps();
-let maybes = MaybeOps();
-let loader = Loader();
-
-let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
-            ExtendedParsingExpressionGrammarPrimitives(ListOps(),
-                BasicParsingExpressionGrammarPrimitives(maybes, maps, 
-                    MaybeMapOps(), StateOps(maybes))));
-
-let rules = TikzcdRules(peg);
-
-let parser = Parser(maps, lexer, loader, rules);
-
-let formatter = TagFormatting(maps);
-
-let lexloader = ({
-    state: maps.chain(lexer.tokenize, loader.state),
-    text:  maps.chain(loader.list, lexer.detokenize),
-});
-
-
-rule([not(']'), 'foo'])(lexloader.state('foo]'))
+rule([not(']'), 'foo'])(lexloader.state('foo]'));
 
 let bpeg = BasicParsingExpressionGrammarPrimitives(maybes, maps, MaybeMapOps(), StateOps(maybes));
 console.log(bpeg.exact('x')( loader.state( ['x' ] )));
@@ -159,13 +141,13 @@ console.log(repeat(2)([not(')'), 'a'])( loader.state( [ ] )));
 console.log(rule([not(')'), 'a'])( loader.state( ['a',')' ] )));
 console.log(rule([not(')'), 'a'])( loader.state( ['a',')' ] )));
 console.log(rule(['a'])( loader.state( ['a',')' ] )));
-console.log(rule([choice(word, directive)])( loader.state( ['a',')' ] )));
-console.log(rule([choice(directive)])( loader.state( ['a',')' ] )));
-console.log(rule([choice(parens, brackets, braces, directive, choice(word))])( loader.state( ['a',')' ] )));
+console.log(rule([choice(word, control)])( loader.state( ['a',')' ] )));
+console.log(rule([choice(control)])( loader.state( ['a',')' ] )));
+console.log(rule([choice(parens, brackets, braces, control, choice(word))])( loader.state( ['a',')' ] )));
 console.log(rule(type('variable',word))( loader.state( ['a',')' ] )));
 console.log(rule([type('variable',word)])( loader.state( ['a',')' ] )));
-console.log(rule([choice(parens, brackets, braces, directive, choice(type('variable',word)))])( loader.state( ['a',')' ] )));
-console.log(rule([choice(parens, brackets, braces, directive, value)])( loader.state( ['a',')' ] )));
+console.log(rule([choice(parens, brackets, braces, control, choice(type('variable',word)))])( loader.state( ['a',')' ] )));
+console.log(rule([choice(parens, brackets, braces, control, value)])( loader.state( ['a',')' ] )));
 console.log(rule([token])( loader.state( ['a',')' ] )));
 console.log(rule([token])(lexloader.state('a)')));
 
@@ -173,8 +155,8 @@ console.log(rule(brackets)(lexloader.state('[foo]')));
 console.log(rule(arrow)(lexloader.state(`\\arrow[rd]`)));
 console.log(rule(arrow)(lexloader.state(`\\arrow[r, "\\phi"]`)));
 console.log(rule(repeat()(arrow))(lexloader.state(`\\arrow[rd] \\arrow[r, "\\phi"]`)));
-console.log(rule(cell)(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"]`)));
-console.log(rule(row)(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B`)));
+console.log(rules.cell(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"]`)));
+console.log(rules.row(lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B`)));
 console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
     lexloader.state(`A \\arrow[rd] \\arrow[r, "\\phi"] & B \\ C`)));
 console.log(rule([repeat()([row, fluff('\\')]), option(row)])(
@@ -197,3 +179,4 @@ console.log('detokenized:', detokenized);
 let parsed = rules.arrow(lexloader.state('\\arrow[rd]'));
 formatter.format(parsed.tree).join(' ');
 
+*/

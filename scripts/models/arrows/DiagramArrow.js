@@ -34,7 +34,7 @@ class DiagramArrow {
         this.body_count = Object.freeze(body_count);
         this.tail_count = Object.freeze(tail_count);
         this.label = Object.freeze(label);
-        this.label_offset_id = Object.freeze(label_offset_id);
+        this.label_offset_id = label_offset_id == null? undefined : Object.freeze(label_offset_id);
         this.color = Object.freeze(color);
         this.is_edited = Object.freeze(is_edited??false);
     }

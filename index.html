@@ -77,18 +77,22 @@
     <script src="./scripts/resources/DiagramArrowResource.js"></script>
     <script src="./scripts/resources/ResourceOperations.js"></script>
     <script src="./scripts/resources/PositionMapOperations.js"></script>
-    <script src="./scripts/serializers/url/UrlNumbersCurried.js"></script>
-    <script src="./scripts/serializers/url/UrlVectorsCurried.js"></script>
-    <script src="./scripts/serializers/url/UrlUintArraysCurried.js"></script>
-    <script src="./scripts/serializers/url/UrlStrings.js"></script>
-    <script src="./scripts/serializers/url/UrlArrays.js"></script>
-    <script src="./scripts/serializers/url/UrlColors.js"></script>
-    <script src="./scripts/serializers/url/UrlObjects.js"></script>
-    <script src="./scripts/serializers/url/UrlArrows.js"></script>
-    <script src="./scripts/serializers/url/UrlScreenState.js"></script>
-    <script src="./scripts/serializers/url/UrlDiagrams.js"></script>
-    <script src="./scripts/serializers/svg/SvgDiagramExport.js"></script>
-    <script src="./scripts/serializers/peg/PegPrimitives.js"></script>
+    <script src="./scripts/codecs/url/UrlNumbersCurried.js"></script>
+    <script src="./scripts/codecs/url/UrlVectorsCurried.js"></script>
+    <script src="./scripts/codecs/url/UrlUintArraysCurried.js"></script>
+    <script src="./scripts/codecs/url/UrlStrings.js"></script>
+    <script src="./scripts/codecs/url/UrlArrays.js"></script>
+    <script src="./scripts/codecs/url/UrlColors.js"></script>
+    <script src="./scripts/codecs/url/UrlObjects.js"></script>
+    <script src="./scripts/codecs/url/UrlArrows.js"></script>
+    <script src="./scripts/codecs/url/UrlScreenState.js"></script>
+    <script src="./scripts/codecs/url/UrlDiagrams.js"></script>
+    <script src="./scripts/codecs/svg/SvgDiagramExport.js"></script>
+    <script src="./scripts/codecs/peg/PegPrimitives.js"></script>
+    <script src="./scripts/codecs/tikzcd/TikzcdRules.js"></script>
+    <script src="./scripts/codecs/tikzcd/TikzcdArrows.js"></script>
+    <script src="./scripts/codecs/tikzcd/TikzcdObjects.js"></script>
+    <script src="./scripts/codecs/tikzcd/TikzcdDiagrams.js"></script>
 </head>
 <body>
 
@@ -402,6 +406,8 @@ const svg_diagram_export = SvgDiagramExport({
     svg_object_view           : svg_object_view,
 });
 
+const default_screen_frame_store = new ScreenStateStore(glm.vec2(), 8);
+
 // url serializers
 const url_floats_curried = UrlNumbersCurried(parseFloat, 10);
 const url_ints_curried =   UrlNumbersCurried(parseInt, 10);
@@ -429,9 +435,72 @@ const url_diagrams = UrlDiagrams(
     }), 
     UrlObjects(url_dependencies),
     UrlScreenState(url_dependencies),
-    new ScreenStateStore(glm.vec2(), 8),
+    default_screen_frame_store,
     0
 );
+
+
+let backslash = '\\\\';
+
+let lexer = Lexer([
+    `'(?:[^']|${backslash}')*?'`,
+    `"(?:[^"]|${backslash}")*?"`,
+    `${backslash}?[a-zA-Z_][a-zA-Z0-9_]*`,
+    `${backslash}${backslash}`,
+    `[^a-zA-Z0-9_ \\t\\n]`,
+    // `\\s+`,
+]);
+
+let maps = MapOps();
+let maybes = MaybeOps();
+let loader = Loader();
+
+let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
+            ExtendedParsingExpressionGrammarPrimitives(ListOps(),
+                BasicParsingExpressionGrammarPrimitives(maybes, maps, 
+                    MaybeMapOps(), StateOps(maybes))));
+
+let rules = TikzcdRules(peg);
+
+let formatter = TagFormatting(maps);
+
+let tags_and_tikzcd = Codecs(Codec(lexer, loader, formatter, ' '), rules);
+
+// tags_and_tikzcd.arrow.decode('\\arrow[rrd, "\\phi"]');
+// let lexloader = ({
+//     state: maps.chain(lexer.tokenize, loader.state),
+//     text:  maps.chain(loader.list, lexer.detokenize),
+// });
+// let tikzcd_arrows = TikzcdArrows(tags_and_tikzcd);
+// let tikzcd_objects = TikzcdObjects(tags_and_tikzcd);
+
+let diagrams_and_tags = TikzcdDiagrams(
+    object_position_resource,
+    resource_operations,
+    TikzcdArrows(tags_and_tikzcd), 
+    TikzcdObjects(tags_and_tikzcd), 
+    new ScreenStateStore(glm.vec2(), 8)
+);
+
+const diagrams_and_tikzcd = CodecComposition(diagrams_and_tags, tags_and_tikzcd.diagram);
+
+const diagram_tikzcd = `
+    \\begin{tikzcd}
+    A \\arrow[rd] \\arrow[r, "\\phi"] & \\textcolor{red}{B} \\\\
+    & C
+    \\end{tikzcd}
+`;
+
+// let arrow = tikzcd_arrows.decode(tags_and_tikzcd.arrow.decode('\\arrow[rrd, "\\phi"]'), glm.vec2(0,0));
+// let object = tikzcd_objects.decode(tags_and_tikzcd.object.decode('\\textcolor{red}{\\bullet}'), glm.vec2(0,0));
+// console.log(tags_and_tikzcd.diagram.decode(diagram_tikzcd));
+
+// const tikzcd_diagram = diagrams_and_tags.decode(tags_and_tikzcd.diagram.decode(diagram_tikzcd));
+// console.log(tikzcd_diagram);
+// console.log(diagrams_and_tags.encode(tikzcd_diagram));
+
+console.log(diagrams_and_tikzcd.decode(diagram_tikzcd));
+console.log(diagrams_and_tikzcd.encode(diagrams_and_tikzcd.decode(diagram_tikzcd)));
 
 const app_updater = 
     AppUpdater({

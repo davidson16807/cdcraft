@@ -11,7 +11,7 @@ These functions return other functions that parse a list of tokens by mapping fr
 A "parse state" contains only two things: the list of tokens that has yet to be parsed, 
 and the syntax tree that has been built to represent the tokens that came before.
 Both the syntax tree and the token list are represented using the same data structure, known as a "Tag"
-A tag represents a list that can be given a name and or be flagged as unimportant "fluff".
+A tag represents a list of tags that can either be given a name (a "type") or be flagged as unimportant ("fluff").
 The list may store either strings or other tags. 
 */
 
@@ -92,8 +92,11 @@ const StateOps = (maybes)=>({
             Tag(list.tags.slice(i), list.type),
             Tag(list.tags.slice(0,i), tree.type),
         ),
-    fluff:                   maybes.bind(({list,tree})=>State(list, Tag([Tag(tree.tags, tree.type, true)]))),
-    type:          (name) => maybes.bind(({list,tree})=>State(list, Tag([Tag(tree.tags, name)]))),
+    fluff:                   maybes.bind(({list,tree})=>State(list, typeof tree == 'string'? Tag([tree], undefined, true) : Tag([Tag(tree.tags, tree.type, true)]))),
+    // fluff:                   maybes.bind(({list,tree})=>State(list, Tag([Tag(tree.tags, tree.type, true)]))),
+    type:          (name) => maybes.bind(({list,tree})=>State(list, typeof tree == 'string'? Tag([tree], name, false)     : Tag([Tag(tree.tags, name, tree.fluff)]))),
+    // type:          (name) => maybes.bind(({list,tree})=>State(list, Tag([Tag(tree.tags, name)]))),
+    // type:          (name) => maybes.bind(({list,tree})=>State(list, tree.type == null? Tag(tree.tags, name, tree.fluff) : Tag([Tag(tree.tags, name, tree.fluff)]))),
     join: next => current => 
             next == null || current == null? null
             : State(next.list, Tag([...current.tree.tags, ...next.tree.tags], next.tree.type )),
@@ -177,37 +180,39 @@ const TagFormatting = (maps) => {
     }
 };
 
-const Lexer = (string_regexen) => 
-    (token_regex => ({
-        // tokenize:   (text)   => text.split(token_regex).filter(token => token.trim(/\s*/).length > 0),
-        tokenize:   (text)   => text.split(token_regex).filter(token => token.length > 0),
+const Lexer = (splitter_regexen) => 
+    (splitter_regex => ({
+        // tokenize:   (text)   => text.split(splitter_regex).filter(token => token.trim(/\s*/).length > 0),
+        tokenize:   (text)   => text.split(splitter_regex).filter(token => token.trim().length > 0),
         detokenize: (tokens) => tokens.join(''),
-    })) (new RegExp('('+string_regexen.join('|')+')', 'g'));
-
+    })) (new RegExp('('+splitter_regexen.join('|')+')', 'g'));
 
 const Loader = () => ({
         state: (list)  => State(Tag(list)),
         list:  (state) => state.list.tags,
     });
 
-const Parser = (lexer, loader) => rule => code => rule(loader.state(lexer.tokenize(code)));
+const Decoder = (lexer, loader) => rule => code => rule(loader.state(lexer.tokenize(code)));
 
-const Parsers = (parser, rules) => {
-    return Object.assign({},
+const Decoders = (decoder, rules) => 
+    Object.assign(
         ...Object.entries(rules).map((
-            [key, rule]) => {key: parser(rule)})
+            [key, rule]) => [key, decoder(rule)])
     );
-};
 
-let Codec = (Lexer, loader, formatter, delimiter=' ') => rule => ({
+const Codec = (lexer, loader, formatter, delimiter=' ') => rule => ({
     encode: tree => formatter.format(tree).join(delimiter),
-    decode: code => rule(loader.state(lexer.tokenize(code))),
+    decode: code => rule(loader.state(lexer.tokenize(code)))?.tree?.tags[0],
 })
 
-const Codecs = (codec, rules) => {
-    return Object.assign({},
-        ...Object.entries(rules).map((
-            [key, rule]) => {key: codec(rule)})
+const Codecs = (codec, rules) => 
+    Object.fromEntries(
+        Object.entries(rules).map(
+            ([key, rule]) => [key, codec(rule)])
     );
-};
+
+const CodecComposition = (encode1, encode2) => ({
+    encode: content => encode2.encode(encode1.encode(content)),
+    decode: code => encode1.decode(encode2.decode(code))
+});
 
