@@ -92,6 +92,7 @@
     <script src="./scripts/codecs/tikzcd/TikzcdRules.js"></script>
     <script src="./scripts/codecs/tikzcd/TikzcdArrows.js"></script>
     <script src="./scripts/codecs/tikzcd/TikzcdObjects.js"></script>
+    <script src="./scripts/codecs/tikzcd/TikzcdDiagrams.js"></script>
 </head>
 <body>
 
@@ -405,6 +406,8 @@ const svg_diagram_export = SvgDiagramExport({
     svg_object_view           : svg_object_view,
 });
 
+const default_screen_frame_store = new ScreenStateStore(glm.vec2(), 8);
+
 // url serializers
 const url_floats_curried = UrlNumbersCurried(parseFloat, 10);
 const url_ints_curried =   UrlNumbersCurried(parseInt, 10);
@@ -432,7 +435,7 @@ const url_diagrams = UrlDiagrams(
     }), 
     UrlObjects(url_dependencies),
     UrlScreenState(url_dependencies),
-    new ScreenStateStore(glm.vec2(), 8),
+    default_screen_frame_store,
     0
 );
 

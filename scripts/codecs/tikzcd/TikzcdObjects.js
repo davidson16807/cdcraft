@@ -31,7 +31,6 @@ const TikzcdObjects = (tikzcd_codec) => {
             const color_text = tag.tags[0];
             if(color_text.type == 'color_text'){
                 const content2 = color_text.tags.filter(subtag=>!subtag.fluff);
-                console.log(content2);
                 object = object.with({color: tikzcd_codec.text.encode(content2[1])});
                 text = tikzcd_codec.text.encode(content2[2]);
             }
@@ -45,56 +44,3 @@ const TikzcdObjects = (tikzcd_codec) => {
     };
 
 };
-
-let backslash = '\\\\';
-
-let lexer = Lexer([
-    `'(?:[^']|${backslash}')*?'`,
-    `"(?:[^"]|${backslash}")*?"`,
-    `${backslash}?[a-zA-Z_][a-zA-Z0-9_]*`,
-    `${backslash}${backslash}`,
-    `[^a-zA-Z0-9_ \\t\\n]`,
-    // `\\s+`,
-]);
-
-let maps = MapOps();
-let maybes = MaybeOps();
-let loader = Loader();
-
-let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
-            ExtendedParsingExpressionGrammarPrimitives(ListOps(),
-                BasicParsingExpressionGrammarPrimitives(maybes, maps, 
-                    MaybeMapOps(), StateOps(maybes))));
-
-let rules = TikzcdRules(peg);
-
-let formatter = TagFormatting(maps);
-
-let codecs = Codecs(Codec(lexer, loader, formatter, ' '), rules);
-
-codecs.arrow.decode('\\arrow[rrd, "\\phi"]');
-
-codecs.diagram.decode(`
-    \\begin{tikzcd}
-    A \\arrow[rd] \\arrow[r, "\\phi"] & B \\\\
-    & C
-    \\end{tikzcd}
-`);
-
-let lexloader = ({
-    state: maps.chain(lexer.tokenize, loader.state),
-    text:  maps.chain(loader.list, lexer.detokenize),
-});
-
-let arrows = TikzcdArrows(codecs);
-let objects = TikzcdObjects(codecs);
-
-let arrow = arrows.decode(codecs.arrow.decode('\\arrow[rrd, "\\phi"]'), glm.vec2(0,0));
-let object = objects.decode(codecs.object.decode('\\textcolor{red}{\\bullet}'), glm.vec2(0,0));
-
-console.log(codecs.object.decode('\\textcolor{red}{\\bullet}'));
-console.log(codecs.object.decode('\\bullet'));
-
-console.log(objects.decode(codecs.object.decode('\\textcolor{red}{\\bullet}'), glm.vec2(0,0)));
-console.log(objects.decode(codecs.object.decode('\\bullet'), glm.vec2(0,0)));
-
