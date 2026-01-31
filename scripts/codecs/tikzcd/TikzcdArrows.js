@@ -31,7 +31,33 @@ const TikzcdArrows = (tikzcd_codec) => {
         'dotted': arc => arc.with({line_style_id: 2}),
     };
 
+    const decode_vec2 = (latex) => glm.vec2(parseInt(value.split('-')[0]), parseInt(value.split('-')[1]));
+
     return {
+
+        encode:(arrow, reference_cell) => {
+
+            return Tag([
+                '\\arrow', 
+                Tag(['['], undefined, true),
+                Tag([
+                    Tag(['from'], 'key'),
+                    Tag(['='], undefined, true),
+                    Tag([`${arrow.arc.source.position.x}-${arrow.arc.source.position.y}`], 'value'),
+                ], 'assignment'),
+                Tag([
+                    Tag(['to'], 'key'),
+                    Tag(['='], undefined, true),
+                    Tag([`${arrow.arc.target.position.x}-${arrow.arc.target.position.y}`], 'value'),
+                ], 'assignment'),
+                ...{
+                    1: ['dashed'],
+                    2: ['dotted'],
+                }[arrow.arc.line_style_id] ?? [],
+                Tag([']'], undefined, true),
+            ], 'arrow');
+
+        },
 
         decode:(tag, reference_cell) => {
 
@@ -65,14 +91,14 @@ const TikzcdArrows = (tikzcd_codec) => {
                 // directionality specified by assignments overrides all other direction modifier
                 const key = tikzcd_codec.phrase.encode(assignment.tags[0]);
                 console.log(key);
-                const value = assignment.tags[1];
+                const value = assignment.tags[2];
                 const action = action_for_phrase[key];
                 if(action != null){
                     arrow = arrow.with({arc: action(arc)});
                 } else if (key == 'to') {
-
+                    arrow = arrow.with({ arc: arrow.arc({source: new Node(decode_vec2(vector))}) });
                 } else if (key == 'from') {
-
+                    arrow = arrow.with({ arc: arrow.arc({target: new Node(decode_vec2(vector))}) });
                 }
             }
 

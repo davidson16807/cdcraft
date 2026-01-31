@@ -10,30 +10,81 @@ TODO:
     implement encode()
 */
 
-const TikzcdDiagrams = (tikzcd_arrows, tikzcd_objects, default_screen_frame_store) => {
+const TikzcdDiagrams = (
+        object_position_resource, 
+        resource_operations, 
+        tikzcd_arrows, 
+        tikzcd_objects, 
+        default_screen_frame_store
+    ) => {
+
+    const min2 = (u,v) => glm.vec2(Math.min(u.x,v.x), Math.min(u.y,v.y));
+    const max2 = (u,v) => glm.vec2(Math.max(u.x,v.x), Math.max(u.y,v.y));
+
+    const oo = Infinity;
 
     return {
+
+        encode:(diagram) => {
+
+            const inferred_objects = 
+                object_position_resource.post([],
+                    resource_operations.delete(
+                        arrow_positions_resource.get(diagram.arrows),
+                        object_position_resource.get(diagram.objects)
+                    )
+                );
+
+            const objects = [...diagram.objects, ...inferred_objects];
+
+            const topleft = objects
+                    .map(object => object.position)
+                    .reduce(min2, glm.vec2(oo,oo));
+
+            const bottomright = objects
+                    .map(object => object.position)
+                    .reduce(max2, glm.vec2(-oo,-oo));
+
+            const rows = [];
+            for(let j=topleft.y; j<=bottomright.y; j++){
+                const cells = [];
+                for(let i=topleft.x; i<=bottomright.x; i++){
+                    const reference_cell = glm.vec2(i,j);
+                    const cell = [];
+                    diagram.arrows
+                        .filter(arrow => glm.distance(arrow.arc.source.position, reference_cell) == 0)
+                        .map(arrow => tikzcd_arrows.encode(arrow, reference_cell))
+                        .forEach(subtag => cell.push(subtag));
+                    diagram.objects
+                        .filter(object => glm.distance(object.position, reference_cell) == 0)
+                        .map(object => tikzcd_objects.encode(object))
+                        .forEach(subtag => cell.push(subtag));
+                    cells.push(Tag(cell, 'cell'));
+                }
+                rows.push(Tag(cells, 'row'));
+            }
+
+            return Tag(rows, 'diagram');
+
+        },
 
         decode:(tag) => {
 
             const arrows = [];
             const objects = [];
 
-            const rows = tag.tags.filter(subtag=>subtag.type=='row');
-            console.log(rows);
+            const rows = tag.tags.filter(subtag => subtag.type=='row');
             for(let j=0; j<rows.length; j++){
-                const cells = rows[j].tags.filter(subtag=>subtag.type=='cell');
-                console.log(cells);
+                const cells = rows[j].tags.filter(subtag => subtag.type=='cell');
                 for(let i=0; i<cells.length; i++){
-                    console.log(cells[i]);
                     cells[i].tags
-                        .filter(subtag=>subtag.type=='arrow')
-                        .map(subtag=>tikzcd_arrows.decode(subtag, glm.vec2(i,j)))
-                        .forEach(arrow=>arrows.push(arrow));
+                        .filter(subtag => subtag.type=='arrow')
+                        .map(subtag => tikzcd_arrows.decode(subtag, glm.vec2(i,j)))
+                        .forEach(arrow => arrows.push(arrow));
                     cells[i].tags
-                        .filter(subtag=>subtag.type=='object')
-                        .map(subtag=>tikzcd_objects.decode(subtag, glm.vec2(i,j)))
-                        .forEach(object=>objects.push(object));
+                        .filter(subtag => subtag.type=='object')
+                        .map(subtag => tikzcd_objects.decode(subtag, glm.vec2(i,j)))
+                        .forEach(object => objects.push(object));
                 }
             }
 
@@ -49,54 +100,3 @@ const TikzcdDiagrams = (tikzcd_arrows, tikzcd_objects, default_screen_frame_stor
 
 };
 
-
-let backslash = '\\\\';
-
-let lexer = Lexer([
-    `'(?:[^']|${backslash}')*?'`,
-    `"(?:[^"]|${backslash}")*?"`,
-    `${backslash}?[a-zA-Z_][a-zA-Z0-9_]*`,
-    `${backslash}${backslash}`,
-    `[^a-zA-Z0-9_ \\t\\n]`,
-    // `\\s+`,
-]);
-
-let maps = MapOps();
-let maybes = MaybeOps();
-let loader = Loader();
-
-let peg = ShorthandParsingExpressionGrammarPrimitives(maps,
-            ExtendedParsingExpressionGrammarPrimitives(ListOps(),
-                BasicParsingExpressionGrammarPrimitives(maybes, maps, 
-                    MaybeMapOps(), StateOps(maybes))));
-
-let rules = TikzcdRules(peg);
-
-let formatter = TagFormatting(maps);
-
-let codecs = Codecs(Codec(lexer, loader, formatter, ' '), rules);
-
-codecs.arrow.decode('\\arrow[rrd, "\\phi"]');
-
-const diagram_tikzcd = `
-    \\begin{tikzcd}
-    A \\arrow[rd] \\arrow[r, "\\phi"] & B \\\\
-    & C
-    \\end{tikzcd}
-`;
-
-
-let lexloader = ({
-    state: maps.chain(lexer.tokenize, loader.state),
-    text:  maps.chain(loader.list, lexer.detokenize),
-});
-
-let arrows = TikzcdArrows(codecs);
-let objects = TikzcdObjects(codecs);
-let diagrams = TikzcdDiagrams(arrows, objects, new ScreenStateStore(glm.vec2(), 8));
-
-let arrow = arrows.decode(codecs.arrow.decode('\\arrow[rrd, "\\phi"]'), glm.vec2(0,0));
-let object = objects.decode(codecs.object.decode('\\textcolor{red}{\\bullet}'), glm.vec2(0,0));
-
-// console.log(codecs.diagram.decode(diagram_tikzcd));
-console.log(diagrams.decode(codecs.diagram.decode(diagram_tikzcd)));

@@ -21,12 +21,30 @@ const TikzcdObjects = (tikzcd_codec) => {
 
     return {
 
+        encode:(object) => {
+
+            let tag = Tag([
+                (object.symbol || object.label).replace('\\[','').replace('\\]','')
+            ], 'object');
+
+            if (object.color != null) {
+                tag = Tag([
+                    Tag(['{'], undefined, true),
+                    object.color,
+                    Tag(['}'], undefined, true),
+                    Tag(['{'], undefined, true),
+                    tag,
+                    Tag(['}'], undefined, true),
+                ], 'color_text')
+            }
+
+            return tag;
+
+        },
+
         decode:(tag, reference_cell) => {
 
-            let object = new DiagramObject(
-                reference_cell, 'black', ''
-            );
-
+            let object = new DiagramObject(reference_cell);
             let text = tikzcd_codec.text.encode(tag);
             const color_text = tag.tags[0];
             if(color_text.type == 'color_text'){
