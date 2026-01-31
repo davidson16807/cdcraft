@@ -53,7 +53,7 @@ const TikzcdDiagrams = (
                     const cell = [];
                     diagram.arrows
                         .filter(arrow => glm.distance(arrow.arc.source.position, reference_cell) == 0)
-                        .map(arrow => tikzcd_arrows.encode(arrow, reference_cell))
+                        .map(arrow => tikzcd_arrows.encode(arrow, topleft))
                         .forEach(subtag => cell.push(subtag));
                     diagram.objects
                         .filter(object => glm.distance(object.position, reference_cell) == 0)

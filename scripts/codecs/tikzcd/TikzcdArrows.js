@@ -35,7 +35,7 @@ const TikzcdArrows = (tikzcd_codec) => {
 
     return {
 
-        encode:(arrow, reference_cell) => {
+        encode:(arrow, origin) => {
 
             return Tag([
                 '\\arrow', 
@@ -43,12 +43,12 @@ const TikzcdArrows = (tikzcd_codec) => {
                 Tag([
                     Tag(['from'], 'key'),
                     Tag(['='], undefined, true),
-                    Tag([`${arrow.arc.source.position.x}-${arrow.arc.source.position.y}`], 'value'),
+                    Tag([`${arrow.arc.source.position.x-origin.x}-${arrow.arc.source.position.y-origin.y}`], 'value'),
                 ], 'assignment'),
                 Tag([
                     Tag(['to'], 'key'),
                     Tag(['='], undefined, true),
-                    Tag([`${arrow.arc.target.position.x}-${arrow.arc.target.position.y}`], 'value'),
+                    Tag([`${arrow.arc.target.position.x-origin.x}-${arrow.arc.target.position.y-origin.y}`], 'value'),
                 ], 'assignment'),
                 ...{
                     1: ['dashed'],

@@ -211,8 +211,8 @@ const Codecs = (codec, rules) =>
             ([key, rule]) => [key, codec(rule)])
     );
 
-// const CodecComposition(outer, inner) => ({
-//     encode: content => inner.encode(outer.encode(content))
-//     decode: code => outer.decode(inner.decode(code))
-// });
+const CodecComposition = (encode1, encode2) => ({
+    encode: content => encode2.encode(encode1.encode(content)),
+    decode: code => encode1.decode(encode2.decode(code))
+});
 

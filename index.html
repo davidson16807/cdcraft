@@ -464,38 +464,43 @@ let rules = TikzcdRules(peg);
 
 let formatter = TagFormatting(maps);
 
-let codecs = Codecs(Codec(lexer, loader, formatter, ' '), rules);
+let tags_and_tikzcd = Codecs(Codec(lexer, loader, formatter, ' '), rules);
 
-// codecs.arrow.decode('\\arrow[rrd, "\\phi"]');
+// tags_and_tikzcd.arrow.decode('\\arrow[rrd, "\\phi"]');
 // let lexloader = ({
 //     state: maps.chain(lexer.tokenize, loader.state),
 //     text:  maps.chain(loader.list, lexer.detokenize),
 // });
-// let arrows = TikzcdArrows(codecs);
-// let objects = TikzcdObjects(codecs);
+// let tikzcd_arrows = TikzcdArrows(tags_and_tikzcd);
+// let tikzcd_objects = TikzcdObjects(tags_and_tikzcd);
 
-let diagrams = TikzcdDiagrams(
+let diagrams_and_tags = TikzcdDiagrams(
     object_position_resource,
     resource_operations,
-    TikzcdArrows(codecs), 
-    TikzcdObjects(codecs), 
+    TikzcdArrows(tags_and_tikzcd), 
+    TikzcdObjects(tags_and_tikzcd), 
     new ScreenStateStore(glm.vec2(), 8)
 );
 
+const diagrams_and_tikzcd = CodecComposition(diagrams_and_tags, tags_and_tikzcd.diagram);
+
 const diagram_tikzcd = `
     \\begin{tikzcd}
-    A \\arrow[rd] \\arrow[r, "\\phi"] & B \\\\
+    A \\arrow[rd] \\arrow[r, "\\phi"] & \\textcolor{red}{B} \\\\
     & C
     \\end{tikzcd}
 `;
 
-// let arrow = arrows.decode(codecs.arrow.decode('\\arrow[rrd, "\\phi"]'), glm.vec2(0,0));
-// let object = objects.decode(codecs.object.decode('\\textcolor{red}{\\bullet}'), glm.vec2(0,0));
-// console.log(codecs.diagram.decode(diagram_tikzcd));
+// let arrow = tikzcd_arrows.decode(tags_and_tikzcd.arrow.decode('\\arrow[rrd, "\\phi"]'), glm.vec2(0,0));
+// let object = tikzcd_objects.decode(tags_and_tikzcd.object.decode('\\textcolor{red}{\\bullet}'), glm.vec2(0,0));
+// console.log(tags_and_tikzcd.diagram.decode(diagram_tikzcd));
 
-const tikzcd_diagram = diagrams.decode(codecs.diagram.decode(diagram_tikzcd));
-console.log(tikzcd_diagram);
-console.log(diagrams.encode(tikzcd_diagram));
+// const tikzcd_diagram = diagrams_and_tags.decode(tags_and_tikzcd.diagram.decode(diagram_tikzcd));
+// console.log(tikzcd_diagram);
+// console.log(diagrams_and_tags.encode(tikzcd_diagram));
+
+console.log(diagrams_and_tikzcd.decode(diagram_tikzcd));
+console.log(diagrams_and_tikzcd.encode(diagrams_and_tikzcd.decode(diagram_tikzcd)));
 
 const app_updater = 
     AppUpdater({
