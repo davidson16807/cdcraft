@@ -23,6 +23,9 @@ const TikzcdDiagrams = (
 
     const oo = Infinity;
 
+    const beginning = Tag(['\\begin{tikzcd}'], undefined, true);
+    const ending    = Tag(['\\end{tikzcd}'],   undefined, true);
+
     return {
 
         encode:(diagram) => {
@@ -64,7 +67,7 @@ const TikzcdDiagrams = (
                 rows.push(Tag(cells, 'row'));
             }
 
-            return Tag(rows, 'diagram');
+            return Tag([beginning, ...rows, ending], 'diagram');
 
         },
 
