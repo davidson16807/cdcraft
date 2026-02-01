@@ -23,6 +23,9 @@ const TikzcdDiagrams = (
 
     const oo = Infinity;
 
+    const beginning = Tag(['\\begin{tikzcd}'], undefined, true);
+    const ending    = Tag(['\\end{tikzcd}'],   undefined, true);
+
     return {
 
         encode:(diagram) => {
@@ -46,25 +49,33 @@ const TikzcdDiagrams = (
                     .reduce(max2, glm.vec2(-oo,-oo));
 
             const rows = [];
+            console.log(topleft)
             for(let j=topleft.y; j<=bottomright.y; j++){
                 const cells = [];
                 for(let i=topleft.x; i<=bottomright.x; i++){
                     const reference_cell = glm.vec2(i,j);
-                    const cell = [];
-                    diagram.arrows
-                        .filter(arrow => glm.distance(arrow.arc.source.position, reference_cell) == 0)
-                        .map(arrow => tikzcd_arrows.encode(arrow, topleft))
-                        .forEach(subtag => cell.push(subtag));
-                    diagram.objects
-                        .filter(object => glm.distance(object.position, reference_cell) == 0)
-                        .map(object => tikzcd_objects.encode(object))
-                        .forEach(subtag => cell.push(subtag));
+                    const cell = [
+                        ...diagram.arrows
+                            .filter(arrow => glm.distance(arrow.arc.source.position, reference_cell) == 0)
+                            .map(arrow => tikzcd_arrows.encode(arrow, topleft)),
+                        ...objects
+                            .filter(object => glm.distance(object.position, reference_cell) == 0)
+                            .map(object => tikzcd_objects.encode(object)),
+                    ];
+                    console.log(cell);
+                    if (i!=topleft.x){
+                        console.log(i, topleft.x);
+                        cells.push(Tag(['&'], undefined, true));
+                    }
                     cells.push(Tag(cell, 'cell'));
+                }
+                if (j!=topleft.y){
+                    rows.push(Tag(['\\\\'], undefined, true));
                 }
                 rows.push(Tag(cells, 'row'));
             }
 
-            return Tag(rows, 'diagram');
+            return Tag([beginning, ...rows, ending], 'diagram');
 
         },
 

@@ -43,12 +43,15 @@ const TikzcdArrows = (tikzcd_codec) => {
                 Tag([
                     Tag(['from'], 'key'),
                     Tag(['='], undefined, true),
-                    Tag([`${arrow.arc.source.position.x-origin.x}-${arrow.arc.source.position.y-origin.y}`], 'value'),
+                    Tag([`${arrow.arc.source.position.x-origin.x+1}-${arrow.arc.source.position.y-origin.y+1}`], 'value'),
+                    // NOTE: arrow source and target positions are 1-indexed in tikzcd
                 ], 'assignment'),
+                Tag([','], undefined, true),
                 Tag([
                     Tag(['to'], 'key'),
                     Tag(['='], undefined, true),
-                    Tag([`${arrow.arc.target.position.x-origin.x}-${arrow.arc.target.position.y-origin.y}`], 'value'),
+                    Tag([`${arrow.arc.target.position.x-origin.x+1}-${arrow.arc.target.position.y-origin.y+1}`], 'value'),
+                    // NOTE: arrow source and target positions are 1-indexed in tikzcd
                 ], 'assignment'),
                 ...{
                     1: ['dashed'],
@@ -96,9 +99,9 @@ const TikzcdArrows = (tikzcd_codec) => {
                 if(action != null){
                     arrow = arrow.with({arc: action(arc)});
                 } else if (key == 'to') {
-                    arrow = arrow.with({ arc: arrow.arc({source: new Node(decode_vec2(vector))}) });
+                    arrow = arrow.with({ arc: arrow.arc({source: new Node(decode_vec2(vector).sub(1))}) });
                 } else if (key == 'from') {
-                    arrow = arrow.with({ arc: arrow.arc({target: new Node(decode_vec2(vector))}) });
+                    arrow = arrow.with({ arc: arrow.arc({target: new Node(decode_vec2(vector).sub(1))}) });
                 }
             }
 

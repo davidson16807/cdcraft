@@ -131,13 +131,13 @@
             <img id="saved-svg-image" src="icons/clipboard-check.svg"/>
         </button>
 
-<!-- 
-        <button id="copy" type="button" class="btn btn-dark">
+        <button id="save-latex" type="button" class="btn btn-dark">
             <div>LaTeX</div>
             <img id="save-latex-image" src="icons/code-braces.svg"/>
             <img id="saved-latex-image" src="icons/clipboard-check.svg"/>
-            <div class="instructions">ctrl+S</div>
         </button>
+
+<!-- 
 
         <button id="copy" type="button" class="btn btn-dark">
             <div>Copy</div>
@@ -482,7 +482,7 @@ let diagrams_and_tags = TikzcdDiagrams(
     new ScreenStateStore(glm.vec2(), 8)
 );
 
-const diagrams_and_tikzcd = CodecComposition(diagrams_and_tags, tags_and_tikzcd.diagram);
+const tikzcd_diagrams = CodecComposition(diagrams_and_tags, tags_and_tikzcd.diagram);
 
 const diagram_tikzcd = `
     \\begin{tikzcd}
@@ -499,8 +499,8 @@ const diagram_tikzcd = `
 // console.log(tikzcd_diagram);
 // console.log(diagrams_and_tags.encode(tikzcd_diagram));
 
-console.log(diagrams_and_tikzcd.decode(diagram_tikzcd));
-console.log(diagrams_and_tikzcd.encode(diagrams_and_tikzcd.decode(diagram_tikzcd)));
+// console.log(tikzcd_diagrams.decode(diagram_tikzcd));
+// console.log(tikzcd_diagrams.encode(tikzcd_diagrams.decode(diagram_tikzcd)));
 
 const app_updater = 
     AppUpdater({
@@ -509,6 +509,7 @@ const app_updater =
         arrow_drags               : arrow_drags,
         view_drags                : view_drags,
         url_diagrams              : url_diagrams,
+        tikzcd_diagrams           : tikzcd_diagrams,
         svg_diagram_export        : svg_diagram_export,
         screen_state_storage      : screen_state_storage,
         diagram_object_resources  : DiagramObjectResource(array_resource),
