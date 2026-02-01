@@ -39,6 +39,7 @@ const TikzcdDiagrams = (
                 );
 
             const objects = [...diagram.objects, ...inferred_objects];
+            console.log(objects);
 
             const topleft = objects
                     .map(object => object.position)
@@ -58,11 +59,17 @@ const TikzcdDiagrams = (
                         .filter(arrow => glm.distance(arrow.arc.source.position, reference_cell) == 0)
                         .map(arrow => tikzcd_arrows.encode(arrow, topleft))
                         .forEach(subtag => cell.push(subtag));
-                    diagram.objects
+                    objects
                         .filter(object => glm.distance(object.position, reference_cell) == 0)
                         .map(object => tikzcd_objects.encode(object))
                         .forEach(subtag => cell.push(subtag));
+                    if (i!=topleft.x){
+                        rows.push(Tag(['&'], undefined, true));
+                    }
                     cells.push(Tag(cell, 'cell'));
+                }
+                if (j!=topleft.y){
+                    rows.push(Tag(['\\\\'], undefined, true));
                 }
                 rows.push(Tag(cells, 'row'));
             }

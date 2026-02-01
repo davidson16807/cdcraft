@@ -24,7 +24,7 @@ const TikzcdObjects = (tikzcd_codec) => {
         encode:(object) => {
 
             let tag = Tag([
-                (object.symbol || object.label).replace('\\[','').replace('\\]','')
+                (object.symbol || object.label || '\\bullet').replace('\\[','').replace('\\]','')
             ], 'object');
 
             if (object.color != null) {
